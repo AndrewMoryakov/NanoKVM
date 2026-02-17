@@ -24,21 +24,26 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
   const [autostartLoading, setAutostartLoading] = useState(false);
 
   useEffect(() => {
-    vpnApi.getPreference().then((rsp: any) => {
-      if (rsp.data?.vpn) {
-        setIsAutostart(rsp.data.vpn === 'netbird');
-      }
-    });
+    vpnApi
+      .getPreference()
+      .then((rsp: any) => {
+        if (rsp.data?.vpn) {
+          setIsAutostart(rsp.data.vpn === 'netbird');
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to get VPN preference:', err);
+      });
   }, []);
 
   function handleAutostartChange(checked: boolean) {
-    if (!checked || autostartLoading) return;
+    if (autostartLoading) return;
     setAutostartLoading(true);
 
     vpnApi
-      .setPreference('netbird')
+      .setPreference(checked ? 'netbird' : '')
       .then(() => {
-        setIsAutostart(true);
+        setIsAutostart(checked);
         onSuccess();
       })
       .catch((err) => {
@@ -75,21 +80,30 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
         <span className="text-base">{t('settings.netbird.title')}</span>
 
         {state && state !== 'notInstall' && (
-          <Popconfirm
-            title={t('settings.netbird.autostartConfirm')}
-            onConfirm={() => handleAutostartChange(true)}
-            okText={t('settings.netbird.okBtn')}
-            cancelText={t('settings.netbird.cancelBtn')}
-            placement="bottom"
-            disabled={isAutostart}
-          >
+          isAutostart ? (
             <Switch
-              checked={isAutostart}
+              checked={true}
               loading={autostartLoading}
               size="small"
               title={t('settings.netbird.autostart')}
+              onChange={() => handleAutostartChange(false)}
             />
-          </Popconfirm>
+          ) : (
+            <Popconfirm
+              title={t('settings.netbird.autostartConfirm')}
+              onConfirm={() => handleAutostartChange(true)}
+              okText={t('settings.netbird.okBtn')}
+              cancelText={t('settings.netbird.cancelBtn')}
+              placement="bottom"
+            >
+              <Switch
+                checked={false}
+                loading={autostartLoading}
+                size="small"
+                title={t('settings.netbird.autostart')}
+              />
+            </Popconfirm>
+          )
         )}
       </div>
 

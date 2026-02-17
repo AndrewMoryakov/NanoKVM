@@ -100,8 +100,8 @@ case "$1" in
       echo -800 > /proc/$SERVER_PID/oom_score_adj 2>/dev/null
     fi
 
-    # Read VPN preference (default: tailscale)
-    VPN_PREF="tailscale"
+    # Read VPN preference
+    VPN_PREF=""
     if [ -f /etc/kvm/vpn ]; then
       VPN_PREF=$(cat /etc/kvm/vpn)
     fi
@@ -111,9 +111,13 @@ case "$1" in
         rm -f /etc/init.d/S98tailscaled
         start_netbird
         ;;
-      *)
+      tailscale)
         rm -f /etc/init.d/S99netbird
         start_tailscale
+        ;;
+      *)
+        rm -f /etc/init.d/S98tailscaled
+        rm -f /etc/init.d/S99netbird
         ;;
     esac
    ;;
@@ -149,8 +153,8 @@ case "$1" in
       echo -800 > /proc/$SERVER_PID/oom_score_adj 2>/dev/null
     fi
 
-    # Read VPN preference (default: tailscale)
-    VPN_PREF="tailscale"
+    # Read VPN preference
+    VPN_PREF=""
     if [ -f /etc/kvm/vpn ]; then
       VPN_PREF=$(cat /etc/kvm/vpn)
     fi
@@ -160,9 +164,13 @@ case "$1" in
         rm -f /etc/init.d/S98tailscaled
         start_netbird
         ;;
-      *)
+      tailscale)
         rm -f /etc/init.d/S99netbird
         start_tailscale
+        ;;
+      *)
+        rm -f /etc/init.d/S98tailscaled
+        rm -f /etc/init.d/S99netbird
         ;;
     esac
 

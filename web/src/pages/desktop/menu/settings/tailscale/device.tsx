@@ -83,6 +83,13 @@ export const Device = ({ status, onLogout }: DeviceProps) => {
         <span>{t('settings.tailscale.account')}</span>
         <span>{status.account}</span>
       </div>
+
+      {status.version && (
+        <div className="flex justify-between">
+          <span>{t('settings.tailscale.version')}</span>
+          <span>{status.version}</span>
+        </div>
+      )}
       <Divider />
 
       <div className="flex justify-center pt-3">

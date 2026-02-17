@@ -32,6 +32,7 @@ func extensionsRouter(r *gin.Engine) {
 	api.POST("/netbird/up", nb.Up)               // run netbird up
 	api.POST("/netbird/down", nb.Down)           // run netbird down
 	api.POST("/netbird/login", nb.Login)         // netbird login (official server)
+	api.POST("/netbird/reconnect", nb.Reconnect) // netbird reconnect (keep config)
 	api.POST("/netbird/start", nb.Start)         // netbird start
 	api.POST("/netbird/stop", nb.Stop)           // netbird stop
 	api.POST("/netbird/restart", nb.Restart)     // netbird restart

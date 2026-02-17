@@ -23,6 +23,7 @@ const (
 type Cli struct{}
 
 type TsStatus struct {
+	Version      string `json:"Version"`
 	BackendState string `json:"BackendState"`
 
 	Self struct {

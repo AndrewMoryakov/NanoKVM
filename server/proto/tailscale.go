@@ -15,6 +15,7 @@ type GetTailscaleStatusRsp struct {
 	Name    string         `json:"name"`
 	IP      string         `json:"ip"`
 	Account string         `json:"account"`
+	Version string         `json:"version"`
 }
 
 type LoginTailscaleRsp struct {

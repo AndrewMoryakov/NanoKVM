@@ -5,4 +5,5 @@ export type Status = {
   name: string;
   ip: string;
   account: string;
+  version: string;
 };

@@ -36,6 +36,10 @@ export function up(setupKey: string, managementUrl: string, adminUrl: string) {
   });
 }
 
+export function reconnect() {
+  return http.post('/api/extensions/netbird/reconnect');
+}
+
 export function down() {
   return http.post('/api/extensions/netbird/down');
 }

@@ -26,21 +26,26 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
   const [autostartLoading, setAutostartLoading] = useState(false);
 
   useEffect(() => {
-    vpnApi.getPreference().then((rsp: any) => {
-      if (rsp.data?.vpn) {
-        setIsAutostart(rsp.data.vpn === 'tailscale');
-      }
-    });
+    vpnApi
+      .getPreference()
+      .then((rsp: any) => {
+        if (rsp.data?.vpn) {
+          setIsAutostart(rsp.data.vpn === 'tailscale');
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to get VPN preference:', err);
+      });
   }, []);
 
   function handleAutostartChange(checked: boolean) {
-    if (!checked || autostartLoading) return;
+    if (autostartLoading) return;
     setAutostartLoading(true);
 
     vpnApi
-      .setPreference('tailscale')
+      .setPreference(checked ? 'tailscale' : '')
       .then(() => {
-        setIsAutostart(true);
+        setIsAutostart(checked);
         onSuccess();
       })
       .catch((err) => {
@@ -77,21 +82,30 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
         <span className="text-base">{t('settings.tailscale.title')}</span>
 
         {state && state !== 'notInstall' && (
-          <Popconfirm
-            title={t('settings.tailscale.autostartConfirm')}
-            onConfirm={() => handleAutostartChange(true)}
-            okText={t('settings.tailscale.okBtn')}
-            cancelText={t('settings.tailscale.cancelBtn')}
-            placement="bottom"
-            disabled={isAutostart}
-          >
+          isAutostart ? (
             <Switch
-              checked={isAutostart}
+              checked={true}
               loading={autostartLoading}
               size="small"
               title={t('settings.tailscale.autostart')}
+              onChange={() => handleAutostartChange(false)}
             />
-          </Popconfirm>
+          ) : (
+            <Popconfirm
+              title={t('settings.tailscale.autostartConfirm')}
+              onConfirm={() => handleAutostartChange(true)}
+              okText={t('settings.tailscale.okBtn')}
+              cancelText={t('settings.tailscale.cancelBtn')}
+              placement="bottom"
+            >
+              <Switch
+                checked={false}
+                loading={autostartLoading}
+                size="small"
+                title={t('settings.tailscale.autostart')}
+              />
+            </Popconfirm>
+          )
         )}
       </div>
 

@@ -151,6 +151,25 @@ func (s *Service) Up(c *gin.Context) {
 	rsp.OkRsp(c)
 }
 
+func (s *Service) Reconnect(c *gin.Context) {
+	var rsp proto.Response
+
+	cli := NewCli()
+
+	url, err := cli.Login()
+	if err != nil {
+		log.Errorf("failed to reconnect netbird: %s", err)
+		rsp.ErrRsp(c, -1, fmt.Sprintf("reconnect failed: %v", err))
+		return
+	}
+
+	rsp.OkRspWithData(c, &proto.LoginNetbirdRsp{
+		Url: url,
+	})
+
+	log.Debugf("netbird reconnect url: %s", url)
+}
+
 func (s *Service) Down(c *gin.Context) {
 	var rsp proto.Response
 

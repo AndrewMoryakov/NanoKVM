@@ -18,6 +18,8 @@ export const Device = ({ status, onRefresh }: DeviceProps) => {
   const { t } = useTranslation();
 
   const [isDownLoading, setIsDownLoading] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectUrl, setReconnectUrl] = useState('');
   const [errMsg, setErrMsg] = useState('');
   const [showReconfigure, setShowReconfigure] = useState(false);
 
@@ -39,6 +41,35 @@ export const Device = ({ status, onRefresh }: DeviceProps) => {
       })
       .finally(() => {
         setIsDownLoading(false);
+      });
+  }
+
+  function reconnect() {
+    if (isReconnecting) return;
+    setErrMsg('');
+    setReconnectUrl('');
+    setIsReconnecting(true);
+
+    api
+      .reconnect()
+      .then((rsp) => {
+        if (rsp.code !== 0) {
+          setErrMsg(rsp.msg);
+          return;
+        }
+
+        const url = rsp.data?.url;
+        if (!url) {
+          onRefresh();
+          return;
+        }
+
+        setReconnectUrl(url);
+        window.open(url, '_blank');
+        setTimeout(() => setReconnectUrl(''), 10 * 60 * 1000);
+      })
+      .finally(() => {
+        setIsReconnecting(false);
       });
   }
 
@@ -75,13 +106,32 @@ export const Device = ({ status, onRefresh }: DeviceProps) => {
         </Popconfirm>
 
         {!connected && (
-          <Button onClick={() => setShowReconfigure(!showReconfigure)}>
-            {t('settings.netbird.reconfigure')}
-          </Button>
+          <>
+            <Button type="primary" loading={isReconnecting} onClick={reconnect}>
+              {t('settings.netbird.reconnect')}
+            </Button>
+            <Button onClick={() => setShowReconfigure(!showReconfigure)}>
+              {t('settings.netbird.reconfigure')}
+            </Button>
+          </>
         )}
 
         <Button onClick={onRefresh}>{t('settings.netbird.refresh')}</Button>
       </div>
+
+      {reconnectUrl && (
+        <div className="mt-4 flex flex-col items-center space-y-3">
+          <Button type="link" href={reconnectUrl} target="_blank">
+            {reconnectUrl}
+          </Button>
+          <span className="text-xs text-neutral-600">
+            {t('settings.netbird.urlPeriod')}
+          </span>
+          <Button type="primary" shape="round" onClick={onRefresh}>
+            {t('settings.netbird.loginSuccess')}
+          </Button>
+        </div>
+      )}
 
       {showReconfigure && (
         <>

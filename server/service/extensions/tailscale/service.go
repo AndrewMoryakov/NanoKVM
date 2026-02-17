@@ -231,6 +231,7 @@ func (s *Service) GetStatus(c *gin.Context) {
 		IP:      ipv4,
 		Name:    status.Self.HostName,
 		Account: status.CurrentTailnet.Name,
+		Version: status.Version,
 	}
 
 	rsp.OkRspWithData(c, &data)

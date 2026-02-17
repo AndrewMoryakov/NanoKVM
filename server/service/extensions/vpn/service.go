@@ -37,8 +37,8 @@ func (s *Service) SetPreference(c *gin.Context) {
 	}
 
 	vpn := strings.TrimSpace(req.VPN)
-	if vpn != "tailscale" && vpn != "netbird" {
-		rsp.ErrRsp(c, -2, "vpn must be 'tailscale' or 'netbird'")
+	if vpn != "" && vpn != "tailscale" && vpn != "netbird" {
+		rsp.ErrRsp(c, -2, "vpn must be 'tailscale', 'netbird' or empty")
 		return
 	}
 
@@ -64,6 +64,8 @@ func (s *Service) SetPreference(c *gin.Context) {
 			rsp.ErrRsp(c, -3, fmt.Sprintf("start netbird failed: %v", err))
 			return
 		}
+	case "":
+		// Disable autostart — don't stop running VPNs
 	}
 
 	if err := writePreference(vpn); err != nil {
@@ -79,15 +81,15 @@ func (s *Service) SetPreference(c *gin.Context) {
 func readPreference() string {
 	data, err := os.ReadFile(VPNPreferenceFile)
 	if err != nil {
-		return "tailscale"
+		return ""
 	}
 
 	vpn := strings.TrimSpace(string(data))
-	if vpn == "netbird" {
-		return "netbird"
+	if vpn == "tailscale" || vpn == "netbird" {
+		return vpn
 	}
 
-	return "tailscale"
+	return ""
 }
 
 func writePreference(vpn string) error {
