@@ -22,6 +22,7 @@ stop_tailscale() {
   if [ -x /etc/init.d/S98tailscaled ]; then
     /etc/init.d/S98tailscaled stop >/dev/null 2>&1
   fi
+  killall tailscaled 2>/dev/null
 }
 
 stop_netbird() {

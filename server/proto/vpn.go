@@ -5,5 +5,5 @@ type GetVPNPreferenceRsp struct {
 }
 
 type SetVPNPreferenceReq struct {
-	VPN string `json:"vpn" form:"vpn" validate:"required"`
+	VPN string `json:"vpn" form:"vpn"`
 }

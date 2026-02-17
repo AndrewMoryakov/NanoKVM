@@ -37,11 +37,15 @@ func (s *Service) Install(c *gin.Context) {
 
 	if !isInstalled() {
 		if err := install(); err != nil {
-			rsp.ErrRsp(c, -1, "install failed")
+			rsp.ErrRsp(c, -1, fmt.Sprintf("install failed: %v", err))
 			return
 		}
+	}
 
-		_ = NewCli().Start()
+	if err := NewCli().Start(); err != nil {
+		rsp.ErrRsp(c, -2, fmt.Sprintf("start failed: %v", err))
+		log.Errorf("failed to start tailscale after install: %s", err)
+		return
 	}
 
 	rsp.OkRsp(c)

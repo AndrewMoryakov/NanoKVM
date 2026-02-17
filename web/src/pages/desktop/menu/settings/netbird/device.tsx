@@ -60,6 +60,7 @@ export const Device = ({ status, onRefresh }: DeviceProps) => {
 
         const url = rsp.data?.url;
         if (!url) {
+          setShowReconfigure(false);
           onRefresh();
           return;
         }

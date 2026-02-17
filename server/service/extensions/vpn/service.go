@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -52,6 +53,7 @@ func (s *Service) SetPreference(c *gin.Context) {
 	switch vpn {
 	case "tailscale":
 		_ = netbird.NewCli().Stop()
+		time.Sleep(2 * time.Second)
 		if err := tailscale.NewCli().Start(); err != nil {
 			log.Errorf("failed to start tailscale: %s", err)
 			rsp.ErrRsp(c, -3, fmt.Sprintf("start tailscale failed: %v", err))
@@ -59,6 +61,7 @@ func (s *Service) SetPreference(c *gin.Context) {
 		}
 	case "netbird":
 		_ = tailscale.NewCli().Stop()
+		time.Sleep(2 * time.Second)
 		if err := netbird.NewCli().Start(); err != nil {
 			log.Errorf("failed to start netbird: %s", err)
 			rsp.ErrRsp(c, -3, fmt.Sprintf("start netbird failed: %v", err))

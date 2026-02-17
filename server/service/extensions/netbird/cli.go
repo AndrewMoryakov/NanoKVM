@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -60,7 +61,12 @@ func (c *Cli) Restart() error {
 }
 
 func (c *Cli) Stop() error {
-	return runCommand(fmt.Sprintf("%s stop", ScriptPath), false)
+	err := runCommand(fmt.Sprintf("%s stop", ScriptPath), false)
+	if err != nil {
+		return err
+	}
+
+	return os.Remove(ScriptPath)
 }
 
 func (c *Cli) Up(setupKey string, managementURL string, adminURL string) error {
