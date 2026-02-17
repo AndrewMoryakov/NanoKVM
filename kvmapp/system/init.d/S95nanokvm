@@ -133,50 +133,8 @@ case "$1" in
    ;;
 
   restart)
-    stop_netbird
-    stop_tailscale
-    killall kvm_system 2>/dev/null
-    killall NanoKVM-Server 2>/dev/null
-    rm -rf /tmp/kvm_system /tmp/server
-
-    # Ensure swap is active
-    setup_swap
-
-    cp -r /kvmapp/kvm_system /tmp/
-    /tmp/kvm_system/kvm_system &
-
-    cp -r /kvmapp/server /tmp/
-    GOMEMLIMIT=20MiB /tmp/server/NanoKVM-Server &
-    SERVER_PID=$!
-
-    sleep 1
-    if [ -d "/proc/$SERVER_PID" ]; then
-      echo -800 > /proc/$SERVER_PID/oom_score_adj 2>/dev/null
-    fi
-
-    # Read VPN preference
-    VPN_PREF=""
-    if [ -f /etc/kvm/vpn ]; then
-      VPN_PREF=$(cat /etc/kvm/vpn)
-    fi
-
-    case "$VPN_PREF" in
-      netbird)
-        rm -f /etc/init.d/S98tailscaled
-        start_netbird
-        ;;
-      tailscale)
-        rm -f /etc/init.d/S99netbird
-        start_tailscale
-        ;;
-      *)
-        rm -f /etc/init.d/S98tailscaled
-        rm -f /etc/init.d/S99netbird
-        ;;
-    esac
-
-    sync
-    echo "OK"
+    $0 stop
+    $0 start
    ;;
 
   *)

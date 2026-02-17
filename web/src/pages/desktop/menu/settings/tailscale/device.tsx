@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { LogoutOutlined } from '@ant-design/icons';
 import { Button, Divider, Popconfirm, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -17,33 +17,31 @@ type DeviceProps = {
 export const Device = ({ status, onLogout }: DeviceProps) => {
   const { t } = useTranslation();
 
-  const [isRunning, setIsRunning] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLogging, setIsLogging] = useState(false);
   const [errMsg, setErrMsg] = useState('');
 
-  useEffect(() => {
-    setIsRunning(status.state === 'running');
-  }, [status]);
+  const isRunning = status.state === 'running';
 
-  async function update() {
+  function update() {
     if (isUpdating) return;
     setIsUpdating(true);
 
-    try {
-      const rsp = isRunning ? await api.down() : await api.up();
-      if (rsp.code !== 0) {
-        setErrMsg(rsp.msg);
-        return;
-      }
-
-      setIsRunning(!isRunning);
-    } finally {
-      setIsUpdating(false);
-    }
+    const call = isRunning ? api.down() : api.up();
+    call
+      .then((rsp) => {
+        if (rsp.code !== 0) {
+          setErrMsg(rsp.msg);
+          return;
+        }
+        onLogout();
+      })
+      .finally(() => {
+        setIsUpdating(false);
+      });
   }
 
-  async function logout() {
+  function logout() {
     if (isLogging) return;
     setIsLogging(true);
 
@@ -54,7 +52,6 @@ export const Device = ({ status, onLogout }: DeviceProps) => {
           setErrMsg(rsp.msg);
           return;
         }
-
         onLogout();
       })
       .finally(() => {
