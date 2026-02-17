@@ -91,6 +91,7 @@ export const Device = ({ status, onRefresh }: DeviceProps) => {
               setShowReconfigure(false);
               onRefresh();
             }}
+            onCancel={() => setShowReconfigure(false)}
             defaultManagementUrl={status.managementUrl}
           />
         </>

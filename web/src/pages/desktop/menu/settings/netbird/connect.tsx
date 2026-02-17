@@ -9,12 +9,13 @@ import { ErrorHelp } from './error-help.tsx';
 
 type ConnectProps = {
   onSuccess: () => void;
+  onCancel?: () => void;
   defaultManagementUrl?: string;
 };
 
 type Mode = 'official' | 'custom';
 
-export const Connect = ({ onSuccess, defaultManagementUrl }: ConnectProps) => {
+export const Connect = ({ onSuccess, onCancel, defaultManagementUrl }: ConnectProps) => {
   const { t } = useTranslation();
 
   const [mode, setMode] = useState<Mode>(
@@ -166,6 +167,12 @@ export const Connect = ({ onSuccess, defaultManagementUrl }: ConnectProps) => {
       </div>
 
       {errMsg && <ErrorHelp error={errMsg} onRefresh={onSuccess} />}
+
+      {onCancel && (
+        <div className="flex justify-end pt-2">
+          <Button onClick={onCancel}>{t('settings.netbird.cancelBtn')}</Button>
+        </div>
+      )}
     </Card>
   );
 };
