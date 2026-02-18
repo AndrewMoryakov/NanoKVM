@@ -114,7 +114,7 @@ if [[ "$SKIP_FRONTEND" -eq 0 ]]; then
   require_cmd node
   require_cmd pnpm
 
-  node_major="$(node -p 'parseInt(process.versions.node.split(\".\")[0], 10)')"
+  node_major="$(node -p 'parseInt(process.versions.node.split(".")[0], 10)')"
   if [[ "$node_major" -lt 20 ]]; then
     die "Node.js >= 20 is required for vite build (current: $(node -v))"
   fi

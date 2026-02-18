@@ -86,7 +86,24 @@ func (c *Cli) Up(setupKey string, managementURL string, adminURL string) error {
 func (c *Cli) ResetToOfficialServer() error {
 	_ = c.Stop()
 	_ = exec.Command("sh", "-c", "rm -f /var/lib/netbird/default.json").Run()
+
+	// Wait for old daemon to fully shut down (socket removed)
+	c.waitForSocketRemoval(5 * time.Second)
+
 	return c.Start()
+}
+
+func (c *Cli) waitForSocketRemoval(timeout time.Duration) {
+	socketPath := "/var/run/netbird.sock"
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if _, err := os.Stat(socketPath); os.IsNotExist(err) {
+			return
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	// Force remove stale socket
+	_ = os.Remove(socketPath)
 }
 
 func (c *Cli) WaitForSocket(timeout time.Duration) error {
@@ -102,7 +119,7 @@ func (c *Cli) WaitForSocket(timeout time.Duration) error {
 }
 
 func (c *Cli) Login() (string, error) {
-	if err := c.WaitForSocket(10 * time.Second); err != nil {
+	if err := c.WaitForSocket(30 * time.Second); err != nil {
 		return "", err
 	}
 

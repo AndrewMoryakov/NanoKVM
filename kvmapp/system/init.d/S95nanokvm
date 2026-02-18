@@ -18,6 +18,21 @@ setup_swap() {
   echo "Swap enabled: $SWAPFILE"
 }
 
+sync_clock() {
+  # NanoKVM Cube has no RTC battery — clock resets on power loss.
+  # TLS connections (NetBird, Tailscale) require roughly correct time.
+  if command -v ntpd >/dev/null 2>&1; then
+    for srv in time.google.com pool.ntp.org time.cloudflare.com; do
+      ntpd -n -q -p "$srv" 2>/dev/null && return 0
+    done
+  fi
+  # BusyBox ntpd may not support -q; try sntp-style fallback
+  if command -v ntpdate >/dev/null 2>&1; then
+    ntpdate -s time.google.com 2>/dev/null && return 0
+  fi
+  return 1
+}
+
 stop_tailscale() {
   if [ -x /etc/init.d/S98tailscaled ]; then
     /etc/init.d/S98tailscaled stop >/dev/null 2>&1
@@ -100,6 +115,9 @@ case "$1" in
     if [ -d "/proc/$SERVER_PID" ]; then
       echo -800 > /proc/$SERVER_PID/oom_score_adj 2>/dev/null
     fi
+
+    # Sync clock (no RTC battery — required for TLS/VPN)
+    sync_clock
 
     # Read VPN preference
     VPN_PREF=""

@@ -137,7 +137,7 @@ func (s *Service) Up(c *gin.Context) {
 		return
 	}
 
-	if err := cli.WaitForSocket(10 * time.Second); err != nil {
+	if err := cli.WaitForSocket(30 * time.Second); err != nil {
 		rsp.ErrRsp(c, -3, fmt.Sprintf("daemon not ready: %v", err))
 		return
 	}

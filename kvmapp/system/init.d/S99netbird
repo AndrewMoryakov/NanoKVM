@@ -35,7 +35,37 @@ case "$1" in
     mkdir -p /var/run "$LOGDIR"
     ensure_tun
 
-    export GOMEMLIMIT=30MiB
+    export GOMEMLIMIT=20MiB
+
+    # ── NetBird config patches (applied before daemon start) ─────
+    NB_CONFIG="/var/lib/netbird/default.json"
+    if [ -f "$NB_CONFIG" ]; then
+      # Firewall manager on RISC-V creates iptables chains
+      # (NETBIRD-ACL-INPUT) but does not populate them — all wt0
+      # traffic gets DROPped. Disable the broken manager entirely.
+      sed -i 's/"DisableFirewall": false/"DisableFirewall": true/' "$NB_CONFIG"
+
+      # No IPv6 on wt0 — skip IPv6 ICE candidates to save CPU.
+      sed -i 's/"DisableIPv6Discovery": false/"DisableIPv6Discovery": true/' "$NB_CONFIG"
+
+      # Connect to peers only on actual traffic — saves memory
+      # and CPU for offline peers on this resource-constrained device.
+      sed -i 's/"LazyConnectionEnabled": false/"LazyConnectionEnabled": true/' "$NB_CONFIG"
+
+      # NetBird DNS routing is not used — disable to save memory.
+      sed -i 's/"DisableDNS": false/"DisableDNS": true/' "$NB_CONFIG"
+    fi
+
+    # ── Log rotation (no logrotate on Buildroot) ─────────────────
+    LOG_MAX_KB=1024
+    for f in "$LOGDIR"/client.log "$LOGFILE"; do
+      if [ -f "$f" ]; then
+        sz=$(du -k "$f" 2>/dev/null | cut -f1)
+        if [ "${sz:-0}" -gt "$LOG_MAX_KB" ]; then
+          tail -n 200 "$f" > "${f}.tmp" && mv "${f}.tmp" "$f"
+        fi
+      fi
+    done
 
     printf "Starting %s (GOMEMLIMIT=%s): " "$DAEMON" "$GOMEMLIMIT"
     start-stop-daemon -S -bmq -p "$PIDFILE" -x "$DAEMON_PATH" -- service run >>"$LOGFILE" 2>&1
