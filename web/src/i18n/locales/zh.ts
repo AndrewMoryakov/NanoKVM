@@ -11,12 +11,17 @@ const zh = {
       login: '登录',
       placeholderUsername: '请输入用户名',
       placeholderPassword: '请输入密码',
+      placeholderCurrentPassword: '请输入当前密码',
       placeholderPassword2: '请再次输入密码',
       noEmptyUsername: '用户名不能为空',
       noEmptyPassword: '密码不能为空',
+      passwordLength: '密码长度必须为 8 到 72 个字符',
       noAccount: '获取用户信息失败，请刷新重试或重置密码',
       invalidUser: '用户名或密码错误',
+      locked: '登录太频繁，请稍后再试',
+      globalLocked: '系统防爆破保护中，请稍后再试',
       error: '未知错误',
+      invalidCurrentPassword: '当前密码错误',
       changePassword: '修改密码',
       changePasswordDesc: '为了您的设备安全，请修改密码!',
       differentPassword: '两次密码不一致',
@@ -44,7 +49,14 @@ const zh = {
       failed: '操作失败，请重试。',
       invalidMode: '当前模式不支持配置网络。请先前往设备启用 Wi-Fi 配置模式。',
       confirmBtn: '确定',
-      finishBtn: '完成'
+      finishBtn: '完成',
+      ap: {
+        authTitle: '身份验证',
+        authDescription: '请输入 AP 密码以继续',
+        authFailed: '密码错误',
+        passPlaceholder: 'AP 密码',
+        verifyBtn: '验证'
+      }
     },
     screen: {
       scale: '缩放',
@@ -64,7 +76,26 @@ const zh = {
       qualityLow: '低',
       frameDetect: '帧差检测',
       frameDetectTip: '计算帧之间的差异，当检测到远程主机画面不变时，停止传输视频流',
-      resetHdmi: '重置 HDMI'
+      resetHdmi: '重置 HDMI',
+      mixedH264: {
+        title: 'H.264 视频流冲突',
+        description:
+          '检测到 H.264 Direct 和 H.264 WebRTC 同时使用，可能导致画面撕裂或花屏。请只保留一种 H.264 模式。'
+      },
+      webrtcConnectionFailed: {
+        title: 'WebRTC 连接失败',
+        description: '请检查网络连接或切换视频模式。'
+      },
+      captureStatus: {
+        hdmiError: 'HDMI 画面异常',
+        unsupportedResolution: '当前分辨率不支持',
+        retrieving: '正在获取画面...',
+        changingResolution: '正在切换分辨率...',
+        updateFailed: '画面暂时无法更新',
+        videoError: '视频显示异常',
+        noHdmi: '未检测到 HDMI 信号',
+        unavailable: '画面暂时无法显示'
+      }
     },
     keyboard: {
       title: '键盘',
@@ -73,6 +104,13 @@ const zh = {
       placeholder: '请输入内容',
       submit: '确定',
       virtual: '虚拟键盘',
+      readClipboard: '从剪贴板读取',
+      clipboardPermissionDenied: '剪贴板权限被拒绝。请允许您的浏览器访问剪贴板。',
+      clipboardReadError: '无法读取剪贴板',
+      dropdownEnglish: '英语',
+      dropdownGerman: '德语',
+      dropdownFrench: '法语',
+      dropdownRussian: '俄语',
       shortcut: {
         title: '快捷键',
         custom: '自定义',
@@ -93,7 +131,7 @@ const zh = {
         },
         sequential: {
           title: '序列输入模式',
-          desc1: '点击【引导键】开始 → 依次点击【快捷键】→ 点击【引导键】结束。',
+          desc1: '点击引导键开始 → 依次点击快捷键 → 再次点击引导键结束。',
           desc2: '步骤较多，但能完美避开系统键位冲突。'
         },
         enable: '启用引导键',
@@ -133,8 +171,8 @@ const zh = {
       hidOnly: {
         title: 'HID-Only 模式',
         desc: '若使用过程中遇到鼠标键盘无响应，且重置 HID 无效，可能是 NanoKVM 与您的设备存在兼容性问题。建议尝试启用 HID-Only 模式以提升兼容性。',
-        tip1: '启用该模式会禁用虚拟U盘和虚拟网卡',
-        tip2: '该模式下无法使用镜像挂载功能',
+        tip1: '启用 HID-Only 模式会卸载虚拟 U 盘和虚拟网络',
+        tip2: 'HID-Only 模式下，镜像挂载将被禁用',
         tip3: '切换模式后将自动重启 NanoKVM',
         enable: '启用 HID-Only 模式',
         disable: '关闭 HID-Only 模式'
@@ -190,6 +228,16 @@ const zh = {
       serialPort: '串口',
       serialPortPlaceholder: '请输入串口',
       baudrate: '波特率',
+      parity: '奇偶校验',
+      parityNone: '无',
+      parityEven: '偶校验',
+      parityOdd: '奇校验',
+      flowControl: '流量控制',
+      flowControlNone: '无',
+      flowControlSoft: '软件',
+      flowControlHard: '硬件',
+      dataBits: '数据位',
+      stopBits: '停止位',
       confirm: '确定'
     },
     wol: {
@@ -201,9 +249,20 @@ const zh = {
     },
     download: {
       title: '下载镜像',
-      input: '请输入镜像的下载地址',
+      input: '请输入远程镜像 URL',
       ok: '确定',
-      disabled: '/data 是只读分区，无法下载镜像'
+      disabled: '/data 是只读分区，无法下载镜像',
+      uploadbox: '将文件拖放到此处或单击选择',
+      inputfile: '请输入镜像文件',
+      NoISO: '无 ISO',
+      sha256: 'SHA-256（可选）',
+      sha256Placeholder: '请输入 64 位 SHA-256 校验和',
+      invalidSHA256: 'SHA-256 必须是 64 位十六进制字符串',
+      failed: '下载失败',
+      success: '下载成功',
+      checksumFailed: '下载失败：SHA-256 校验失败',
+      cancel: '取消',
+      cancelFailed: '取消下载失败'
     },
     power: {
       title: '电源',
@@ -220,6 +279,23 @@ const zh = {
     },
     settings: {
       title: '设置',
+      mcp: {
+        title: 'MCP 服务',
+        service: '远程控制 MCP',
+        serviceDesc: '允许可信的 MCP 客户端控制键盘、鼠标并获取屏幕截图',
+        securityWarning:
+          '任何持有此 API key 的人都可以控制远程主机并查看屏幕，请使用 HTTPS，并仅在可信网络中启用。',
+        endpoint: '服务地址',
+        apiKey: 'API Key',
+        regenerateConfirmTitle: '重新生成 MCP API key？',
+        regenerateConfirmDesc: '当前 key 将立即失效。',
+        enableConfirmTitle: '启用外部 MCP 控制？',
+        enableConfirmDesc: '启用 MCP 将停止 PicoClaw，并关闭当前活动的 PicoClaw 会话。',
+        failed: 'MCP 操作失败',
+        copyFailed: '复制失败，请手动复制。',
+        okBtn: '确认',
+        cancelBtn: '取消'
+      },
       about: {
         title: '关于 NanoKVM',
         information: '信息',
@@ -232,7 +308,12 @@ const zh = {
         deviceKey: '设备码',
         community: '社区',
         hostname: '主机名',
-        hostnameUpdated: '主机名修改成功，重启后生效'
+        hostnameUpdated: '主机名修改成功，重启后生效',
+        ipType: {
+          Wired: '有线',
+          Wireless: '无线',
+          Other: '其他'
+        }
       },
       appearance: {
         title: '外观',
@@ -248,9 +329,24 @@ const zh = {
           modeOff: '关闭',
           modeAuto: '自动隐藏',
           modeAlways: '始终显示',
+          keyboardLedStatus: '键盘锁定状态指示灯',
+          keyboardLedStatusDesc: '显示远程主机的 Num Lock、Caps Lock 和 Scroll Lock 状态',
           icons: '菜单图标',
           iconsDesc: '是否在菜单栏中显示子菜单图标'
         }
+      },
+      keyboardLedStatus: {
+        groupLabel: '远程键盘锁定状态',
+        indicatorLabel: '{{label}}：{{state}}',
+        numLock: '数字锁定',
+        numLockShort: '数',
+        capsLock: '大写锁定',
+        capsLockShort: '大',
+        scrollLock: '滚动锁定',
+        scrollLockShort: '滚',
+        on: '开启',
+        off: '关闭',
+        unknown: '未知'
       },
       device: {
         title: '设备',
@@ -267,31 +363,13 @@ const zh = {
           1800: '30分钟',
           3600: '1小时'
         },
-        wifi: {
-          title: 'Wi-Fi',
-          description: '配置 Wi-Fi 信息',
-          apMode: 'AP 模式已启用，该模式下仅支持扫描二维码配网',
-          connect: '连接 Wi-Fi',
-          connectDesc1: '请输入网络名称和密码',
-          connectDesc2: '请输入密码以连接此网络',
-          disconnect: '是否要断开该网络连接？',
-          failed: '连接失败，请重试',
-          ssid: '名称',
-          password: '密码',
-          joinBtn: '加入',
-          confirmBtn: '确定',
-          cancelBtn: '取消'
-        },
         ssh: {
           description: '启用 SSH 远程访问',
           tip: '启用前请务必设置强密码（帐号 - 修改密码）'
         },
-        tls: {
-          description: '启用 HTTPS 协议',
-          tip: '注意：使用 HTTPS 可能导致延迟增加，特别是在 MJPEG 视频模式下。'
-        },
         advanced: '高级设置',
         swap: {
+          title: '交换',
           disable: '禁用',
           description: '设置交换文件大小',
           tip: '启用该功能可能会减少SD卡使用寿命！'
@@ -308,7 +386,10 @@ const zh = {
           tip: '如果您未使用此功能，建议将其关闭'
         },
         hdmi: {
-          description: '启用 HDMI/显示器 输出功能'
+          description: '启用 HDMI/显示器 输出功能',
+          idleTimeoutTitle: '无观看者自动停止采集',
+          idleTimeoutDescription: '没有活跃观看者后停止 HDMI 采集，0 表示永不停止',
+          minutes: '分钟'
         },
         autostart: {
           title: '自动启动脚本设置',
@@ -327,11 +408,61 @@ const zh = {
         diskDesc: '在远程主机中挂载虚拟U盘',
         network: '虚拟网卡',
         networkDesc: '在远程主机中挂载虚拟网卡',
+        reboot: '重新启动',
+        rebootDesc: '您确定要重新启动 NanoKVM 吗？',
         okBtn: '是',
         cancelBtn: '否'
       },
+      network: {
+        title: '网络',
+        wifi: {
+          title: 'Wi-Fi',
+          description: '配置 Wi-Fi 信息',
+          apMode: 'AP 模式已启用，请扫描二维码连接 Wi-Fi',
+          connect: '连接 Wi-Fi',
+          connectDesc1: '请输入网络名称和密码',
+          connectDesc2: '请输入密码以连接此网络',
+          disconnect: '是否要断开该网络连接？',
+          failed: '连接失败，请重试',
+          ssid: '名称',
+          password: '密码',
+          joinBtn: '加入',
+          confirmBtn: '确定',
+          cancelBtn: '取消'
+        },
+        tls: {
+          description: '启用 HTTPS 协议',
+          tip: '注意：使用 HTTPS 可能导致延迟增加，特别是在 MJPEG 视频模式下。'
+        },
+        dns: {
+          title: 'DNS',
+          description: '配置 NanoKVM 使用的 DNS 服务器',
+          mode: '模式',
+          dhcp: 'DHCP',
+          manual: '手动',
+          add: '添加 DNS',
+          save: '保存',
+          invalid: '请输入有效的 IP 地址',
+          noDhcp: '当前未获取到 DHCP DNS',
+          saved: 'DNS 设置已保存',
+          saveFailed: '保存 DNS 设置失败',
+          unsaved: '有未保存的更改',
+          maxServers: '最多允许 {{count}} 个 DNS 服务器',
+          dnsServers: 'DNS 服务器',
+          dhcpServersDescription: 'DNS 服务器由 DHCP 自动获取',
+          manualServersDescription: 'DNS 服务器可以手动编辑',
+          networkDetails: '网络详情',
+          interface: '接口',
+          ipAddress: 'IP 地址',
+          subnetMask: '子网掩码',
+          router: '路由器',
+          none: '无'
+        }
+      },
       tailscale: {
         title: 'Tailscale',
+        autostart: '开机自启',
+        autostartConfirm: '将开机自启切换为 Tailscale？NetBird 将被停止。',
         memory: {
           title: '内存优化',
           tip: '当内存占用超过限制时，会更积极地执行垃圾回收来尝试释放内存。需重启 Tailscale 后生效。'
@@ -342,7 +473,7 @@ const zh = {
         },
         restart: '取定要重启 Tailscale 吗？',
         stop: '确定要停止 Tailscale 吗？',
-        stopDesc: '该操作会退出登录，并停止开机自动启动。',
+        stopDesc: '退出 Tailscale 并禁用开机自动启动。',
         loading: '加载中...',
         notInstall: '未检测到 Tailscale，请先安装',
         install: '安装',
@@ -352,8 +483,8 @@ const zh = {
         download: '下载',
         package: '安装包',
         unzip: '并解压',
-        upTailscale: '将 tailscale 文件上传到 /usr/bin/ 目录',
-        upTailscaled: '将 tailscaled 文件上传到 /usr/sbin/ 目录',
+        upTailscale: '将 tailscale 上传到 NanoKVM 的 /usr/bin/ 目录',
+        upTailscaled: '将 tailscaled 上传到 NanoKVM 的 /usr/sbin/ 目录',
         refresh: '刷新页面',
         notRunning: 'Tailscale 尚未运行，请先执行启动操作',
         run: '启动',
@@ -369,10 +500,44 @@ const zh = {
         logoutDesc: '确定要退出吗？',
         uninstall: '卸载 Tailscale',
         uninstallDesc: '确定要卸载 Tailscale 吗？',
-        reboot: '重启',
-        rebootDesc: '你确定要重启 NanoKVM 吗？',
         okBtn: '确认',
         cancelBtn: '取消'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: '开机自启',
+        autostartConfirm: '将开机自启切换为 NetBird？Tailscale 将被停止。',
+        restart: '确定要重启 NetBird 吗？',
+        stop: '确定要停止 NetBird 吗？',
+        stopDesc: '断开 NetBird 并禁用开机自动启动。',
+        loading: '加载中...',
+        notInstall: '未检测到 NetBird，请先安装',
+        install: '安装',
+        installing: '安装中',
+        notRunning: 'NetBird 尚未运行，请先执行启动操作',
+        run: '启动',
+        notLogin: '该设备尚未绑定，请点击登录并将这台设备绑定到您的账号。',
+        urlPeriod: '该链接10分钟内有效',
+        login: '登录',
+        loginSuccess: '登录完成',
+        enable: '启用 NetBird',
+        deviceName: '设备名称',
+        deviceIP: '设备地址',
+        version: '版本',
+        disconnect: '断开连接',
+        disconnectConfirm: '确定要断开连接吗？',
+        okBtn: '确认',
+        cancelBtn: '取消',
+        error: {
+          title: 'NetBird 操作失败',
+          intro: '错误详情：',
+          stepWait: '1. 等待 10-15 秒后重试。',
+          stepRestartUI: '2. 点击下方的「重启服务」。',
+          stepRestartSSH: '3. 如仍无效，执行：/etc/init.d/S99netbird restart',
+          stepReboot: '4. 只有在以上步骤都无效时才重启 NanoKVM。',
+          restartButton: '重启服务',
+          refreshButton: '刷新状态'
+        }
       },
       update: {
         title: '检查更新',
@@ -386,10 +551,28 @@ const zh = {
         preview: '预览更新',
         previewDesc: '率先体验即将推出的新功能和优化',
         previewTip: '预览版更新可能包含一些不稳定因素或未完善的功能！',
+        customServer: {
+          title: '自定义更新服务器',
+          desc: '从指定服务器检查并下载在线更新',
+          invalidUrl:
+            '请输入有效的 HTTP 或 HTTPS 服务器目录，不能包含查询参数、片段或 latest.json。',
+          loadFailed: '读取更新服务器配置失败。',
+          saveFailed: '保存更新服务器配置失败。',
+          saved: '更新服务器配置已保存。',
+          save: '保存',
+          confirmTitle: '使用自定义更新服务器？',
+          confirmDesc:
+            'SHA-512 只能验证安装包与该服务器提供的清单一致，不能证明安装包来自 NanoKVM 官方。错误或恶意的服务器可能导致设备不可用、数据丢失或系统被接管。',
+          confirm: '仍然使用',
+          previewDisabled: '启用自定义更新服务器时，预览更新不可用'
+        },
         offline: {
           title: '离线更新',
           desc: '通过本地安装包进行更新',
           upload: '上传',
+          checksumPlaceholder: 'SHA-256 校验和（可选）',
+          invalidChecksum: 'SHA-256 校验和必须为 64 位十六进制字符。',
+          checksumMismatch: 'SHA-256 校验失败，安装包可能已损坏。',
           invalidName: '文件名格式错误，请前往 GitHub 发布页下载安装包。',
           updateFailed: '更新失败，请重试'
         }
@@ -397,12 +580,192 @@ const zh = {
       account: {
         title: '帐号',
         webAccount: '网页帐号',
+        role: '角色',
+        roles: {
+          admin: '管理员',
+          user: '普通用户'
+        },
         password: '密码',
         updateBtn: '修改',
         logoutBtn: '退出',
         logoutDesc: '确定要退出吗？',
-        confirm: '确定',
-        cancel: '取消'
+        okBtn: '确定',
+        cancelBtn: '取消',
+        users: {
+          title: '用户管理',
+          create: '创建用户',
+          enabled: '已启用',
+          disabled: '已禁用',
+          deviceOwner: '设备所有者',
+          resetPassword: '重置密码',
+          delete: '删除',
+          deleteConfirm: '删除此用户并撤销其全部会话？',
+          created: '用户已创建',
+          deleted: '用户已删除',
+          passwordUpdated: '密码已更新',
+          loadFailed: '加载用户失败',
+          saveFailed: '保存用户失败',
+          deleteFailed: '删除用户失败'
+        }
+      }
+    },
+    picoclaw: {
+      title: 'PicoClaw 助手',
+      empty: '打开面板并发送任务后，PicoClaw 会开始工作。',
+      inputPlaceholder: '描述你希望 PicoClaw 执行的操作',
+      newConversation: '新对话',
+      processing: '正在处理中...',
+      agent: {
+        defaultTitle: '通用助手',
+        defaultDescription: '适合普通问答、搜索和工作区辅助。',
+        kvmTitle: '远程控制',
+        kvmDescription: '通过 NanoKVM 操作下游远程主机。',
+        switched: '角色已切换',
+        switchFailed: '切换角色失败'
+      },
+      send: '发送',
+      cancel: '取消',
+      status: {
+        connecting: '正在连接 Gateway...',
+        connected: 'PicoClaw 会话已连接',
+        disconnected: 'PicoClaw 会话已关闭',
+        stopped: '已发送停止请求',
+        runtimeStarted: 'PicoClaw 运行时已启动',
+        runtimeStartFailed: '启动 PicoClaw 运行时失败',
+        runtimeStopped: 'PicoClaw 运行时已停止',
+        runtimeStopFailed: '停止 PicoClaw 运行时失败',
+        controlSwitchedToMCP: '控制权已切换到外部 MCP 服务'
+      },
+      connection: {
+        runtime: {
+          checking: '检查中',
+          restoring: '正在恢复 PicoClaw',
+          ready: '运行时已就绪',
+          stopped: '运行时未启动',
+          blockedByMCP: '外部 MCP 控制已启用',
+          readyBlockedByMCP: '运行时正在运行，但外部 MCP 当前控制设备输入。',
+          readyWithoutControl: '运行时正在运行，请先授予 PicoClaw 设备控制权后再重新连接。',
+          unavailable: '运行时不可用',
+          configError: '配置错误'
+        },
+        transport: {
+          connecting: '连接中',
+          connected: '已连接',
+          disconnected: '未连接',
+          reconnect: '重新连接',
+          reconnectDescription: '重新连接到正在运行的 PicoClaw 会话。',
+          reconnectBlocked: 'PicoClaw 需要先获得设备控制权才能重新连接。'
+        },
+        run: {
+          idle: '空闲',
+          busy: '执行中'
+        }
+      },
+      message: {
+        toolAction: '动作',
+        observation: '观察',
+        screenshot: '截图'
+      },
+      overlay: {
+        locked: 'PicoClaw 正在控制设备，手动输入已暂停。'
+      },
+      control: {
+        picoclaw: '设备控制：PicoClaw',
+        picoclawDescription: 'PicoClaw 可以写入键鼠，手动输入可能会被暂停。',
+        mcp: '设备控制：外部 MCP',
+        mcpDescription: '外部 MCP 可以写入设备，PicoClaw 不会接管键鼠。',
+        off: '设备控制：手动/无 AI',
+        offDescription: 'AI 不会写入键鼠，手动控制保持可用。',
+        transitioning: '设备控制：正在切换',
+        transitioningDescription: '正在同步设备控制权，请稍候。',
+        grant: '接管设备',
+        release: '交还控制',
+        releasing: '正在释放...',
+        switching: '正在切换...',
+        releasingLabel: '设备控制：正在释放',
+        releasingDescription: '正在交还设备控制，PicoClaw 已停止当前写入。',
+        granted: '已授予 PicoClaw 控制权',
+        released: '已交还设备控制权',
+        grantFailed: '授予 PicoClaw 控制权失败',
+        releaseFailed: '释放 PicoClaw 控制权失败',
+        grantConfirmTitle: '将设备控制切换到 PicoClaw？',
+        grantConfirmDesc: '外部 MCP 的设备写入将被中断。'
+      },
+      install: {
+        install: '安装 PicoClaw',
+        installing: '正在安装 PicoClaw',
+        success: 'PicoClaw 安装成功',
+        failed: 'PicoClaw 安装失败',
+        uninstalling: '正在卸载运行时...',
+        uninstalled: '运行时卸载成功。',
+        uninstallFailed: '卸载失败。',
+        requiredTitle: '未安装 PicoClaw',
+        requiredDescription: '在启动 PicoClaw 运行时之前，需要先下载安装 PicoClaw。',
+        progressDescription: '正在下载并安装 PicoClaw。',
+        stages: {
+          preparing: '准备中',
+          downloading: '下载中',
+          extracting: '解压中',
+          verifying: '验证中',
+          installing: '安装中',
+          installed: '已安装',
+          install_timeout: '已超时',
+          install_failed: '失败'
+        }
+      },
+      model: {
+        requiredTitle: '需要配置模型',
+        requiredDescription: '在使用 PicoClaw 聊天之前，请先配置 PicoClaw 模型。',
+        docsTitle: '配置指南',
+        docsDesc: '支持的模型与协议',
+        menuLabel: '配置模型',
+        modelIdentifier: '模型标识',
+        modelIdentifierPlaceholder: 'openai/gpt-5.4',
+        apiBase: 'API Base URL',
+        apiBasePlaceholder: 'https://api.example.com/v1',
+        apiKey: 'API Key',
+        apiKeyPlaceholder: '请输入模型 API Key',
+        save: '保存模型配置',
+        saving: '正在保存模型配置',
+        saved: '模型配置已保存',
+        saveFailed: '保存模型配置失败',
+        invalid: '模型标识、API Base URL 和 API Key 不能为空'
+      },
+      uninstall: {
+        menuLabel: '卸载',
+        confirmTitle: '卸载 PicoClaw',
+        confirmContent: '确定要卸载 PicoClaw 吗？这会删除可执行文件和所有配置文件。',
+        confirmOk: '卸载',
+        confirmCancel: '取消'
+      },
+      history: {
+        title: '历史会话',
+        loading: '正在加载历史会话...',
+        emptyTitle: '还没有历史会话',
+        emptyDescription: '之前的 PicoClaw 会话会显示在这里。',
+        loadFailed: '加载会话历史失败',
+        deleteFailed: '删除会话失败',
+        deleteConfirmTitle: '删除会话',
+        deleteConfirmContent: '确定要删除“{{title}}”吗？',
+        deleteConfirmOk: '删除',
+        deleteConfirmCancel: '取消',
+        messageCount_one: '{{count}} 条消息',
+        messageCount_other: '{{count}} 条消息',
+        messageCount: '{{count}} 条消息'
+      },
+      config: {
+        startRuntime: '启动 PicoClaw',
+        stopRuntime: '停止 PicoClaw'
+      },
+      start: {
+        enableConfirmTitle: '切换为 PicoClaw 控制？',
+        enableConfirmDesc: '启动 PicoClaw 前会中断外部 MCP 的设备写入。',
+        enableConfirmOk: '启动 PicoClaw',
+        enableConfirmCancel: '取消',
+        title: '启动 PicoClaw',
+        description: '启动运行时后即可开始使用 PicoClaw 助手。',
+        switchFromMCP: '切换到 PicoClaw 并启动',
+        takeoverAndStart: '接管并启动'
       }
     },
     error: {

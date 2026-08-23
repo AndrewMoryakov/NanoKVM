@@ -14,11 +14,15 @@ const uk = {
       placeholderPassword2: 'Введіть пароль ще раз',
       noEmptyUsername: "Ім'я користувача не може бути порожнім",
       noEmptyPassword: 'Пароль не може бути порожнім',
-      noAccount: 'Не вдалося отримати інформацію про користувача, оновіть веб-сторінку або скиньте пароль',
+      noAccount:
+        'Не вдалося отримати інформацію про користувача, оновіть веб-сторінку або скиньте пароль',
       invalidUser: "Недійсне ім'я користувача або пароль",
+      locked: 'Забагато входів, спробуйте пізніше',
+      globalLocked: 'Система під захистом, спробуйте пізніше',
       error: 'Якась халепа! Непередбачена помилка :(',
       changePassword: 'Змінити пароль',
-      changePasswordDesc: 'Для безпеки вашого пристрою, будь ласка, змініть пароль для входу в веб-інтерфейс.',
+      changePasswordDesc:
+        'Для безпеки вашого пристрою, будь ласка, змініть пароль для входу в веб-інтерфейс.',
       differentPassword: 'Паролі не збігаються',
       illegalUsername: "Ім'я користувача містить недопустимі символи",
       illegalPassword: 'Пароль містить недопустимі символи',
@@ -28,25 +32,35 @@ const uk = {
       loginButtonText: 'Увійти',
       tips: {
         reset1:
-          'Щоб скинути паролі, натискаючи та тримаючи кнопку завантаження на Nanokvm протягом 10 секунд.',
+          'Щоб скинути паролі, натисніть і утримуйте кнопку BOOT на NanoKVM протягом 10 секунд.',
         reset2: 'Щоб отримати детальні кроки, зверніться до цього документа:',
         reset3: 'Обліковий запис вебінтерфейс за замовчуванням:',
         reset4: 'Обліковий запис SSH за замовчуванням:',
         change1: 'Зверніть увагу, що ця дія змінить наступні паролі:',
         change2: 'Пароль для входу у веб-інтерфейс',
         change3: 'Системний root пароль (пароль для входу в систему по SSH)',
-        change4: 'Щоб скинути паролі, натисніть та утримуйте кнопку "Завантаження" на Nanokvm.'
+        change4: 'Щоб скинути паролі, натисніть і утримуйте кнопку BOOT на NanoKVM.'
       }
     },
     wifi: {
       title: 'Wi-Fi',
-      description: 'Налаштування Wi-Fi для Nanokvm',
-      success: 'Будь ласка, перевірте статус мережі NANOKVM та відвідайте нову IP -адресу.',
+      description: 'Налаштування Wi-Fi для NanoKVM',
+      success: 'Перейдіть до пристрою та перевірте стан мережі NanoKVM.',
       failed: 'Операція не вдалася, спробуйте ще раз.',
+      invalidMode:
+        'Поточний режим не підтримує налаштування мережі. Перейдіть на свій пристрій і ввімкніть режим конфігурації Wi-Fi.',
       confirmBtn: 'Так',
-      finishBtn: 'Готово'
+      finishBtn: 'Готово',
+      ap: {
+        authTitle: 'Потрібна автентифікація',
+        authDescription: 'Щоб продовжити, введіть пароль AP',
+        authFailed: 'Недійсний пароль AP',
+        passPlaceholder: 'AP пароль',
+        verifyBtn: 'Перевірити'
+      }
     },
     screen: {
+      scale: 'Масштаб',
       title: 'Екран',
       video: 'Відеорежим',
       videoDirectTips: 'Увімкніть HTTPS у "Налаштування > Пристрій", щоб використовувати цей режим',
@@ -64,7 +78,26 @@ const uk = {
       frameDetect: 'Виявлення кадрів',
       frameDetectTip:
         'Обчислює різницю між кадрами. Зупиняє передачу відеопотоку, коли на екрані віддаленого хоста не виявлено змін.',
-      resetHdmi: 'Перезавантажити HDMI підсистему'
+      resetHdmi: 'Перезавантажити HDMI підсистему',
+      mixedH264: {
+        title: 'Конфлікт потоків H.264',
+        description:
+          'H.264 Direct і H.264 WebRTC використовуються одночасно. Це може спричинити розриви зображення або пошкодження відео. Використовуйте лише один режим H.264.'
+      },
+      webrtcConnectionFailed: {
+        title: 'Не вдалося підключитися через WebRTC',
+        description: 'Перевірте мережеве з’єднання або змініть режим відео.'
+      },
+      captureStatus: {
+        hdmiError: 'Помилка зображення HDMI',
+        unsupportedResolution: 'Поточна роздільна здатність не підтримується',
+        retrieving: 'Отримання зображення...',
+        changingResolution: 'Перемикання роздільної здатності...',
+        updateFailed: 'Зараз неможливо оновити зображення',
+        videoError: 'Помилка відображення відео',
+        noHdmi: 'Сигнал HDMI не виявлено',
+        unavailable: 'Зараз неможливо показати зображення'
+      }
     },
     keyboard: {
       title: 'Клавіатура',
@@ -73,7 +106,52 @@ const uk = {
       placeholder: 'Будь ласка, введіть',
       submit: 'Надіслати',
       virtual: 'Клавіатура',
-      ctrlaltdel: 'Ctrl+Alt+Del'
+      readClipboard: 'Читання з буфера обміну',
+      clipboardPermissionDenied:
+        'Відмовлено в дозволі буфера обміну. Будь ласка, дозвольте доступ до буфера обміну у вашому браузері.',
+      clipboardReadError: 'Не вдалося прочитати буфер обміну',
+      dropdownEnglish: 'англійська',
+      dropdownGerman: 'нім',
+      dropdownFrench: 'французька',
+      dropdownRussian: 'рос',
+      shortcut: {
+        title: 'Ярлики',
+        custom: 'Custom',
+        capture: 'Натисніть тут, щоб захопити ярлик',
+        clear: 'Ясно',
+        save: 'Зберегти',
+        captureTips:
+          'Для захоплення системних клавіш (наприклад, клавіші Windows) потрібен дозвіл повноекранного режиму.',
+        enterFullScreen: 'Перемкнути повноекранний режим.'
+      },
+      leaderKey: {
+        title: 'Клавіша Leader',
+        desc: 'Обійти обмеження браузера та надсилати системні ярлики безпосередньо на віддалений хост.',
+        howToUse: 'Як використовувати',
+        simultaneous: {
+          title: 'Одночасний режим',
+          desc1: 'Натисніть і утримуйте клавішу Leader, потім натисніть клавішу швидкого доступу.',
+          desc2: 'Інтуїтивно зрозумілий, але може конфліктувати з системними ярликами.'
+        },
+        sequential: {
+          title: 'Послідовний режим',
+          desc1:
+            'Натисніть клавішу Leader → послідовно натисніть клавішу швидкого доступу → знову натисніть клавішу Leader.',
+          desc2: 'Вимагає більше кроків, але повністю уникає системних конфліктів.'
+        },
+        enable: 'Увімкнути клавішу Leader',
+        tip: 'Якщо її призначити клавішею Leader, ця клавіша працює лише як тригер швидкого доступу та втрачає поведінку за замовчуванням.',
+        placeholder: 'Натисніть клавішу Leader',
+        shiftRight: 'Правий Shift',
+        ctrlRight: 'Правий Ctrl',
+        metaRight: 'Правий Win',
+        submit: 'Надіслати',
+        recorder: {
+          rec: 'REC',
+          activate: 'Активувати клавіші',
+          input: 'Будь ласка, натисніть клавішу швидкого доступу...'
+        }
+      }
     },
     mouse: {
       title: 'Миша',
@@ -87,14 +165,21 @@ const uk = {
       mode: 'Режим миші',
       absolute: 'Абсолютний режим',
       relative: 'Відносний режим',
-      requestPointer: 'Використовується відносний режим. Будь ласка, натисніть на робочий стіл, щоб отримати курсор миші.',
+      direction: 'Напрямок коліщатка',
+      scrollUp: 'Прокрутіть вгору',
+      scrollDown: 'Прокрутіть вниз',
+      speed: 'Швидкість коліщатка',
+      fast: 'Швидко',
+      slow: 'Повільно',
+      requestPointer:
+        'Використовується відносний режим. Будь ласка, натисніть на робочий стіл, щоб отримати курсор миші.',
       resetHid: 'Скинути HID',
       hidOnly: {
         title: 'Режим лише HID',
         desc: 'Якщо ваша миша та клавіатура перестають відповідати та скинути HID, це не допомагає, це може бути проблемою сумісності між NanoKVM та пристроєм. Спробуйте ввімкнути режим "лише HID" лише для кращої сумісності.',
         tip1: 'Увімкнення режиму "лише HID" демонтує віртуальний U-диск і віртуальну мережу',
         tip2: 'У режимі "лише HID" монтування образів буде вимкнено',
-        tip3: 'NANOKVM автоматично перезавантажиться після перемикання режимів',
+        tip3: 'NanoKVM автоматично перезавантажиться після перемикання режимів',
         enable: 'Увімкнути режим "лише HID"',
         disable: 'Ввимкнути режим "лише HID"'
       }
@@ -103,11 +188,18 @@ const uk = {
       title: 'Образи',
       loading: 'Завантаження...',
       empty: 'Нічого не знайдено',
-      cdrom: 'Встановіть образ в режимі CD-ROM',
+      mountMode: 'Режим монтування',
       mountFailed: 'Не вдалося змонтувати образ у режимі CD-ROM',
       mountDesc:
         'У деяких системах необхідно витягнути віртуальний диск на віддаленому хості перед монтуванням файлу образа.',
+      unmountFailed: 'Не вдалося розмонтувати',
+      unmountDesc:
+        'У деяких системах вам потрібно вручну вийти з віддаленого хоста перед демонтуванням образу.',
       refresh: 'Оновіть список образів',
+      attention: 'Увага',
+      deleteConfirm: 'Ви впевнені, що хочете видалити це зображення?',
+      okBtn: 'Так',
+      cancelBtn: 'Ні',
       tips: {
         title: 'Як завантажити',
         usb1: "Під'єднайте NanoKVM до вашого комп'ютера через USB.",
@@ -146,12 +238,12 @@ const uk = {
       baudrate: 'Швидкість передачі',
       parity: 'Парність',
       parityNone: 'Без парності',
-      parityEven: 'Парний',
-      parityOdd: 'Непарний',
+      parityEven: 'Парна',
+      parityOdd: 'Непарна',
       flowControl: 'Керування потоком',
       flowControlNone: 'Без керування',
-      flowControlSoft: "М'яке керування",
-      flowControlHard: 'Жорстке керування',
+      flowControlSoft: 'Програмне',
+      flowControlHard: 'Апаратне',
       dataBits: 'Біти даних',
       stopBits: 'Стопові біти',
       confirm: 'Ок'
@@ -167,7 +259,18 @@ const uk = {
       title: 'Завантажувач образів',
       input: 'Введіть URL-адресу віддаленого образу',
       ok: 'Так',
-      disabled: 'Розділ даних /data у режимі лише для читання, тому ми не можемо завантажити образ'
+      disabled: 'Розділ даних /data у режимі лише для читання, тому ми не можемо завантажити образ',
+      uploadbox: 'Перетягніть файл сюди або натисніть, щоб вибрати',
+      inputfile: 'Будь ласка, введіть файл зображення',
+      NoISO: 'Немає ISO',
+      sha256: 'SHA-256 (необов’язково)',
+      sha256Placeholder: 'Введіть контрольну суму SHA-256 із 64 символів',
+      invalidSHA256: 'SHA-256 має бути шістнадцятковим рядком із 64 символів',
+      failed: 'Помилка завантаження',
+      success: 'Завантаження успішне',
+      checksumFailed: 'Помилка завантаження: перевірка SHA-256 не пройдена',
+      cancel: 'Скасувати',
+      cancelFailed: 'Не вдалося скасувати завантаження'
     },
     power: {
       title: 'Живлення',
@@ -184,6 +287,24 @@ const uk = {
     },
     settings: {
       title: 'Налаштування',
+      mcp: {
+        title: 'Служба MCP',
+        service: 'Віддалене керування MCP',
+        serviceDesc:
+          'Дозволити довіреним клієнтам MCP керувати клавіатурою та мишею і робити знімки екрана',
+        securityWarning:
+          'Будь-хто, хто має цей ключ API, може керувати віддаленим хостом і переглядати його екран. Використовуйте HTTPS і вмикайте службу лише в довірених мережах.',
+        endpoint: 'Кінцева точка',
+        apiKey: 'Ключ API',
+        regenerateConfirmTitle: 'Створити новий ключ API MCP?',
+        regenerateConfirmDesc: 'Поточний ключ негайно припинить працювати.',
+        enableConfirmTitle: 'Увімкнути зовнішнє керування MCP?',
+        enableConfirmDesc: 'Увімкнення MCP зупинить PicoClaw і закриє всі активні сеанси PicoClaw.',
+        failed: 'Операція MCP завершилася помилкою',
+        copyFailed: 'Не вдалося скопіювати. Скопіюйте вручну.',
+        okBtn: 'Підтвердити',
+        cancelBtn: 'Скасувати'
+      },
       about: {
         title: 'Про NanoKVM',
         information: 'Інформація',
@@ -207,10 +328,35 @@ const uk = {
         title: 'Зовнішній вигляд',
         display: 'Відображення',
         language: 'Мова',
-        menuBar: 'Панель меню',
-        menuBarDesc: 'Піктограми відображення в панелі меню',
+        languageDesc: 'Виберіть мову для інтерфейсу',
         webTitle: 'Веб-назва',
-        webTitleDesc: 'Налаштуйте назву веб-сторінки'
+        webTitleDesc: 'Налаштуйте назву веб-сторінки',
+        menuBar: {
+          title: 'Рядок меню',
+          mode: 'Режим відображення',
+          modeDesc: 'Відображення панелі меню на екрані',
+          modeOff: 'Вимк',
+          modeAuto: 'Автоматичне приховування',
+          modeAlways: 'Завжди видно',
+          keyboardLedStatus: 'Індикатори блокування клавіатури',
+          keyboardLedStatusDesc:
+            'Показувати стан Num Lock, Caps Lock і Scroll Lock віддаленого комп’ютера',
+          icons: 'Значки підменю',
+          iconsDesc: 'Відображення значків підменю на панелі меню'
+        }
+      },
+      keyboardLedStatus: {
+        groupLabel: 'Стан блокувань віддаленої клавіатури',
+        indicatorLabel: '{{label}}: {{state}}',
+        numLock: 'Num Lock',
+        numLockShort: 'Num',
+        capsLock: 'Caps Lock',
+        capsLockShort: 'Caps',
+        scrollLock: 'Scroll Lock',
+        scrollLockShort: 'Scr',
+        on: 'Увімкнено',
+        off: 'Вимкнено',
+        unknown: 'Невідомо'
       },
       device: {
         title: 'Пристрій',
@@ -227,25 +373,16 @@ const uk = {
           1800: '30 хв',
           3600: '1 година'
         },
-        wifi: {
-          title: 'Wi-Fi',
-          description: 'Налаштування Wi-Fi',
-          setBtn: 'Конфігурація'
-        },
         ssh: {
           description: 'Увімкніть віддалений доступ по SSH',
           tip: 'Перед ввімкненням встановіть надійний пароль (Обліковий запис - Зміна пароля)'
-        },
-        tls: {
-          description: 'Увімкнути протокол HTTPS',
-          tip: 'Будьте в курсі: Використання HTTPS може збільшити затримку, особливо в режимі відео MJPEG.'
         },
         advanced: 'Розширені налаштування',
         swap: {
           title: 'Swap (файл підкачки)',
           disable: 'Відключено',
           description: 'Встановіть розмір файлу свопу',
-          tip: "Увімкнення цієї опції може вивести з ладу SD карту!"
+          tip: 'Увімкнення цієї опції може вивести з ладу SD карту!'
         },
         mouseJiggler: {
           title: 'Налаштування пацюка',
@@ -256,24 +393,91 @@ const uk = {
         },
         mdns: {
           description: 'Увімкнути службу MDNS Discovery',
-          tip: "Вимкнути, якщо це не потрібно"
+          tip: 'Вимкнути, якщо це не потрібно'
+        },
+        hdmi: {
+          description: 'Увімкнути вихід HDMI/monitor',
+          idleTimeoutTitle: 'Час очікування неактивного захоплення',
+          idleTimeoutDescription: 'Зупинити захоплення HDMI, якщо активних глядачів немає протягом',
+          minutes: 'хв'
+        },
+        autostart: {
+          title: 'Налаштування сценаріїв автозапуску',
+          description: 'Керування сценаріями, які запускаються автоматично під час запуску системи',
+          new: 'Нове',
+          deleteConfirm: 'Ви впевнені, що хочете видалити цей файл?',
+          yes: 'Так',
+          no: 'Ні',
+          scriptName: 'Назва сценарію автозапуску',
+          scriptContent: 'Вміст сценарію автозапуску',
+          settings: 'Налаштування'
         },
         hidOnly: 'Режим лише HID',
+        hidOnlyDesc: 'Зупиніть емуляцію віртуальних пристроїв, зберігши лише базовий контроль HID',
         disk: 'Віртуальний диск',
         diskDesc: 'Монтувати віртуальний U-диск на віддаленому хості',
         network: 'Віртуальна мережа',
         networkDesc: 'Встановити віртуальну мережеву карту на віддаленому хості',
         reboot: 'Перезавантажити',
-        rebootDesc: 'Ви впевнені, що хочете перезавантажити Nanokvm?',
+        rebootDesc: 'Ви впевнені, що хочете перезавантажити NanoKVM?',
         okBtn: 'Так',
         cancelBtn: 'Ні'
+      },
+      network: {
+        title: 'Мережа',
+        wifi: {
+          title: 'Wi-Fi',
+          description: 'Налаштування Wi-Fi',
+          apMode: 'Режим AP увімкнено, підключіться до Wi-Fi, відсканувавши QR-код',
+          connect: 'Підключити Wi-Fi',
+          connectDesc1: 'Введіть SSID мережі та пароль',
+          connectDesc2: 'Введіть пароль, щоб підключитися до цієї мережі',
+          disconnect: 'Ви впевнені, що хочете відключити мережу?',
+          failed: 'Не вдалося підключитися, спробуйте ще раз.',
+          ssid: 'Назва',
+          password: 'Пароль',
+          joinBtn: 'Підключити',
+          confirmBtn: 'OK',
+          cancelBtn: 'Скасувати'
+        },
+        tls: {
+          description: 'Увімкнути протокол HTTPS',
+          tip: 'Будьте в курсі: Використання HTTPS може збільшити затримку, особливо в режимі відео MJPEG.'
+        },
+        dns: {
+          title: 'DNS',
+          description: 'Налаштування DNS-серверів для NanoKVM',
+          mode: 'Режим',
+          dhcp: 'DHCP',
+          manual: 'Вручну',
+          add: 'Додати DNS',
+          save: 'Зберегти',
+          invalid: 'Введіть дійсну IP-адресу',
+          noDhcp: 'Наразі DHCP DNS недоступний',
+          saved: 'Налаштування DNS збережено',
+          saveFailed: 'Не вдалося зберегти налаштування DNS',
+          unsaved: 'Незбережені зміни',
+          maxServers: 'Дозволено щонайбільше {{count}} DNS-серверів',
+          dnsServers: 'DNS-сервери',
+          dhcpServersDescription: 'DNS-сервери автоматично отримуються з DHCP',
+          manualServersDescription: 'DNS-сервери можна редагувати вручну',
+          networkDetails: 'Відомості про мережу',
+          interface: 'Інтерфейс',
+          ipAddress: 'IP-адреса',
+          subnetMask: 'Маска підмережі',
+          router: 'Маршрутизатор',
+          none: 'Немає'
+        }
       },
       tailscale: {
         title: 'Tailscale',
         memory: {
           title: "Оптимізація пам'яті",
-          tip: "Коли використання пам’яті перевищує обмеження, збирання сміття проводиться більш агресивно, щоб спробувати звільнити пам’ять. Рекомендується встановити 50 Мб, якщо використовувати Tailscale. Після зміни налаштувань потрібно перезавантажити Tailscale.",
-          disable: 'Відключено'
+          tip: 'Коли використання пам’яті перевищує обмеження, збирання сміття проводиться більш агресивно, щоб спробувати звільнити пам’ять. Рекомендується встановити 50 Мб, якщо використовувати Tailscale. Після зміни налаштувань потрібно перезавантажити Tailscale.'
+        },
+        swap: {
+          title: "Обмін пам'яттю",
+          tip: 'Якщо проблеми не зникають після ввімкнення оптимізації пам’яті, спробуйте ввімкнути підкачну пам’ять. Це встановлює розмір файлу підкачки 256MB за замовчуванням, який можна налаштувати в «Параметрах > Пристрій».'
         },
         restart: 'Ви впевнені, що бажаєте перезавантажити Tailscale?',
         stop: 'Ви впевнені, що бажаєте зупинити Tailscale?',
@@ -290,6 +494,8 @@ const uk = {
         upTailscale: 'Завантажте Tailscale до каталогу /usr/bin/ на NanoKVM',
         upTailscaled: 'Завантажте Tailscaled до каталогу /usr/sbin/ на NanoKVM',
         refresh: 'Оновіть поточну сторінку',
+        notRunning: 'Tailscale не працює. Щоб продовжити, запустіть його.',
+        run: 'Початок',
         notLogin:
           "Пристрій ще не прив'язаний. Будь ласка, увійдіть і прив'яжіть цей пристрій до вашого облікового запису.",
         urlPeriod: 'Ця URL-адреса дійсна протягом 10 хвилин',
@@ -302,6 +508,7 @@ const uk = {
         logout: 'Вийти',
         logoutDesc: 'Ви впевнені, що хочете вийти?',
         uninstall: 'Видалити Tailscale',
+        uninstallDesc: 'Ви впевнені, що хочете видалити Tailscale?',
         okBtn: 'Так',
         cancelBtn: 'Ні'
       },
@@ -317,7 +524,33 @@ const uk = {
         preview: 'О бета релізах',
         previewDesc: 'Отримайте ранній доступ до нових функцій та вдосконалень',
         previewTip:
-          'Будь ласка, майте на увазі, що випуски бета релізів можуть містити помилки або неповну функціональність!'
+          'Будь ласка, майте на увазі, що випуски бета релізів можуть містити помилки або неповну функціональність!',
+        customServer: {
+          title: 'Користувацький сервер оновлень',
+          desc: 'Перевіряйте наявність оновлень і завантажуйте їх із зазначеного сервера',
+          invalidUrl:
+            'Введіть коректну адресу каталогу HTTP- або HTTPS-сервера без рядка запиту, фрагмента чи файлу latest.json.',
+          loadFailed: 'Не вдалося завантажити конфігурацію сервера оновлень.',
+          saveFailed: 'Не вдалося зберегти конфігурацію сервера оновлень.',
+          saved: 'Конфігурацію сервера оновлень збережено.',
+          save: 'Зберегти',
+          confirmTitle: 'Використовувати користувацький сервер оновлень?',
+          confirmDesc:
+            'SHA-512 перевіряє лише відповідність пакета маніфесту, наданому цим сервером. Це не підтверджує, що пакет є офіційним випуском NanoKVM. Несправний або зловмисний сервер може вивести пристрій із ладу, спричинити втрату даних або поставити під загрозу безпеку системи.',
+          confirm: 'Усе одно використовувати',
+          previewDisabled:
+            'Попередні оновлення недоступні, доки ввімкнено користувацький сервер оновлень.'
+        },
+        offline: {
+          title: 'Оновлення в автономному режимі',
+          desc: 'Оновлення через локальний інсталяційний пакет',
+          upload: 'Завантажити',
+          checksumPlaceholder: "Контрольна сума SHA-256 (необов'язково)",
+          invalidChecksum: 'Контрольна сума SHA-256 має містити 64 шістнадцяткові символи.',
+          checksumMismatch: 'Не вдалося перевірити SHA-256. Пакунок може бути пошкоджений.',
+          invalidName: 'Недійсний формат імені файлу. Завантажте випуски з GitHub.',
+          updateFailed: 'Оновлення не вдалося. Будь ласка, спробуйте ще раз.'
+        }
       },
       account: {
         title: 'Обліковий запис',
@@ -330,8 +563,172 @@ const uk = {
         cancelBtn: 'Ні'
       }
     },
+    picoclaw: {
+      title: 'PicoClaw Помічник',
+      empty: 'Для початку відкрийте панель і запустіть завдання.',
+      inputPlaceholder: 'Опишіть, що ви хочете, щоб PicoClaw зробив',
+      newConversation: 'Нова розмова',
+      processing: 'Обробка...',
+      agent: {
+        defaultTitle: 'Загальний помічник',
+        defaultDescription: 'Загальна довідка щодо чату, пошуку та робочої області.',
+        kvmTitle: 'Віддалене керування',
+        kvmDescription: 'Керуйте віддаленим хостом через NanoKVM.',
+        switched: 'Роль агента змінена',
+        switchFailed: 'Не вдалося змінити роль агента'
+      },
+      send: 'Надіслати',
+      cancel: 'Скасувати',
+      status: {
+        connecting: 'Підключення до шлюзу...',
+        connected: 'Сеанс PicoClaw підключено',
+        disconnected: 'Сеанс PicoClaw відключено',
+        stopped: 'Запит на зупинку надіслано',
+        runtimeStarted: 'Runtime PicoClaw запущено',
+        runtimeStartFailed: 'Не вдалося запустити runtime PicoClaw',
+        runtimeStopped: 'Runtime PicoClaw зупинено',
+        runtimeStopFailed: 'Не вдалося зупинити runtime PicoClaw',
+        controlSwitchedToMCP: 'Керування перемкнено на зовнішню службу MCP'
+      },
+      connection: {
+        runtime: {
+          checking: 'Перевірка',
+          restoring: 'Restoring PicoClaw',
+          ready: 'Runtime готовий',
+          stopped: 'Runtime зупинено',
+          blockedByMCP: 'Зовнішнє керування MCP активне',
+          readyBlockedByMCP:
+            'The runtime is running, but external MCP currently controls device input.',
+          readyWithoutControl:
+            'The runtime is running. Grant PicoClaw device control before reconnecting.',
+          unavailable: 'Runtime недоступний',
+          configError: 'Помилка конфігурації'
+        },
+        transport: {
+          connecting: 'Підключення',
+          connected: 'Підключено',
+          disconnected: 'Disconnected',
+          reconnect: 'Reconnect',
+          reconnectDescription: 'Reconnect to the running PicoClaw session.',
+          reconnectBlocked: 'PicoClaw needs device control before reconnecting.'
+        },
+        run: {
+          idle: 'Бездіяльність',
+          busy: 'Зайнятий'
+        }
+      },
+      message: {
+        toolAction: 'Дія',
+        observation: 'Спостереження',
+        screenshot: 'Скріншот'
+      },
+      overlay: {
+        locked: 'PicoClaw керує пристроєм. Ручне введення призупинено.'
+      },
+      control: {
+        picoclaw: 'Керування пристроєм: PicoClaw',
+        picoclawDescription: 'PicoClaw can write keyboard and mouse input. Manual input may pause.',
+        mcp: 'Керування пристроєм: зовнішній MCP',
+        mcpDescription: 'External MCP can write to the device. PicoClaw will not take over input.',
+        off: 'Керування пристроєм: вимкнено',
+        offDescription:
+          'AI will not write keyboard or mouse input. Manual control remains available.',
+        transitioning: 'Device control: switching',
+        transitioningDescription: 'Device control is syncing. Please wait.',
+        grant: 'Надати керування',
+        release: 'Звільнити',
+        releasing: 'Releasing...',
+        switching: 'Switching...',
+        releasingLabel: 'Device control: releasing',
+        releasingDescription:
+          'Device control is being returned. PicoClaw has stopped current writes.',
+        granted: 'Керування PicoClaw надано',
+        released: 'Керування PicoClaw звільнено',
+        grantFailed: 'Не вдалося надати керування PicoClaw',
+        releaseFailed: 'Не вдалося звільнити керування PicoClaw',
+        grantConfirmTitle: 'Перемкнути керування пристроєм на PicoClaw?',
+        grantConfirmDesc: 'Записи пристрою зовнішнім MCP буде перервано.'
+      },
+      install: {
+        install: 'Встановити PicoClaw',
+        installing: 'Встановлення PicoClaw',
+        success: 'PicoClaw успішно встановлено',
+        failed: 'Не вдалося встановити PicoClaw',
+        uninstalling: 'Видалення runtime...',
+        uninstalled: 'Runtime успішно видалено.',
+        uninstallFailed: 'Помилка видалення.',
+        requiredTitle: 'PicoClaw не встановлено',
+        requiredDescription: 'Встановіть PicoClaw перед запуском runtime PicoClaw.',
+        progressDescription: 'PicoClaw завантажується та встановлюється.',
+        stages: {
+          preparing: 'Підготовка',
+          downloading: 'Завантаження',
+          extracting: 'Розпакування',
+          verifying: 'Перевірка',
+          installing: 'Встановлення',
+          installed: 'Встановлено',
+          install_timeout: 'Час очікування минув',
+          install_failed: 'Помилка'
+        }
+      },
+      model: {
+        requiredTitle: 'Потрібна конфігурація моделі',
+        requiredDescription: 'Налаштуйте модель PicoClaw перед використанням чату PicoClaw.',
+        docsTitle: 'Керівництво з налаштування',
+        docsDesc: 'Підтримувані моделі та протоколи',
+        menuLabel: 'Налаштувати модель',
+        modelIdentifier: 'Ідентифікатор моделі',
+        modelIdentifierPlaceholder: 'openai/gpt-5.4',
+        apiBase: 'API Base URL',
+        apiBasePlaceholder: 'https://api.example.com/v1',
+        apiKey: 'API-ключ',
+        apiKeyPlaceholder: 'Введіть API-ключ моделі',
+        save: 'Зберегти',
+        saving: 'Збереження',
+        saved: 'Конфігурацію моделі збережено',
+        saveFailed: 'Не вдалося зберегти конфігурацію моделі',
+        invalid: 'Потрібні ідентифікатор моделі, API Base URL і API-ключ'
+      },
+      uninstall: {
+        menuLabel: 'Видалити',
+        confirmTitle: 'Видалити PicoClaw',
+        confirmContent:
+          'Ви впевнені, що хочете видалити PicoClaw? Це призведе до видалення виконуваного файлу та всіх конфігураційних файлів.',
+        confirmOk: 'Видалити',
+        confirmCancel: 'Скасувати'
+      },
+      history: {
+        title: 'Історія',
+        loading: 'Завантаження сеансів...',
+        emptyTitle: 'Історії ще немає',
+        emptyDescription: 'Попередні PicoClaw сесії відображатимуться тут.',
+        loadFailed: 'Не вдалося завантажити історію сеансу',
+        deleteFailed: 'Не вдалося видалити сеанс',
+        deleteConfirmTitle: 'Видалити сеанс',
+        deleteConfirmContent: 'Ви впевнені, що хочете видалити "{{title}}"?',
+        deleteConfirmOk: 'Видалити',
+        deleteConfirmCancel: 'Скасувати',
+        messageCount_one: '{{count}} повідомлення',
+        messageCount_other: '{{count}} повідомлень',
+        messageCount: '{{count}} повідомлень'
+      },
+      config: {
+        startRuntime: 'Запустити PicoClaw',
+        stopRuntime: 'Зупинити PicoClaw'
+      },
+      start: {
+        enableConfirmTitle: 'Перемкнути керування на PicoClaw?',
+        enableConfirmDesc: 'Запуск PicoClaw вимкне зовнішню службу MCP.',
+        enableConfirmOk: 'Запустити PicoClaw',
+        enableConfirmCancel: 'Скасувати',
+        title: 'Запустити PicoClaw',
+        description: 'Запустіть runtime, щоб почати використовувати помічника PicoClaw.',
+        switchFromMCP: 'Switch to PicoClaw and start',
+        takeoverAndStart: 'Take over and start'
+      }
+    },
     error: {
-      title: "Ми зіткнулися з проблемою",
+      title: 'Ми зіткнулися з проблемою',
       refresh: 'Оновити'
     },
     fullscreen: {

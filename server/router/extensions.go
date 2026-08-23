@@ -1,6 +1,7 @@
 package router
 
 import (
+	"NanoKVM-Server/authn"
 	"NanoKVM-Server/middleware"
 	"NanoKVM-Server/service/extensions/netbird"
 	"NanoKVM-Server/service/extensions/tailscale"
@@ -10,7 +11,10 @@ import (
 )
 
 func extensionsRouter(r *gin.Engine) {
-	api := r.Group("/api/extensions").Use(middleware.CheckToken())
+	api := r.Group("/api/extensions").Use(
+		middleware.CheckToken(),
+		middleware.RequireRole(authn.RoleAdmin),
+	)
 
 	ts := tailscale.NewService()
 

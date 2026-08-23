@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import * as api from '@/api/extensions/netbird.ts';
 
 import { ErrorHelp } from './error-help.tsx';
-
 import { Status } from './types.ts';
 
 type DeviceProps = {

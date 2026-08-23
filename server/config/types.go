@@ -1,14 +1,16 @@
 package config
 
 type Config struct {
-	Proto          string `yaml:"proto"`
-	Port           Port   `yaml:"port"`
-	Cert           Cert   `yaml:"cert"`
-	Logger         Logger `yaml:"logger"`
-	Authentication string `yaml:"authentication"`
-	JWT            JWT    `yaml:"jwt"`
-	Stun           string `yaml:"stun"`
-	Turn           Turn   `yaml:"turn"`
+	Proto          string   `yaml:"proto"`
+	Host           string   `yaml:"host"`
+	Port           Port     `yaml:"port"`
+	Cert           Cert     `yaml:"cert"`
+	Logger         Logger   `yaml:"logger"`
+	Authentication string   `yaml:"authentication"`
+	JWT            JWT      `yaml:"jwt"`
+	Stun           string   `yaml:"stun"`
+	Turn           Turn     `yaml:"turn"`
+	Security       Security `yaml:"security"`
 
 	Hardware Hardware `yaml:"-"`
 }
@@ -38,6 +40,11 @@ type Turn struct {
 	TurnAddr string `yaml:"turnAddr"`
 	TurnUser string `yaml:"turnUser"`
 	TurnCred string `yaml:"turnCred"`
+}
+
+type Security struct {
+	LoginLockoutDuration int `yaml:"loginLockoutDuration"`
+	LoginMaxFailures     int `yaml:"loginMaxFailures"`
 }
 
 type Hardware struct {

@@ -14,8 +14,11 @@ const tr = {
       placeholderPassword2: 'Şifrenizi tekrar deneyiniz',
       noEmptyUsername: 'Kullanıcı adı gereklidir',
       noEmptyPassword: 'Şifre gereklidir',
-      noAccount: 'Kullanıcı verileri alınırken hata yaşandı, lütfen sayfayı yenileyiniz ya da şifrenizi sıfırlayınız',
+      noAccount:
+        'Kullanıcı verileri alınırken hata yaşandı, lütfen sayfayı yenileyiniz ya da şifrenizi sıfırlayınız',
       invalidUser: 'Yanlış kullanıcı adı ya da şifre',
+      locked: 'Çok fazla giriş yapıldı, lütfen daha sonra tekrar deneyin',
+      globalLocked: 'Sistem koruma altında, lütfen daha sonra tekrar deneyin',
       error: 'Beklenmedik bir hata',
       changePassword: 'Şifrenizi değiştiriniz',
       changePasswordDesc: 'Güvenlik sebebiyle lütfen şifrenizi değiştiriniz!',
@@ -35,25 +38,36 @@ const tr = {
         change1: 'Bu işlem şu şifreleri değiştiricektir:',
         change2: 'Arayüz giriş şifresi',
         change3: 'Sistem yöneticisi şifresi (Güvenli Kabuk Bağlantısı (SSH) giriş şifresi)',
-        change4: 'Şifreleri sıfırlamak için NanoKVM üzerinde bulunan BOOT tuşuna 10 saniye boyunca basılı tutun.'
+        change4:
+          'Şifreleri sıfırlamak için NanoKVM üzerinde bulunan BOOT tuşuna 10 saniye boyunca basılı tutun.'
       }
     },
     wifi: {
       title: 'Wi-Fi',
       description: 'NanoKVM için Wi-Fi ayarlarını ayarlayın',
-      success: 'NanoKVM\'in bağlantı durumunu kontrol edin ve yeni IP adresini ziyaret edin.',
+      success: "NanoKVM'in bağlantı durumunu kontrol edin ve yeni IP adresini ziyaret edin.",
       failed: 'İşlem başarısız oldu, lütfen tekrar deneyiniz.',
+      invalidMode:
+        'Geçerli mod ağ kurulumunu desteklemiyor. Lütfen cihazınıza gidin ve Wi-Fi yapılandırma modunu etkinleştirin.',
       confirmBtn: 'Tamam',
-      finishBtn: 'Bitti'
+      finishBtn: 'Bitti',
+      ap: {
+        authTitle: 'Kimlik Doğrulaması Gerekli',
+        authDescription: 'Devam etmek için lütfen AP şifresini girin',
+        authFailed: 'Geçersiz AP şifresi',
+        passPlaceholder: 'AP şifre',
+        verifyBtn: 'Doğrula'
+      }
     },
     screen: {
+      scale: 'Ölçek',
       title: 'Ekran',
       video: 'Görüntü modu',
       videoDirectTips: 'kullanmak için "Ayarlar > Cihaz" HTTPS aktif edin',
       resolution: 'Çözünürlük',
       auto: 'Otomatik',
       autoTips:
-        "Belirli çözünürlüklerde ekran yırtılması veya fare kayması meydana gelebilir. Bu durumda uzak ana bilgisayarın çözünürlüğünü ayarlamayı ya da otomatik modu devre dışı bırakmayı deneyin.",
+        'Belirli çözünürlüklerde ekran yırtılması veya fare kayması meydana gelebilir. Bu durumda uzak ana bilgisayarın çözünürlüğünü ayarlamayı ya da otomatik modu devre dışı bırakmayı deneyin.',
       fps: 'Saniyedeki kare sayısı',
       customizeFps: 'Kişiselleştir',
       quality: 'Kalite',
@@ -63,8 +77,27 @@ const tr = {
       qualityLow: 'Düşük',
       frameDetect: 'Kareleri algıla',
       frameDetectTip:
-        "Gönderilen kareler arasındaki farkı hesaplar. Uzak ana bilgisayardan gönderilen yayında bir değişiklik yoksa görüntü yayınını durdurur.",
-      resetHdmi: 'HDMI sıfırla'
+        'Gönderilen kareler arasındaki farkı hesaplar. Uzak ana bilgisayardan gönderilen yayında bir değişiklik yoksa görüntü yayınını durdurur.',
+      resetHdmi: 'HDMI sıfırla',
+      mixedH264: {
+        title: 'H.264 akış çakışması',
+        description:
+          'H.264 Direct ve H.264 WebRTC aynı anda kullanılıyor. Bu, ekran yırtılmasına veya bozuk videoya neden olabilir. Lütfen yalnızca bir H.264 modu kullanın.'
+      },
+      webrtcConnectionFailed: {
+        title: 'WebRTC bağlantısı başarısız',
+        description: 'Ağ bağlantısını kontrol edin veya video modunu değiştirin.'
+      },
+      captureStatus: {
+        hdmiError: 'HDMI ekran hatası',
+        unsupportedResolution: 'Geçerli çözünürlük desteklenmiyor',
+        retrieving: 'Ekran alınıyor...',
+        changingResolution: 'Çözünürlük değiştiriliyor...',
+        updateFailed: 'Ekran şu anda güncellenemiyor',
+        videoError: 'Video görüntüleme hatası',
+        noHdmi: 'HDMI sinyali algılanmadı',
+        unavailable: 'Ekran şu anda gösterilemiyor'
+      }
     },
     keyboard: {
       title: 'Klavye',
@@ -73,7 +106,51 @@ const tr = {
       placeholder: 'Girdi',
       submit: 'Gönder',
       virtual: 'Klavye',
-      ctrlaltdel: 'Ctrl+Alt+Del'
+      readClipboard: 'Panodan Oku',
+      clipboardPermissionDenied:
+        'Pano izni reddedildi. Lütfen tarayıcınızda pano erişimine izin verin.',
+      clipboardReadError: 'Pano okunamadı',
+      dropdownEnglish: 'İngilizce',
+      dropdownGerman: 'Almanca',
+      dropdownFrench: 'Fransızca',
+      dropdownRussian: 'Rusça',
+      shortcut: {
+        title: 'Kısayollar',
+        custom: 'Özel',
+        capture: 'Kısayolu yakalamak için burayı tıklayın',
+        clear: 'Temizle',
+        save: 'Kaydet',
+        captureTips:
+          'Windows tuşu gibi sistem düzeyi tuşları yakalamak için tam ekran izni gerekir.',
+        enterFullScreen: 'Tam ekran moduna geçiş yapın.'
+      },
+      leaderKey: {
+        title: 'Leader Tuşu',
+        desc: 'Tarayıcı kısıtlamalarını atlayın ve sistem kısayollarını doğrudan uzak ana bilgisayara gönderin.',
+        howToUse: 'Nasıl Kullanılır',
+        simultaneous: {
+          title: 'Eşzamanlı Mod',
+          desc1: 'Leader tuşunu basılı tutun, ardından kısayola basın.',
+          desc2: 'Sezgisel, ancak sistem kısayollarıyla çakışabilir.'
+        },
+        sequential: {
+          title: 'Sıralı Mod',
+          desc1: 'Leader tuşuna basın → kısayola sırayla basın → Leader tuşuna tekrar basın.',
+          desc2: 'Daha fazla adım gerektirir ancak sistem çakışmalarını tamamen önler.'
+        },
+        enable: 'Leader tuşunu etkinleştir',
+        tip: 'Leader tuşu olarak atandığında bu tuş yalnızca kısayol tetikleyici olarak çalışır ve varsayılan davranışını kaybeder.',
+        placeholder: 'Leader tuşuna basın',
+        shiftRight: 'Sağ Shift',
+        ctrlRight: 'Sağ Ctrl',
+        metaRight: 'Sağ Win',
+        submit: 'Gönder',
+        recorder: {
+          rec: 'KAYIT',
+          activate: 'Tuşları etkinleştir',
+          input: 'Lütfen kısayola basın...'
+        }
+      }
     },
     mouse: {
       title: 'Fare',
@@ -87,44 +164,54 @@ const tr = {
       mode: 'Fare modu',
       absolute: 'Mutlak fare modu',
       relative: 'Bağıl fare modu',
-      speed: 'Tekerlek hızı',
+      direction: 'Kaydırma tekerleği yönü',
+      scrollUp: 'Yukarı kaydır',
+      scrollDown: 'Aşağı kaydır',
+      speed: 'Kaydırma tekerleği hızı',
       fast: 'Hızlı',
       slow: 'Yavaş',
       requestPointer: 'Bağıl fare modu kullanılıyor. Masaüstüne tıklayarak imleç elde edinin.',
-      resetHid: 'İnsan Arayüz Cihazı\'nı sıfırlayın',
+      resetHid: 'HID’yi sıfırla',
       hidOnly: {
-        title: 'Sadece İnsan Arayüz Cihazı modu',
-        desc: "Eğer fare ve klavye çalışmayı bırakırsa ve İnsan Arayüz Cihazı'nı sıfırlamak sorunu çözmezse bunun sebebi cihazınız ve NanoKVM arasındaki bir uyumluluk sorunu olabilir. Uyumluluğu arttırmak için Sadece İnsan Arayüz Cihazı modunu kullanın.",
-        tip1: 'Sadece İnsan Arayüz Cihazı modunu aktifleştirmek, sanal U-disk’i ve sanal ağı devre dışı bırakacaktır.',
-        tip2: 'Sadece İnsan Arayüz Cihazı modunda disk imajı bağlama özelliği devre dışı bırakılır',
+        title: 'Yalnızca HID modu',
+        desc: 'Fare ve klavye yanıt vermeyi durdurursa ve HID sıfırlama yardımcı olmazsa, NanoKVM ile cihaz arasında bir uyumluluk sorunu olabilir. Daha iyi uyumluluk için yalnızca HID modunu etkinleştirmeyi deneyin.',
+        tip1: 'Yalnızca HID modunu etkinleştirmek sanal U-disk’i ve sanal ağı ayırır',
+        tip2: 'Yalnızca HID modunda imaj bağlama devre dışıdır',
         tip3: 'NanoKVM mod değişiminden sonra kendiliğinden yeniden başlatılacaktır',
-        enable: 'Sadece İnsan Arayüz Cihazı modunu aktifleştir',
-        disable: 'Sadece İnsan Arayüz Cihazı modunu devre dışı bırak'
+        enable: 'Yalnızca HID modunu etkinleştir',
+        disable: 'Yalnızca HID modunu devre dışı bırak'
       }
     },
     image: {
       title: 'Disk İmajları',
       loading: 'Yükleniyor...',
       empty: 'Hiçbir şey bulunamadı',
-      cdrom: 'Disk imajını CD-ROM modunda bağlayın.',
+      mountMode: 'Montaj modu',
       mountFailed: 'Bağlantı başarısız oldu',
       mountDesc:
-        "Bazı sistemlerde, disk imajını bağlamadan önce uzak ana bilgisayardaki sanal diski çıkarmak gerekir.",
+        'Bazı sistemlerde, disk imajını bağlamadan önce uzak ana bilgisayardaki sanal diski çıkarmak gerekir.',
+      unmountFailed: 'Bağlantıyı kesme işlemi başarısız oldu',
+      unmountDesc:
+        'Bazı sistemlerde, görüntünün bağlantısını kesmeden önce uzak ana bilgisayardan manuel olarak çıkarmanız gerekir.',
       refresh: 'Disk imajı listesini yenile',
+      attention: 'Dikkat',
+      deleteConfirm: 'Bu resmi silmek istediğinizden emin misiniz?',
+      okBtn: 'Evet',
+      cancelBtn: 'Hayır',
       tips: {
         title: 'Nasıl yüklenir',
-        usb1: 'NanoKVM\'i bilgisayarınıza USB ile bağlayın.',
+        usb1: "NanoKVM'i bilgisayarınıza USB ile bağlayın.",
         usb2: 'Sanal diskin bağlı olduğundan emin olun (Ayarlar - Sanal Disk).',
         usb3: 'Sanal diski bilgisayarınızda açın ve disk imajı dosyanızı sanal diskin kök dizinine kopyalayın.',
         scp1: 'NanoKVM ve bilgisayarınızın aynı yerel ağda bulunduğundan emin olun.',
-        scp2: 'Bilgisayarınızda uçbirimi açın ve disk imajı dosyanını SCP komudunu kullanarak NanoKVM\'in /data dizinine yükleyin.',
+        scp2: "Bilgisayarınızda uçbirimi açın ve disk imajı dosyanını SCP komudunu kullanarak NanoKVM'in /data dizinine yükleyin.",
         scp3: 'Örnek: scp senin-disk-imajı-dizinin root@senin-nanokvm-ip:/data',
         tfCard: 'micro SD kart',
         tf1: 'Bu yöntem Linux sistemlerde desteklenmektedir.',
-        tf2: 'NanoKVM\'den micro SD kartı çıkartın(TAM sürüm için öncelikle kutuyu sökün).',
+        tf2: "NanoKVM'den micro SD kartı çıkartın(TAM sürüm için öncelikle kutuyu sökün).",
         tf3: 'micro SD kartı kart okuyucusuna takın ve bilgisayarınıza bağlayın.',
         tf4: 'Disk imajı dosyanını micro SD kartın /data dizinine kopyalayın.',
-        tf5: 'micro SD kartı NanoKVM\'e geri yerleştirin.'
+        tf5: "micro SD kartı NanoKVM'e geri yerleştirin."
       }
     },
     script: {
@@ -144,7 +231,7 @@ const tr = {
       title: 'Uçbirim',
       nanokvm: 'NanoKVM Uçbirimi',
       serial: 'Serial Port Uçbirimi',
-      serialPort: 'Serial Port',
+      serialPort: 'Seri port',
       serialPortPlaceholder: 'Lütfen serial portunu giriniz',
       baudrate: 'Baud hızı',
       parity: 'Eşlik kontrolü',
@@ -168,9 +255,20 @@ const tr = {
     },
     download: {
       title: 'Disk İmajı İndirici',
-      input: 'Uzaktaki disk imajı adresini girin',
+      input: 'Uzak imaj URL’sini girin',
       ok: 'Tamam',
-      disabled: '/data bölüntüsü salt okunur modda, disk imajı indirilemiyor.'
+      disabled: '/data bölüntüsü salt okunur modda, disk imajı indirilemiyor.',
+      uploadbox: 'Dosyayı buraya bırakın veya seçmek için tıklayın',
+      inputfile: 'Lütfen resim dosyasını giriniz',
+      NoISO: 'ISO yok',
+      sha256: 'SHA-256 (isteğe bağlı)',
+      sha256Placeholder: '64 karakterlik SHA-256 sağlama toplamını girin',
+      invalidSHA256: 'SHA-256, 64 karakterlik bir onaltılık dize olmalıdır',
+      failed: 'İndirme başarısız',
+      success: 'İndirme başarılı',
+      checksumFailed: 'İndirme başarısız: SHA-256 doğrulaması başarısız',
+      cancel: 'İptal',
+      cancelFailed: 'İndirme iptal edilemedi'
     },
     power: {
       title: 'Güç',
@@ -187,6 +285,25 @@ const tr = {
     },
     settings: {
       title: 'Ayarlar',
+      mcp: {
+        title: 'MCP Hizmeti',
+        service: 'MCP uzaktan kumanda',
+        serviceDesc:
+          'Güvenilir MCP istemcilerinin klavye ve fareyi kontrol etmesine ve ekran görüntüsü almasına izin verin',
+        securityWarning:
+          'Bu API anahtarına sahip herkes uzak ana bilgisayarı kontrol edebilir ve ekranını görebilir. HTTPS kullanın ve hizmeti yalnızca güvenilir ağlarda etkinleştirin.',
+        endpoint: 'Uç nokta',
+        apiKey: 'API anahtarı',
+        regenerateConfirmTitle: 'MCP API anahtarı yeniden oluşturulsun mu?',
+        regenerateConfirmDesc: 'Geçerli anahtar hemen çalışmayı durduracaktır.',
+        enableConfirmTitle: 'Harici MCP kontrolü etkinleştirilsin mi?',
+        enableConfirmDesc:
+          'MCP etkinleştirildiğinde PicoClaw durdurulur ve tüm etkin PicoClaw oturumları kapatılır.',
+        failed: 'MCP işlemi başarısız oldu',
+        copyFailed: 'Kopyalama başarısız. Elle kopyalayın.',
+        okBtn: 'Onayla',
+        cancelBtn: 'İptal'
+      },
       about: {
         title: 'NanoKVM Hakkında',
         information: 'Bilgi',
@@ -198,7 +315,7 @@ const tr = {
         imageTip: 'NanoKVM sistem imajı sürümü',
         deviceKey: 'Cihaz Anahtarı',
         community: 'Topluluk',
-        hostname: 'Hostname',
+        hostname: 'Ana makine adı',
         hostnameUpdated: 'Hostname güncellendi. Uygulamak için yeniden başlatın.',
         ipType: {
           Wired: 'Kablolu bağlantı',
@@ -210,10 +327,35 @@ const tr = {
         title: 'Görünüm',
         display: 'Ekran',
         language: 'Dil',
-        menuBar: 'Menü çubuğu',
-        menuBarDesc: 'Menü çubuğunda ikonları göster',
+        languageDesc: 'Arayüz için dili seçin',
         webTitle: 'Site başlığı',
-        webTitleDesc: 'Görünen site başlığını güncelleyin'
+        webTitleDesc: 'Görünen site başlığını güncelleyin',
+        menuBar: {
+          title: 'Menü Çubuğu',
+          mode: 'Görüntüleme Modu',
+          modeDesc: 'Ekranda menü çubuğunu görüntüle',
+          modeOff: 'Kapalı',
+          modeAuto: 'Otomatik gizle',
+          modeAlways: 'Her zaman görünür',
+          keyboardLedStatus: 'Klavye kilidi göstergeleri',
+          keyboardLedStatusDesc:
+            'Uzak bilgisayarın Num Lock, Caps Lock ve Scroll Lock durumunu göster',
+          icons: 'Alt Menü Simgeleri',
+          iconsDesc: 'Menü çubuğunda alt menü simgelerini görüntüle'
+        }
+      },
+      keyboardLedStatus: {
+        groupLabel: 'Uzak klavye kilidi durumu',
+        indicatorLabel: '{{label}}: {{state}}',
+        numLock: 'Num Lock',
+        numLockShort: 'Num',
+        capsLock: 'Caps Lock',
+        capsLockShort: 'Caps',
+        scrollLock: 'Scroll Lock',
+        scrollLockShort: 'Scr',
+        on: 'Açık',
+        off: 'Kapalı',
+        unknown: 'Bilinmiyor'
       },
       device: {
         title: 'Cihaz',
@@ -230,25 +372,16 @@ const tr = {
           1800: '30 dakika',
           3600: '1 saat'
         },
-        wifi: {
-          title: 'Wi-Fi',
-          description: 'Wi-Fi ayarlayın',
-          setBtn: 'Ayarla'
-        },
         ssh: {
           description: 'Güvenli Kabuk Bağlantısı (SSH) aktif et',
           tip: 'Aktifleştirmeden önce güçlü bir şifreye sahip olduğunuzdan emin olun (Hesap - Şifremi Değiştir)'
-        },
-        tls: {
-          description: 'HTTPS protokolünü etkinleştir',
-          tip: 'HTTPS protokolü bağlantıda gecikmeye sebep olabilir, özellikle MJPEG görüntü modu ile.'
         },
         advanced: 'Gelişmiş Ayarlar',
         swap: {
           title: 'Swap',
           disable: 'Aktifleştir',
           description: 'Swap dosyasının boyutunu belirle',
-          tip: "Bu özelliği aktifleştirmek micro SD kartınızın ömrünü kısaltabilir!"
+          tip: 'Bu özelliği aktifleştirmek micro SD kartınızın ömrünü kısaltabilir!'
         },
         mouseJiggler: {
           title: 'Fare Oynatıcı',
@@ -259,30 +392,97 @@ const tr = {
         },
         mdns: {
           description: 'mDNS keşif hizmetini etkinleştir',
-          tip: "Kullanmıyorsanız devre dışı bırakabilirsiniz"
+          tip: 'Kullanmıyorsanız devre dışı bırakabilirsiniz'
         },
         hdmi: {
-          description: 'HDMI/Momitör çıktısını aktifleştir'
+          description: 'HDMI/Momitör çıktısını aktifleştir',
+          idleTimeoutTitle: 'Etkin olmayan yakalama zaman aşımı',
+          idleTimeoutDescription:
+            'Etkin görüntüleyici olmadığında HDMI yakalamayı şu süre sonunda durdur:',
+          minutes: 'dk'
         },
-        hidOnly: 'Sadece İnsan Arayüz Cihazı modu',
+        autostart: {
+          title: 'Otomatik Başlatılan Komut Dosyaları Ayarları',
+          description:
+            'Sistem başlangıcında otomatik olarak çalıştırılan komut dosyalarını yönetme',
+          new: 'Yeni',
+          deleteConfirm: 'Bu dosyayı silmek istediğinden emin misin?',
+          yes: 'Evet',
+          no: 'Hayır',
+          scriptName: 'Otomatik Başlatma Komut Dosyası Adı',
+          scriptContent: 'Otomatik Başlatılan Komut Dosyası İçeriği',
+          settings: 'Ayarlar'
+        },
+        hidOnly: 'Yalnızca HID modu',
+        hidOnlyDesc:
+          'Yalnızca temel HID kontrolünü koruyarak sanal aygıtları taklit etmeyi bırakın',
         disk: 'Sanal Disk',
-        diskDesc: 'Sanal U-disk\'i uzak ana bilgisayara bağla',
+        diskDesc: "Sanal U-disk'i uzak ana bilgisayara bağla",
         network: 'Sanal Ağ',
         networkDesc: 'Sanal ağ kartını uzak ana bilgisayara bağla',
         reboot: 'Yeniden Başlat',
-        rebootDesc: 'NanoKVM\'i yeniden başlatmak istediğinizden emin misiniz?',
+        rebootDesc: "NanoKVM'i yeniden başlatmak istediğinizden emin misiniz?",
         okBtn: 'Evet',
         cancelBtn: 'Hayır'
+      },
+      network: {
+        title: 'Ağ',
+        wifi: {
+          title: 'Wi-Fi',
+          description: 'Wi-Fi ayarlayın',
+          apMode: "AP modu etkin, QR kodu tarayarak Wi-Fi'ye bağlanın",
+          connect: "Wi-Fi'ye bağlan",
+          connectDesc1: "Lütfen ağ SSID'sini ve parolayı girin",
+          connectDesc2: 'Bu ağa katılmak için parolayı girin',
+          disconnect: 'Ağ bağlantısını kesmek istediğinizden emin misiniz?',
+          failed: 'Bağlantı başarısız, lütfen tekrar deneyin.',
+          ssid: 'Ad',
+          password: 'Parola',
+          joinBtn: 'Katıl',
+          confirmBtn: 'Tamam',
+          cancelBtn: 'İptal'
+        },
+        tls: {
+          description: 'HTTPS protokolünü etkinleştir',
+          tip: 'HTTPS protokolü bağlantıda gecikmeye sebep olabilir, özellikle MJPEG görüntü modu ile.'
+        },
+        dns: {
+          title: 'DNS',
+          description: 'NanoKVM için DNS sunucularını yapılandır',
+          mode: 'Mod',
+          dhcp: 'DHCP',
+          manual: 'Manuel',
+          add: 'DNS ekle',
+          save: 'Kaydet',
+          invalid: 'Geçerli bir IP adresi girin',
+          noDhcp: 'Şu anda DHCP DNS mevcut değil',
+          saved: 'DNS ayarları kaydedildi',
+          saveFailed: 'DNS ayarları kaydedilemedi',
+          unsaved: 'Kaydedilmemiş değişiklikler',
+          maxServers: 'En fazla {{count}} DNS sunucusuna izin verilir',
+          dnsServers: 'DNS Sunucuları',
+          dhcpServersDescription: "DNS sunucuları DHCP'den otomatik olarak alınır",
+          manualServersDescription: 'DNS sunucuları manuel olarak düzenlenebilir',
+          networkDetails: 'Ağ Ayrıntıları',
+          interface: 'Arayüz',
+          ipAddress: 'IP Adresi',
+          subnetMask: 'Alt Ağ Maskesi',
+          router: 'Yönlendirici',
+          none: 'Yok'
+        }
       },
       tailscale: {
         title: 'Tailscale',
         memory: {
           title: 'Bellek optimizasyonu',
-          tip: "Bellek kullanımı sınırı aştığında, belleği boşaltmak amacıyla çöp toplama işlemi daha agresif bir şekilde gerçekleştirilir. Tailscale kullanıyorsanız bu değerin 75 MB olarak ayarlanması önerilir. Değişikliğin etkili olabilmesi için Tailscale'in yeniden başlatılması gerekir.",
-          disable: 'Devre dışı bırak'
+          tip: "Bellek kullanımı sınırı aştığında, belleği boşaltmak amacıyla çöp toplama işlemi daha agresif bir şekilde gerçekleştirilir. Tailscale kullanıyorsanız bu değerin 75 MB olarak ayarlanması önerilir. Değişikliğin etkili olabilmesi için Tailscale'in yeniden başlatılması gerekir."
         },
-        restart: 'Tailscale\'i yeniden başlat?',
-        stop: 'Tailscale\'i durdur?',
+        swap: {
+          title: 'Belleği değiştir',
+          tip: 'Bellek optimizasyonunu etkinleştirdikten sonra sorunlar devam ederse, takas belleğini etkinleştirmeyi deneyin. Bu, takas dosyası boyutunu varsayılan olarak 256MB olarak ayarlar ve bu, "Ayarlar > Cihaz" bölümünden ayarlanabilir.'
+        },
+        restart: "Tailscale'i yeniden başlat?",
+        stop: "Tailscale'i durdur?",
         stopDesc: 'Tailscale oturumundan çıkış yap ve başlangıçta çalışmasını devre dışı bırak.',
         loading: 'Yükleniyor...',
         notInstall: 'Tailscale bulunamadı! Lütfen indirin.',
@@ -293,21 +493,23 @@ const tr = {
         download: 'İndir',
         package: 'yükleme paketi',
         unzip: 'sıkışmış dosyayı açın',
-        upTailscale: 'tailscale dosyasını NanoKVM\'in /usr/bin dizinine yükleyin',
-        upTailscaled: 'tailscaled dosyasını NanoKVM\'in /usr/sbin dizinine yükleyin',
+        upTailscale: "tailscale dosyasını NanoKVM'in /usr/bin dizinine yükleyin",
+        upTailscaled: "tailscaled dosyasını NanoKVM'in /usr/sbin dizinine yükleyin",
         refresh: 'İçinde bulunduğunuz sayfayı yenileyin',
-        notLogin:
-          'Cihaz bağlı değil. Lütfen giriş yapıp cihazınızı hesabınıza bağlayın.',
+        notRunning: 'Tailscale çalışmıyor. Devam etmek için lütfen başlatın.',
+        run: 'Başlat',
+        notLogin: 'Cihaz bağlı değil. Lütfen giriş yapıp cihazınızı hesabınıza bağlayın.',
         urlPeriod: 'Adres sadece 10 ndakika boyunca geçerlidir',
         login: 'Giriş yap',
         loginSuccess: 'Giriş yapıldı',
-        enable: 'Tailscale\'i etkinleştir',
+        enable: "Tailscale'i etkinleştir",
         deviceName: 'Cihaz Adı',
         deviceIP: 'Cihaz IP adresi',
         account: 'Hesap',
         logout: 'Çıkış yap',
         logoutDesc: 'Çıkış yapmak istediğinizden emin misiniz?',
-        uninstall: 'Tailscale\'i kaldır',
+        uninstall: "Tailscale'i kaldır",
+        uninstallDesc: "Tailscale'i kaldırmak istediğinizden emin misiniz?",
         okBtn: 'Evet',
         cancelBtn: 'Hayır'
       },
@@ -323,7 +525,33 @@ const tr = {
         preview: 'Ön İzleme Güncellemeleri',
         previewDesc: 'En son geliştirmelere ve özelliklere erken erişin',
         previewTip:
-          'Ön izleme güncellemelerinin tamamlanmamış olduğunu ve sorunlara sebep olabileceğini unutmayın!'
+          'Ön izleme güncellemelerinin tamamlanmamış olduğunu ve sorunlara sebep olabileceğini unutmayın!',
+        customServer: {
+          title: 'Özel güncelleme sunucusu',
+          desc: 'Belirtilen sunucudaki çevrimiçi güncellemeleri denetleyin ve indirin',
+          invalidUrl:
+            'Sorgu, parça tanımlayıcısı veya latest.json içermeyen geçerli bir HTTP ya da HTTPS sunucu dizini girin.',
+          loadFailed: 'Güncelleme sunucusu yapılandırması yüklenemedi.',
+          saveFailed: 'Güncelleme sunucusu yapılandırması kaydedilemedi.',
+          saved: 'Güncelleme sunucusu yapılandırması kaydedildi.',
+          save: 'Kaydet',
+          confirmTitle: 'Özel bir güncelleme sunucusu kullanılsın mı?',
+          confirmDesc:
+            'SHA-512 yalnızca paketin bu sunucunun sağladığı bildirimle eşleştiğini doğrular. Paketin resmi bir NanoKVM sürümü olduğunu kanıtlamaz. Hatalı veya kötü amaçlı bir sunucu cihazı kullanılamaz hâle getirebilir, veri kaybına yol açabilir ya da sistem güvenliğini tehlikeye atabilir.',
+          confirm: 'Yine de kullan',
+          previewDisabled:
+            'Özel bir güncelleme sunucusu etkinken önizleme güncellemeleri kullanılamaz.'
+        },
+        offline: {
+          title: 'Çevrimdışı Güncellemeler',
+          desc: 'Yerel kurulum paketi aracılığıyla güncelleme',
+          upload: 'Yükle',
+          checksumPlaceholder: 'SHA-256 sağlama toplamı (isteğe bağlı)',
+          invalidChecksum: 'SHA-256 sağlama toplamı 64 onaltılık karakter içermelidir.',
+          checksumMismatch: 'SHA-256 doğrulaması başarısız oldu. Paket bozulmuş olabilir.',
+          invalidName: 'Geçersiz dosya adı biçimi. Lütfen GitHub sürümlerinden indirin.',
+          updateFailed: 'Güncelleme başarısız oldu. Lütfen tekrar deneyin.'
+        }
       },
       account: {
         title: 'Hesap',
@@ -336,8 +564,172 @@ const tr = {
         cancelBtn: 'Hayır'
       }
     },
+    picoclaw: {
+      title: 'PicoClaw Asistan',
+      empty: 'Paneli açın ve başlamak için bir görevi başlatın.',
+      inputPlaceholder: "PicoClaw'nin ne yapmasını istediğinizi açıklayın",
+      newConversation: 'Yeni görüşme',
+      processing: 'İşleniyor...',
+      agent: {
+        defaultTitle: 'Genel Asistan',
+        defaultDescription: 'Genel sohbet, arama ve çalışma alanı yardımı.',
+        kvmTitle: 'Uzaktan Kontrol',
+        kvmDescription: 'Uzak ana bilgisayarı NanoKVM aracılığıyla çalıştırın.',
+        switched: 'Temsilci rolü değiştirildi',
+        switchFailed: 'Temsilci rolü değiştirilemedi'
+      },
+      send: 'Gönder',
+      cancel: 'İptal',
+      status: {
+        connecting: 'Ağ geçidine bağlanılıyor...',
+        connected: 'PicoClaw oturumu bağlandı',
+        disconnected: 'PicoClaw oturumu bağlantısı kesildi',
+        stopped: 'Durdurma isteği gönderildi',
+        runtimeStarted: 'PicoClaw runtime başlatıldı',
+        runtimeStartFailed: 'PicoClaw runtime başlatılamadı',
+        runtimeStopped: 'PicoClaw runtime durduruldu',
+        runtimeStopFailed: 'PicoClaw runtime durdurulamadı',
+        controlSwitchedToMCP: 'Kontrol harici MCP hizmetine geçirildi'
+      },
+      connection: {
+        runtime: {
+          checking: 'Kontrol ediliyor',
+          restoring: 'Restoring PicoClaw',
+          ready: 'Runtime hazır',
+          stopped: 'Runtime durduruldu',
+          blockedByMCP: 'Harici MCP kontrolü etkin',
+          readyBlockedByMCP:
+            'The runtime is running, but external MCP currently controls device input.',
+          readyWithoutControl:
+            'The runtime is running. Grant PicoClaw device control before reconnecting.',
+          unavailable: 'Runtime mevcut değil',
+          configError: 'Yapılandırma hatası'
+        },
+        transport: {
+          connecting: 'Bağlanıyor',
+          connected: 'Bağlandı',
+          disconnected: 'Disconnected',
+          reconnect: 'Reconnect',
+          reconnectDescription: 'Reconnect to the running PicoClaw session.',
+          reconnectBlocked: 'PicoClaw needs device control before reconnecting.'
+        },
+        run: {
+          idle: 'Boşta',
+          busy: 'Meşgul'
+        }
+      },
+      message: {
+        toolAction: 'Eylem',
+        observation: 'Gözlem',
+        screenshot: 'Ekran Görüntüsü'
+      },
+      overlay: {
+        locked: 'PicoClaw cihazı kontrol ediyor. Manuel giriş duraklatıldı.'
+      },
+      control: {
+        picoclaw: 'Cihaz kontrolü: PicoClaw',
+        picoclawDescription: 'PicoClaw can write keyboard and mouse input. Manual input may pause.',
+        mcp: 'Cihaz kontrolü: harici MCP',
+        mcpDescription: 'External MCP can write to the device. PicoClaw will not take over input.',
+        off: 'Cihaz kontrolü: kapalı',
+        offDescription:
+          'AI will not write keyboard or mouse input. Manual control remains available.',
+        transitioning: 'Device control: switching',
+        transitioningDescription: 'Device control is syncing. Please wait.',
+        grant: 'Kontrol ver',
+        release: 'Bırak',
+        releasing: 'Releasing...',
+        switching: 'Switching...',
+        releasingLabel: 'Device control: releasing',
+        releasingDescription:
+          'Device control is being returned. PicoClaw has stopped current writes.',
+        granted: 'PicoClaw kontrolü verildi',
+        released: 'PicoClaw kontrolü bırakıldı',
+        grantFailed: 'PicoClaw kontrolü verilemedi',
+        releaseFailed: 'PicoClaw kontrolü bırakılamadı',
+        grantConfirmTitle: "Cihaz kontrolü PicoClaw'a geçirilsin mi?",
+        grantConfirmDesc: 'Harici MCP cihaz yazmaları kesintiye uğrayacak.'
+      },
+      install: {
+        install: 'Yükle PicoClaw',
+        installing: 'PicoClaw yükleniyor',
+        success: 'PicoClaw başarıyla yüklendi',
+        failed: 'PicoClaw yüklenemedi',
+        uninstalling: 'Runtime kaldırılıyor...',
+        uninstalled: 'Runtime başarıyla kaldırıldı.',
+        uninstallFailed: 'Kaldırma başarısız oldu.',
+        requiredTitle: 'PicoClaw kurulu değil',
+        requiredDescription: "PicoClaw runtime'ı başlatmadan önce PicoClaw'ı yükleyin.",
+        progressDescription: 'PicoClaw indiriliyor ve kuruluyor.',
+        stages: {
+          preparing: 'Hazırlanıyor',
+          downloading: 'İndiriliyor',
+          extracting: 'Çıkarılıyor',
+          verifying: 'Doğrulanıyor',
+          installing: 'Yükleniyor',
+          installed: 'Yüklendi',
+          install_timeout: 'Zaman Aşımı',
+          install_failed: 'Başarısız'
+        }
+      },
+      model: {
+        requiredTitle: 'Model yapılandırması gerekli',
+        requiredDescription: 'PicoClaw sohbetini kullanmadan önce PicoClaw modelini yapılandırın.',
+        docsTitle: 'Yapılandırma Kılavuzu',
+        docsDesc: 'Desteklenen modeller ve protokoller',
+        menuLabel: 'Modeli yapılandır',
+        modelIdentifier: 'Model Tanımlayıcı',
+        modelIdentifierPlaceholder: 'openai/gpt-5.4',
+        apiBase: 'API Base URL',
+        apiBasePlaceholder: 'https://api.example.com/v1',
+        apiKey: 'API Anahtarı',
+        apiKeyPlaceholder: 'Model API anahtarını girin',
+        save: 'Kaydet',
+        saving: 'Kaydediliyor',
+        saved: 'Model yapılandırması kaydedildi',
+        saveFailed: 'Model yapılandırması kaydedilemedi',
+        invalid: 'Model tanımlayıcı, API Base URL ve API anahtarı gereklidir'
+      },
+      uninstall: {
+        menuLabel: 'Kaldırma',
+        confirmTitle: 'Kaldırma PicoClaw',
+        confirmContent:
+          "PicoClaw'yi kaldırmak istediğinizden emin misiniz? Bu, yürütülebilir dosyayı ve tüm yapılandırma dosyalarını siler.",
+        confirmOk: 'Kaldırma',
+        confirmCancel: 'İptal'
+      },
+      history: {
+        title: 'Geçmiş',
+        loading: 'Oturumlar yükleniyor...',
+        emptyTitle: 'Henüz geçmiş yok',
+        emptyDescription: 'Önceki PicoClaw oturumlar burada görünecek.',
+        loadFailed: 'Oturum geçmişi yüklenemedi',
+        deleteFailed: 'Oturum silinemedi',
+        deleteConfirmTitle: 'Oturumu sil',
+        deleteConfirmContent: '"{{title}}" silmek istediğinizden emin misiniz?',
+        deleteConfirmOk: 'Sil',
+        deleteConfirmCancel: 'İptal',
+        messageCount_one: '{{count}} mesaj',
+        messageCount_other: '{{count}} mesaj',
+        messageCount: '{{count}} mesaj'
+      },
+      config: {
+        startRuntime: "PicoClaw'ı Başlat",
+        stopRuntime: "PicoClaw'ı Durdur"
+      },
+      start: {
+        enableConfirmTitle: "Kontrol PicoClaw'a geçirilsin mi?",
+        enableConfirmDesc: "PicoClaw'ı başlatmak harici MCP hizmetini devre dışı bırakır.",
+        enableConfirmOk: "PicoClaw'ı Başlat",
+        enableConfirmCancel: 'İptal',
+        title: "PicoClaw'ı Başlat",
+        description: "PicoClaw yardımcısını kullanmaya başlamak için runtime'ı başlatın.",
+        switchFromMCP: 'Switch to PicoClaw and start',
+        takeoverAndStart: 'Take over and start'
+      }
+    },
     error: {
-      title: "Bir hata oldu!",
+      title: 'Bir hata oldu!',
       refresh: 'Yenile'
     },
     fullscreen: {

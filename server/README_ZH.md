@@ -24,45 +24,61 @@ server
 配置文件路径为 `/etc/kvm/server.yaml`。
 
 ```yaml
-proto: http
+# 网络设置
+proto: http            # 访问协议，默认为 `http`，仅当配置了证书时支持改为 `https`
+host: ""
 port:
-    http: 80
-    https: 443
+    http: 80           # HTTP 服务的监听端口，默认为 `80`
+    https: 443         # HTTPS 服务的监听端口（启用 https 协议时生效），默认为 `443`
 cert:
-    crt: server.crt
-    key: server.key
+    crt: server.crt    # HTTPS 服务使用的公钥证书路径
+    key: server.key    # HTTPS 服务使用的私钥文件路径
 
-# 日志级别（debug/info/warn/error）
-# 注意：在生产环境中使用 info 或 error。debug 模式仅在开发环境中使用。
+
+# 日志配置
 logger:
-    level: info
-    file: stdout
+    level: info     # 全局日志打印级别，从高到底可选 `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`。默认为 `info`
+    file: stdout    # 日志输出目标位置。若填写 `stdout` 则输出在控制台。配置为文件路径则会输出到对应的文件。默认为 `stdout`
 
-# 鉴权设置（enable/disable）
-# 注意：生产环境中请勿使用 disable。
-authentication: enable
 
+# 认证与安全
+authentication: enable              # 是否开启 HTTP 接口与网页的身份校验。可选 `enable` (开启) 或 `disable` (禁用)。默认为 `enable`。强烈建议公开在互联网的机器开启此项！
 jwt:
-   # jwt 密钥。设置为空则使用随机生成的64位密钥
-   secretKey: ""
-   # jwt token 过期时间（单位：秒），默认为2678400（31天）
-   refreshTokenDuration: 2678400
-   # 在帐号登出时是否使所有 jwt token 失效。默认为 true
-   revokeTokensOnLogout: true
+   secretKey: ""                    # 用于签发和验证 JWT Token 的密钥。如果不填，服务启动时将自动随机生成
+   refreshTokenDuration: 2678400    # 登录超时的刷新周期（单位：秒）。默认为 `2678400`（约31天）
+   revokeTokensOnLogout: true       # 退出登录时是否废除该用户的全部会话；不会影响其他用户。设为 false 时仅清除浏览器 Cookie，不推荐使用。默认为 `true`
+security:
+   loginLockoutDuration: 0,         # 达到失败上限后，禁止该 IP 再次尝试登录的持续时间（单位：秒）。如果设为 `0` 或不填，则代表不开启防暴力破解功能。默认为 `0`
+   loginMaxFailures:     5,         # 允许触发保护前，单个 IP 连续登录失败的最大次数。默认为 `5`
 
-# 自定义 STUN 服务器的地址
-# 注意：可以设置为“disable”来禁用 STUN 服务（例如在局域网环境中使用时）
-stun: stun.l.google.com:19302
 
+# WebRTC 内网穿透
+stun: stun.l.google.com:19302    # 默认使用的 STUN 服务器地址，用于打洞获取公网 IP 建立 P2P 流
 turn:
-    turnAddr: example_addr
-    turnUser: example_user
-    turnCred: example_cred
+    turnAddr: example_addr       # 当 P2P 直连失败时，作为备用的中继（TURN）服务器地址（格式如 `ip:port`）。留空表示不使用 TURN 中继
+    turnUser: example_user       # TURN 服务器授权连接时使用的用户名
+    turnCred: example_cred       # TURN 服务器授权连接时使用的凭据/密码
 ```
+
+## Web 多用户
+
+NanoKVM 使用两种设备级角色：
+
+- `admin`：除 KVM 操作外，还可管理用户、系统、网络、更新、存储、终端、脚本、MCP 和 PicoClaw。
+- `user`：可使用 KVM 视频、键盘、鼠标、粘贴、目标机电源/复位和网络唤醒。
+
+管理员可在**设置 > 账户**中管理用户。账户数据继续保存在 `/etc/kvm/pwd`；服务会原地迁移旧版单账户
+JSON，并以 `0600` 权限原子写入多用户格式。沿用同一路径可保持长按 BOOT 键重置密码的现有行为。
+用户自助修改密码时必须验证当前密码；管理员可在账户管理中重置非设备所有者的密码。由于设备所有者
+密码还会同步至 Linux root 账户，因此只有设备所有者本人可以修改自己的密码。
+
+所有登录会话都会校验当前账户状态。禁用、删除、修改角色或密码会立即撤销该用户的 HTTP 与实时连接，
+且不会影响其他用户。多个用户可同时观看和协作控制 KVM；输入沿用现有 HID 协调器，因此同时输入可能交错。
+视频模式、画质、分辨率和 MJPEG 帧检测仍属于共享 KVM 操作；多人同时调整时，以最后一次设备级修改为准。
 
 ## 编译部署
 
-**注意：请使用 Linux 操作系统（x86-64）。该工具链无法在 ARM、Windows 或 macOS 下使用。**
+**注意：请使用 Linux 操作系统（x86-64）和 Go 1.25 或更高版本。该工具链无法在 ARM、Windows 或 macOS 下使用。**
 
 1. 安装工具链
    1. 下载工具链：[下载地址](https://sophon-file.sophon.cn/sophon-prod-s3/drive/23/03/07/16/host-tools.tar.gz)；

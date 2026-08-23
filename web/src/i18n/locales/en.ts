@@ -11,12 +11,17 @@ const en = {
       login: 'Login',
       placeholderUsername: 'Username',
       placeholderPassword: 'Password',
+      placeholderCurrentPassword: 'Current password',
       placeholderPassword2: 'Please enter password again',
       noEmptyUsername: 'Username required',
       noEmptyPassword: 'Password required',
+      passwordLength: 'Password must be between 8 and 72 characters',
       noAccount: 'Failed to get user information, please refresh web page or reset password',
       invalidUser: 'Invalid username or password',
+      locked: 'Too many logins, please try again later',
+      globalLocked: 'System under protection, please try again later',
       error: 'Unexpected error',
+      invalidCurrentPassword: 'Current password is incorrect',
       changePassword: 'Change Password',
       changePasswordDesc: 'For the security of your device, please change the password!',
       differentPassword: 'Passwords do not match',
@@ -46,7 +51,14 @@ const en = {
       invalidMode:
         'The current mode does not support network setup. Please go to your device and enable Wi-Fi configuration mode.',
       confirmBtn: 'Ok',
-      finishBtn: 'Finished'
+      finishBtn: 'Finished',
+      ap: {
+        authTitle: 'Authentication Required',
+        authDescription: 'Please enter the AP password to continue',
+        authFailed: 'Invalid AP password',
+        passPlaceholder: 'AP password',
+        verifyBtn: 'Verify'
+      }
     },
     screen: {
       scale: 'Scale',
@@ -67,7 +79,26 @@ const en = {
       frameDetect: 'Frame Detect',
       frameDetectTip:
         "Calculate the difference between frames. Stop transmitting video stream when no changes are detected on the remote host's screen.",
-      resetHdmi: 'Reset HDMI'
+      resetHdmi: 'Reset HDMI',
+      mixedH264: {
+        title: 'H.264 stream conflict',
+        description:
+          'H.264 Direct and H.264 WebRTC are being used at the same time. This may cause screen tearing or corrupted video. Please use only one H.264 mode.'
+      },
+      webrtcConnectionFailed: {
+        title: 'WebRTC connection failed',
+        description: 'Check the network connection or switch the video mode.'
+      },
+      captureStatus: {
+        hdmiError: 'HDMI screen error',
+        unsupportedResolution: 'Current resolution is not supported',
+        retrieving: 'Getting screen...',
+        changingResolution: 'Switching resolution...',
+        updateFailed: 'Screen cannot update right now',
+        videoError: 'Video display error',
+        noHdmi: 'No HDMI signal detected',
+        unavailable: 'Screen cannot be displayed right now'
+      }
     },
     keyboard: {
       title: 'Keyboard',
@@ -82,6 +113,7 @@ const en = {
       clipboardReadError: 'Failed to read clipboard',
       dropdownEnglish: 'English',
       dropdownGerman: 'German',
+      dropdownFrench: 'French',
       dropdownRussian: 'Russian',
       shortcut: {
         title: 'Shortcuts',
@@ -230,7 +262,15 @@ const en = {
       disabled: '/data partition is RO, so we cannot download the image',
       uploadbox: 'Drop file here or click to select',
       inputfile: 'Please enter the image File',
-      NoISO: 'No ISO'
+      NoISO: 'No ISO',
+      sha256: 'SHA-256 (optional)',
+      sha256Placeholder: 'Enter a 64-character SHA-256 checksum',
+      invalidSHA256: 'SHA-256 must be a 64-character hexadecimal string',
+      failed: 'Download failed',
+      success: 'Download successful',
+      checksumFailed: 'Download failed: SHA-256 verification failed',
+      cancel: 'Cancel',
+      cancelFailed: 'Failed to cancel download'
     },
     power: {
       title: 'Power',
@@ -247,6 +287,24 @@ const en = {
     },
     settings: {
       title: 'Settings',
+      mcp: {
+        title: 'MCP Service',
+        service: 'Remote control MCP',
+        serviceDesc:
+          'Allow trusted MCP clients to control the keyboard and mouse and capture screenshots',
+        securityWarning:
+          'Anyone with this API key can control the remote host and view its screen. Use HTTPS and enable it only on trusted networks.',
+        endpoint: 'Endpoint',
+        apiKey: 'API Key',
+        regenerateConfirmTitle: 'Regenerate MCP API key?',
+        regenerateConfirmDesc: 'The current key will stop working immediately.',
+        enableConfirmTitle: 'Enable external MCP control?',
+        enableConfirmDesc: 'Enabling MCP will stop PicoClaw and close any active PicoClaw session.',
+        failed: 'MCP operation failed',
+        copyFailed: 'Copy failed. Copy manually.',
+        okBtn: 'Confirm',
+        cancelBtn: 'Cancel'
+      },
       about: {
         title: 'About NanoKVM',
         information: 'Information',
@@ -280,9 +338,24 @@ const en = {
           modeOff: 'Off',
           modeAuto: 'Auto hide',
           modeAlways: 'Always visible',
+          keyboardLedStatus: 'Keyboard lock indicators',
+          keyboardLedStatusDesc: 'Display remote Num Lock, Caps Lock, and Scroll Lock status',
           icons: 'Submenu Icons',
           iconsDesc: 'Display submenu icons in the menu bar'
         }
+      },
+      keyboardLedStatus: {
+        groupLabel: 'Remote keyboard lock status',
+        indicatorLabel: '{{label}}: {{state}}',
+        numLock: 'Num Lock',
+        numLockShort: 'Num',
+        capsLock: 'Caps Lock',
+        capsLockShort: 'Caps',
+        scrollLock: 'Scroll Lock',
+        scrollLockShort: 'Scr',
+        on: 'On',
+        off: 'Off',
+        unknown: 'Unknown'
       },
       device: {
         title: 'Device',
@@ -299,28 +372,9 @@ const en = {
           1800: '30 min',
           3600: '1 hour'
         },
-        wifi: {
-          title: 'Wi-Fi',
-          description: 'Configure Wi-Fi',
-          apMode: 'AP mode is enabled, connect to Wi-Fi by scanning QR code',
-          connect: 'Join Wi-Fi',
-          connectDesc1: 'Please enter the network ssid and password',
-          connectDesc2: 'Please enter the password to join this network',
-          disconnect: 'Are you sure to disconnect the network?',
-          failed: 'Connection failed, please try again.',
-          ssid: 'Name',
-          password: 'Password',
-          joinBtn: 'Join',
-          confirmBtn: 'Ok',
-          cancelBtn: 'Cancel'
-        },
         ssh: {
           description: 'Enable SSH remote access',
           tip: 'Set a strong password before enabling (Account - Change Password)'
-        },
-        tls: {
-          description: 'Enable HTTPS protocol',
-          tip: 'Be aware: Using HTTPS can increase latency, especially with MJPEG video mode.'
         },
         advanced: 'Advanced Settings',
         swap: {
@@ -341,7 +395,10 @@ const en = {
           tip: "Turning it off if it's not needed"
         },
         hdmi: {
-          description: 'Enable HDMI/monitor output'
+          description: 'Enable HDMI/monitor output',
+          idleTimeoutTitle: 'Capture idle timeout',
+          idleTimeoutDescription: 'Stop HDMI capture after there are no active viewers for',
+          minutes: 'min'
         },
         autostart: {
           title: 'Autostart Scripts Settings',
@@ -364,6 +421,52 @@ const en = {
         rebootDesc: 'Are you sure you want to reboot NanoKVM?',
         okBtn: 'Yes',
         cancelBtn: 'No'
+      },
+      network: {
+        title: 'Network',
+        wifi: {
+          title: 'Wi-Fi',
+          description: 'Configure Wi-Fi',
+          apMode: 'AP mode is enabled, connect to Wi-Fi by scanning QR code',
+          connect: 'Join Wi-Fi',
+          connectDesc1: 'Please enter the network ssid and password',
+          connectDesc2: 'Please enter the password to join this network',
+          disconnect: 'Are you sure to disconnect the network?',
+          failed: 'Connection failed, please try again.',
+          ssid: 'Name',
+          password: 'Password',
+          joinBtn: 'Join',
+          confirmBtn: 'Ok',
+          cancelBtn: 'Cancel'
+        },
+        tls: {
+          description: 'Enable HTTPS protocol',
+          tip: 'Be aware: Using HTTPS can increase latency, especially with MJPEG video mode.'
+        },
+        dns: {
+          title: 'DNS',
+          description: 'Configure DNS servers for NanoKVM',
+          mode: 'Mode',
+          dhcp: 'DHCP',
+          manual: 'Manual',
+          add: 'Add DNS',
+          save: 'Save',
+          invalid: 'Please enter a valid IP address',
+          noDhcp: 'No DHCP DNS is currently available',
+          saved: 'DNS settings saved',
+          saveFailed: 'Failed to save DNS settings',
+          unsaved: 'Unsaved changes',
+          maxServers: 'Maximum {{count}} DNS servers allowed',
+          dnsServers: 'DNS Servers',
+          dhcpServersDescription: 'DNS servers are automatically obtained from DHCP',
+          manualServersDescription: 'DNS servers can be edited manually',
+          networkDetails: 'Network Details',
+          interface: 'Interface',
+          ipAddress: 'IP Address',
+          subnetMask: 'Subnet Mask',
+          router: 'Router',
+          none: 'None'
+        }
       },
       tailscale: {
         title: 'Tailscale',
@@ -460,10 +563,28 @@ const en = {
         previewDesc: 'Get early access to new features and improvements',
         previewTip:
           'Please be aware that preview releases may contain bugs or incomplete functionality!',
+        customServer: {
+          title: 'Custom Update Server',
+          desc: 'Check for and download online updates from a specified server',
+          invalidUrl:
+            'Enter a valid HTTP or HTTPS server directory without a query, fragment, or latest.json.',
+          loadFailed: 'Failed to load the update server configuration.',
+          saveFailed: 'Failed to save the update server configuration.',
+          saved: 'Update server configuration saved.',
+          save: 'Save',
+          confirmTitle: 'Use a custom update server?',
+          confirmDesc:
+            'SHA-512 only checks that the package matches the manifest supplied by this server. It does not prove that the package is an official NanoKVM release. A faulty or malicious server may make the device unusable, cause data loss, or compromise the system.',
+          confirm: 'Use Anyway',
+          previewDisabled: 'Preview Updates are unavailable while a custom update server is enabled'
+        },
         offline: {
           title: 'Offline Updates',
           desc: 'Update through local installation package',
           upload: 'Upload',
+          checksumPlaceholder: 'SHA-256 checksum (optional)',
+          invalidChecksum: 'The SHA-256 checksum must contain 64 hexadecimal characters.',
+          checksumMismatch: 'SHA-256 verification failed. The package may be corrupted.',
           invalidName: 'Invalid filename format. Please download from GitHub releases.',
           updateFailed: 'Update failed. Please retry.'
         }
@@ -471,12 +592,197 @@ const en = {
       account: {
         title: 'Account',
         webAccount: 'Web Account Name',
+        role: 'Role',
+        roles: {
+          admin: 'Administrator',
+          user: 'User'
+        },
         password: 'Password',
         updateBtn: 'Change',
         logoutBtn: 'Logout',
         logoutDesc: 'Are you sure you want to logout?',
         okBtn: 'Yes',
-        cancelBtn: 'No'
+        cancelBtn: 'No',
+        users: {
+          title: 'Users',
+          create: 'Create User',
+          enabled: 'Enabled',
+          disabled: 'Disabled',
+          deviceOwner: 'Device owner',
+          resetPassword: 'Reset Password',
+          delete: 'Delete',
+          deleteConfirm: 'Delete this user and revoke all of their sessions?',
+          created: 'User created',
+          deleted: 'User deleted',
+          passwordUpdated: 'Password updated',
+          loadFailed: 'Failed to load users',
+          saveFailed: 'Failed to save user',
+          deleteFailed: 'Failed to delete user'
+        }
+      }
+    },
+    picoclaw: {
+      title: 'PicoClaw Assistant',
+      empty: 'Open the panel and start a task to begin.',
+      inputPlaceholder: 'Describe what you want the PicoClaw to do',
+      newConversation: 'New conversation',
+      processing: 'Processing...',
+      agent: {
+        defaultTitle: 'General Assistant',
+        defaultDescription: 'General chat, search, and workspace help.',
+        kvmTitle: 'Remote Control',
+        kvmDescription: 'Operate the remote host through NanoKVM.',
+        switched: 'Agent role switched',
+        switchFailed: 'Failed to switch agent role'
+      },
+      send: 'Send',
+      cancel: 'Cancel',
+      status: {
+        connecting: 'Connecting to gateway...',
+        connected: 'PicoClaw session connected',
+        disconnected: 'PicoClaw session closed',
+        stopped: 'Stop request sent',
+        runtimeStarted: 'PicoClaw runtime started',
+        runtimeStartFailed: 'Failed to start PicoClaw runtime',
+        runtimeStopped: 'PicoClaw runtime stopped',
+        runtimeStopFailed: 'Failed to stop PicoClaw runtime',
+        controlSwitchedToMCP: 'Control switched to the external MCP service'
+      },
+      connection: {
+        runtime: {
+          checking: 'Checking',
+          restoring: 'Restoring PicoClaw',
+          ready: 'Runtime ready',
+          stopped: 'Runtime stopped',
+          blockedByMCP: 'External MCP control is active',
+          readyBlockedByMCP:
+            'The runtime is running, but external MCP currently controls device input.',
+          readyWithoutControl:
+            'The runtime is running. Grant PicoClaw device control before reconnecting.',
+          unavailable: 'Runtime unavailable',
+          configError: 'Configuration error'
+        },
+        transport: {
+          connecting: 'Connecting',
+          connected: 'Connected',
+          disconnected: 'Disconnected',
+          reconnect: 'Reconnect',
+          reconnectDescription: 'Reconnect to the running PicoClaw session.',
+          reconnectBlocked: 'PicoClaw needs device control before reconnecting.'
+        },
+        run: {
+          idle: 'Idle',
+          busy: 'Busy'
+        }
+      },
+      message: {
+        toolAction: 'Action',
+        observation: 'Observation',
+        screenshot: 'Screenshot'
+      },
+      overlay: {
+        locked: 'PicoClaw is controlling the device. Manual input is paused.'
+      },
+      control: {
+        picoclaw: 'Device control: PicoClaw',
+        picoclawDescription: 'PicoClaw can write keyboard and mouse input. Manual input may pause.',
+        mcp: 'Device control: external MCP',
+        mcpDescription: 'External MCP can write to the device. PicoClaw will not take over input.',
+        off: 'Device control: manual/no AI',
+        offDescription:
+          'AI will not write keyboard or mouse input. Manual control remains available.',
+        transitioning: 'Device control: switching',
+        transitioningDescription: 'Device control is syncing. Please wait.',
+        grant: 'Take over',
+        release: 'Return control',
+        releasing: 'Releasing...',
+        switching: 'Switching...',
+        releasingLabel: 'Device control: releasing',
+        releasingDescription:
+          'Device control is being returned. PicoClaw has stopped current writes.',
+        granted: 'PicoClaw control granted',
+        released: 'Device control returned',
+        grantFailed: 'Failed to grant PicoClaw control',
+        releaseFailed: 'Failed to release PicoClaw control',
+        grantConfirmTitle: 'Switch device control to PicoClaw?',
+        grantConfirmDesc: 'External MCP device writes will be interrupted.'
+      },
+      install: {
+        install: 'Install PicoClaw',
+        installing: 'Installing PicoClaw',
+        success: 'PicoClaw installed successfully',
+        failed: 'Failed to install PicoClaw',
+        uninstalling: 'Uninstalling runtime...',
+        uninstalled: 'Runtime uninstalled successfully.',
+        uninstallFailed: 'Uninstall failed.',
+        requiredTitle: 'PicoClaw is not installed',
+        requiredDescription: 'Install PicoClaw before starting the PicoClaw runtime.',
+        progressDescription: 'PicoClaw is being downloaded and installed.',
+        stages: {
+          preparing: 'Preparing',
+          downloading: 'Downloading',
+          extracting: 'Extracting',
+          verifying: 'Verifying',
+          installing: 'Installing',
+          installed: 'Installed',
+          install_timeout: 'Timed Out',
+          install_failed: 'Failed'
+        }
+      },
+      model: {
+        requiredTitle: 'Model configuration is required',
+        requiredDescription: 'Configure the PicoClaw model before using PicoClaw chat.',
+        docsTitle: 'Configuration Guide',
+        docsDesc: 'Supported models and protocols',
+        menuLabel: 'Configure model',
+        modelIdentifier: 'Model Identifier',
+        modelIdentifierPlaceholder: 'openai/gpt-5.4',
+        apiBase: 'API Base URL',
+        apiBasePlaceholder: 'https://api.example.com/v1',
+        apiKey: 'API Key',
+        apiKeyPlaceholder: 'Enter the model API key',
+        save: 'Save',
+        saving: 'Saving',
+        saved: 'Model configuration saved',
+        saveFailed: 'Failed to save model configuration',
+        invalid: 'Model identifier, API base URL, and API key are required'
+      },
+      uninstall: {
+        menuLabel: 'Uninstall',
+        confirmTitle: 'Uninstall PicoClaw',
+        confirmContent:
+          'Are you sure you want to uninstall PicoClaw? This will delete the executable and all configuration files.',
+        confirmOk: 'Uninstall',
+        confirmCancel: 'Cancel'
+      },
+      history: {
+        title: 'History',
+        loading: 'Loading sessions...',
+        emptyTitle: 'No history yet',
+        emptyDescription: 'Previous PicoClaw sessions will appear here.',
+        loadFailed: 'Failed to load session history',
+        deleteFailed: 'Failed to delete session',
+        deleteConfirmTitle: 'Delete session',
+        deleteConfirmContent: 'Are you sure you want to delete "{{title}}"?',
+        deleteConfirmOk: 'Delete',
+        deleteConfirmCancel: 'Cancel',
+        messageCount_one: '{{count}} message',
+        messageCount_other: '{{count}} messages',
+        messageCount: '{{count}} messages'
+      },
+      config: {
+        startRuntime: 'Start PicoClaw',
+        stopRuntime: 'Stop PicoClaw'
+      },
+      start: {
+        enableConfirmTitle: 'Switch control to PicoClaw?',
+        enableConfirmDesc: 'External MCP device writes will be interrupted before PicoClaw starts.',
+        enableConfirmOk: 'Start PicoClaw',
+        enableConfirmCancel: 'Cancel',
+        title: 'Start PicoClaw',
+        description: 'Start the runtime to begin using the PicoClaw assistant.',
+        switchFromMCP: 'Switch to PicoClaw and start',
+        takeoverAndStart: 'Take over and start'
       }
     },
     error: {

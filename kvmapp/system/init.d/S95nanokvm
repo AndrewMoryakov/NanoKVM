@@ -3,6 +3,7 @@
 
 SWAPFILE="/data/swapfile"
 SWAP_SIZE_MB=128
+SERVER_GOMEMLIMIT=20MiB
 
 setup_swap() {
   if [ -f "$SWAPFILE" ]; then
@@ -52,6 +53,104 @@ start_netbird() {
   fi
 }
 
+wait_for_exit() {
+    process="$1"
+    timeout="$2"
+    elapsed=0
+
+    while pidof "$process" >/dev/null 2>&1; do
+        if [ "$elapsed" -ge "$timeout" ]; then
+            return 1
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+    done
+    return 0
+}
+
+stop_process() {
+    process="$1"
+
+    if ! pidof "$process" >/dev/null 2>&1; then
+        return
+    fi
+
+    killall -INT "$process" 2>/dev/null || true
+    if wait_for_exit "$process" 20; then
+        return
+    fi
+
+    killall -TERM "$process" 2>/dev/null || true
+    if wait_for_exit "$process" 5; then
+        return
+    fi
+
+    killall -KILL "$process" 2>/dev/null || true
+    wait_for_exit "$process" 2 || true
+}
+
+stop_services() {
+    # The server owns VI/VPSS. Let it release MMF before stopping kvm_system.
+    stop_process NanoKVM-Server
+    stop_process kvm_system
+    rm -rf /tmp/kvm_system /tmp/server
+}
+
+start_services() {
+    cp -r /kvmapp/kvm_system /tmp/
+    if [ -f /kvmapp/kvm_new_app ]; then
+        touch /tmp/.nanokvm_migrating
+        /tmp/kvm_system/kvm_system &
+
+        # The legacy migration invokes this init script recursively and starts
+        # the server itself. Wait for that single migration path to finish.
+        migration_wait=0
+        while [ "$migration_wait" -lt 30 ]; do
+            if [ ! -f /kvmapp/kvm_new_app ] && pidof NanoKVM-Server >/dev/null 2>&1; then
+                rm -f /tmp/.nanokvm_migrating
+                return
+            fi
+            sleep 1
+            migration_wait=$((migration_wait + 1))
+        done
+        rm -f /tmp/.nanokvm_migrating
+    else
+        /tmp/kvm_system/kvm_system &
+    fi
+
+    if ! pidof NanoKVM-Server >/dev/null 2>&1; then
+        rm -rf /tmp/server
+        cp -r /kvmapp/server /tmp/
+        GOMEMLIMIT=$SERVER_GOMEMLIMIT /tmp/server/NanoKVM-Server &
+        server_pid=$!
+
+        # Protect NanoKVM-Server from the OOM killer
+        sleep 1
+        if [ -d "/proc/$server_pid" ]; then
+            echo -800 > "/proc/$server_pid/oom_score_adj" 2>/dev/null
+        fi
+    fi
+}
+
+# Only one VPN may run at a time: the device has too little RAM for both.
+start_vpn() {
+    vpn_pref="tailscale"
+    if [ -f /etc/kvm/vpn ]; then
+        vpn_pref=$(cat /etc/kvm/vpn)
+    fi
+
+    case "$vpn_pref" in
+      netbird)
+        rm -f /etc/init.d/S98tailscaled
+        start_netbird
+        ;;
+      *)
+        rm -f /etc/init.d/S99netbird
+        start_tailscale
+        ;;
+    esac
+}
+
 case "$1" in
   start)
     echo -n kvm > /boot/hostname.prefix
@@ -86,85 +185,37 @@ case "$1" in
     iptables -C OUTPUT -o eth0 -p tcp --sport 8000 -m state --state ESTABLISHED -j DROP 2>/dev/null || \
     iptables -A OUTPUT -o eth0 -p tcp --sport 8000 -m state --state ESTABLISHED -j DROP
 
-    # Start services with GOMEMLIMIT
-    cp -r /kvmapp/kvm_system /tmp/
-    /tmp/kvm_system/kvm_system &
-
-    cp -r /kvmapp/server /tmp/
-    GOMEMLIMIT=20MiB /tmp/server/NanoKVM-Server &
-    SERVER_PID=$!
-
-    # Protect NanoKVM-Server from OOM killer
-    sleep 1
-    if [ -d "/proc/$SERVER_PID" ]; then
-      echo -800 > /proc/$SERVER_PID/oom_score_adj 2>/dev/null
+    # Logo selection
+    if [ -f /boot/logo.ico ]; then
+        if [ ! -f /kvmapp/server/web/original.ico ]; then
+            mv /kvmapp/server/web/sipeed.ico /kvmapp/server/web/original.ico
+            cp /boot/logo.ico /kvmapp/server/web/sipeed.ico
+        fi
+    else
+        if [ -f /kvmapp/server/web/original.ico ]; then
+            mv /kvmapp/server/web/original.ico /kvmapp/server/web/sipeed.ico
+        fi
     fi
 
-    # Read VPN preference (default: tailscale)
-    VPN_PREF="tailscale"
-    if [ -f /etc/kvm/vpn ]; then
-      VPN_PREF=$(cat /etc/kvm/vpn)
-    fi
-
-    case "$VPN_PREF" in
-      netbird)
-        rm -f /etc/init.d/S98tailscaled
-        start_netbird
-        ;;
-      *)
-        rm -f /etc/init.d/S99netbird
-        start_tailscale
-        ;;
-    esac
+    # Start services
+    start_services
+    start_vpn
    ;;
 
   stop)
+    stop_services
     stop_netbird
     stop_tailscale
-    killall kvm_system 2>/dev/null
-    killall NanoKVM-Server 2>/dev/null
-    rm -rf /tmp/kvm_system /tmp/server
     echo "OK"
    ;;
 
   restart)
-    stop_netbird
-    stop_tailscale
-    killall kvm_system 2>/dev/null
-    killall NanoKVM-Server 2>/dev/null
-    rm -rf /tmp/kvm_system /tmp/server
-
-    # Ensure swap is active
+    if [ -f /tmp/.nanokvm_migrating ]; then
+        exit 0
+    fi
     setup_swap
-
-    cp -r /kvmapp/kvm_system /tmp/
-    /tmp/kvm_system/kvm_system &
-
-    cp -r /kvmapp/server /tmp/
-    GOMEMLIMIT=20MiB /tmp/server/NanoKVM-Server &
-    SERVER_PID=$!
-
-    sleep 1
-    if [ -d "/proc/$SERVER_PID" ]; then
-      echo -800 > /proc/$SERVER_PID/oom_score_adj 2>/dev/null
-    fi
-
-    # Read VPN preference (default: tailscale)
-    VPN_PREF="tailscale"
-    if [ -f /etc/kvm/vpn ]; then
-      VPN_PREF=$(cat /etc/kvm/vpn)
-    fi
-
-    case "$VPN_PREF" in
-      netbird)
-        rm -f /etc/init.d/S98tailscaled
-        start_netbird
-        ;;
-      *)
-        rm -f /etc/init.d/S99netbird
-        start_tailscale
-        ;;
-    esac
+    stop_services
+    start_services
 
     sync
     echo "OK"

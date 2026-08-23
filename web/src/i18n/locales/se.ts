@@ -16,6 +16,8 @@ const se = {
       noEmptyPassword: 'Lösenord krävs',
       noAccount: 'Kunde inte hämta användarinformation, uppdatera sidan eller återställ lösenordet',
       invalidUser: 'Ogiltigt användarnamn eller lösenord',
+      locked: 'För många inloggningar, försök igen senare',
+      globalLocked: 'System under skydd, försök igen senare',
       error: 'Oväntat fel',
       changePassword: 'Byt lösenord',
       changePasswordDesc: 'För din enhets säkerhet, byt lösenord!',
@@ -27,8 +29,7 @@ const se = {
       cancel: 'Avbryt',
       loginButtonText: 'Logga in',
       tips: {
-        reset1:
-          'För att återställa lösenordet, håll in BOOT-knappen på NanoKVM i 10 sekunder.',
+        reset1: 'För att återställa lösenordet, håll in BOOT-knappen på NanoKVM i 10 sekunder.',
         reset2: 'För detaljerade steg, se detta dokument:',
         reset3: 'Standardkonto för webben:',
         reset4: 'Standardkonto för SSH:',
@@ -43,10 +44,20 @@ const se = {
       description: 'Konfigurera Wi-Fi för NanoKVM',
       success: 'Kontrollera nätverksstatusen för NanoKVM och besök den nya IP-adressen.',
       failed: 'Åtgärden misslyckades, försök igen.',
+      invalidMode:
+        'Det aktuella läget stöder inte nätverksinstallation. Gå till din enhet och aktivera Wi-Fi konfigurationsläge.',
       confirmBtn: 'Ok',
-      finishBtn: 'Färdig'
+      finishBtn: 'Färdig',
+      ap: {
+        authTitle: 'Autentisering krävs',
+        authDescription: 'Ange lösenordet AP för att fortsätta',
+        authFailed: 'Ogiltigt AP lösenord',
+        passPlaceholder: 'AP lösenord',
+        verifyBtn: 'Verifiera'
+      }
     },
     screen: {
+      scale: 'Skala',
       title: 'Skärm',
       video: 'Videoläge',
       videoDirectTips: 'Aktivera HTTPS i "Inställningar > Enhet" för att använda detta läge',
@@ -63,8 +74,27 @@ const se = {
       qualityLow: 'Låg',
       frameDetect: 'Ramdetection',
       frameDetectTip:
-        "Beräkna skillnaden mellan ramar. Sluta skicka videoström när inga förändringar upptäcks på fjärrvärdens skärm.",
-      resetHdmi: 'Återställ HDMI'
+        'Beräkna skillnaden mellan ramar. Sluta skicka videoström när inga förändringar upptäcks på fjärrvärdens skärm.',
+      resetHdmi: 'Återställ HDMI',
+      mixedH264: {
+        title: 'H.264-strömningskonflikt',
+        description:
+          'H.264 Direct och H.264 WebRTC används samtidigt. Detta kan orsaka skärmrivningar eller skadad video. Använd endast ett H.264-läge.'
+      },
+      webrtcConnectionFailed: {
+        title: 'WebRTC-anslutningen misslyckades',
+        description: 'Kontrollera nätverksanslutningen eller byt videoläge.'
+      },
+      captureStatus: {
+        hdmiError: 'HDMI-skärmfel',
+        unsupportedResolution: 'Den aktuella upplösningen stöds inte',
+        retrieving: 'Hämtar skärmen...',
+        changingResolution: 'Byter upplösning...',
+        updateFailed: 'Skärmen kan inte uppdateras just nu',
+        videoError: 'Videovisningsfel',
+        noHdmi: 'Ingen HDMI-signal upptäcktes',
+        unavailable: 'Skärmen kan inte visas just nu'
+      }
     },
     keyboard: {
       title: 'Tangentbord',
@@ -73,12 +103,52 @@ const se = {
       placeholder: 'Ange text',
       submit: 'Skicka',
       virtual: 'Tangentbord',
-      ctrlaltdel: 'Ctrl+Alt+Del',
       readClipboard: 'Läs från Urklipp',
-      clipboardPermissionDenied: 'Behörighet till Urklipp nekad. Vänligen tillåt åtkomst till Urklipp i din webbläsare.',
+      clipboardPermissionDenied:
+        'Behörighet till Urklipp nekad. Vänligen tillåt åtkomst till Urklipp i din webbläsare.',
       clipboardReadError: 'Misslyckades med att läsa Urklipp',
       dropdownEnglish: 'Engelska',
-      dropdownGerman: 'Tyska'
+      dropdownGerman: 'Tyska',
+      dropdownFrench: 'Franska',
+      dropdownRussian: 'ryska',
+      shortcut: {
+        title: 'Genvägar',
+        custom: 'Anpassad',
+        capture: 'Klicka här för att fånga genväg',
+        clear: 'Rensa',
+        save: 'Spara',
+        captureTips:
+          'Att fånga systemtangenter (som Windows-tangenten) kräver helskärmsbehörighet.',
+        enterFullScreen: 'Växla helskärmsläge.'
+      },
+      leaderKey: {
+        title: 'Leader-tangent',
+        desc: 'Gå förbi webbläsarbegränsningar och skicka systemgenvägar direkt till fjärrvärden.',
+        howToUse: 'Hur man använder',
+        simultaneous: {
+          title: 'Samtidigt läge',
+          desc1: 'Håll ned Leader-tangenten och tryck sedan på genvägen.',
+          desc2: 'Intuitivt, men kan komma i konflikt med systemgenvägar.'
+        },
+        sequential: {
+          title: 'Sekventiellt läge',
+          desc1:
+            'Tryck på Leader-tangenten → tryck på genvägen i följd → tryck på Leader-tangenten igen.',
+          desc2: 'Kräver fler steg, men undviker helt systemkonflikter.'
+        },
+        enable: 'Aktivera Leader-tangent',
+        tip: 'När den tilldelas som Leader-tangent fungerar denna tangent endast som genvägsutlösare och förlorar sitt standardbeteende.',
+        placeholder: 'Tryck på Leader-tangenten',
+        shiftRight: 'Höger Shift',
+        ctrlRight: 'Höger Ctrl',
+        metaRight: 'Höger Win',
+        submit: 'Skicka',
+        recorder: {
+          rec: 'REC',
+          activate: 'Aktivera tangenter',
+          input: 'Vänligen tryck på genvägen...'
+        }
+      }
     },
     mouse: {
       title: 'Mus',
@@ -92,13 +162,16 @@ const se = {
       mode: 'Musläge',
       absolute: 'Absolut läge',
       relative: 'Relativt läge',
-      speed: 'Scrollhastighet',
+      direction: 'Rullhjulsriktning',
+      scrollUp: 'Scrolla uppåt',
+      scrollDown: 'Scrolla ner',
+      speed: 'Rullhjulshastighet',
       fast: 'Snabb',
       slow: 'Långsam',
       requestPointer: 'Använder relativt läge. Klicka på skrivbordet för att få muspekaren.',
       resetHid: 'Återställ HID',
       hidOnly: {
-        title: 'Endast-HID-läge',
+        title: 'Endast HID-läge',
         desc: 'Om din mus och ditt tangentbord slutar svara och återställning av HID inte hjälper, kan det bero på kompatibilitetsproblem mellan NanoKVM och enheten. Prova att aktivera Endast-HID-läge för bättre kompatibilitet.',
         tip1: 'Aktivering av Endast-HID-läge avmonterar den virtuella U-disken och nätverket',
         tip2: 'I Endast-HID-läge är avbildningsmontering inaktiverat',
@@ -112,13 +185,13 @@ const se = {
       loading: 'Laddar...',
       empty: 'Inget hittades',
       mountMode: 'Monteringsläge',
-      cdrom: 'Montera avbildning i CD-ROM-läge',
       mountFailed: 'Montering misslyckades',
       mountDesc:
-        "I vissa system måste den virtuella disken avmonteras på fjärrvärden innan avbildningen monteras.",
-      refresh: 'Uppdatera avbildningslistan',
+        'I vissa system måste den virtuella disken avmonteras på fjärrvärden innan avbildningen monteras.',
       unmountFailed: 'Avmontering misslyckades',
-      unmountDesc: 'I vissa system måste du manuellt mata ut från fjärrvärden innan du avmonterar avbildningen.',
+      unmountDesc:
+        'I vissa system måste du manuellt mata ut från fjärrvärden innan du avmonterar avbildningen.',
+      refresh: 'Uppdatera avbildningslistan',
       attention: 'Observera',
       deleteConfirm: 'Är du säker på att du vill ta bort denna avbildning?',
       okBtn: 'Ja',
@@ -165,8 +238,8 @@ const se = {
       parityOdd: 'Udda',
       flowControl: 'Flödeskontroll',
       flowControlNone: 'Ingen',
-      flowControlSoft: 'Mjuk',
-      flowControlHard: 'Hård',
+      flowControlSoft: 'Programvara',
+      flowControlHard: 'Hårdvara',
       dataBits: 'Databitar',
       stopBits: 'Stoppbitar',
       confirm: 'Ok'
@@ -182,7 +255,18 @@ const se = {
       title: 'Avbildningshämtare',
       input: 'Ange en fjärravbildnings-URL',
       ok: 'Ok',
-      disabled: '/data partitionen är skrivskyddad, kan inte hämta avbildning'
+      disabled: '/data partitionen är skrivskyddad, kan inte hämta avbildning',
+      uploadbox: 'Släpp filen här eller klicka för att välja',
+      inputfile: 'Vänligen ange bildfilen',
+      NoISO: 'Ingen ISO',
+      sha256: 'SHA-256 (valfrie)',
+      sha256Placeholder: 'Skriv inn en SHA-256-kontrollsum på 64 tegn',
+      invalidSHA256: 'SHA-256 må være en heksadesimal streng på 64 tegn',
+      failed: 'Nedlasting mislyktes',
+      success: 'Nedlasting fullført',
+      checksumFailed: 'Nedlasting mislyktes: SHA-256-verifisering mislyktes',
+      cancel: 'Avbryt',
+      cancelFailed: 'Kunne ikke avbryte nedlastingen'
     },
     power: {
       title: 'Ström',
@@ -199,6 +283,25 @@ const se = {
     },
     settings: {
       title: 'Inställningar',
+      mcp: {
+        title: 'MCP-tjänst',
+        service: 'MCP-fjärrstyrning',
+        serviceDesc:
+          'Tillåt betrodda MCP-klienter att styra tangentbord och mus och ta skärmbilder',
+        securityWarning:
+          'Alla som har denna API-nyckel kan styra fjärrvärden och se dess skärm. Använd HTTPS och aktivera tjänsten endast i betrodda nätverk.',
+        endpoint: 'Slutpunkt',
+        apiKey: 'API-nyckel',
+        regenerateConfirmTitle: 'Generera om MCP API-nyckeln?',
+        regenerateConfirmDesc: 'Den aktuella nyckeln slutar omedelbart att fungera.',
+        enableConfirmTitle: 'Aktivera extern MCP-styrning?',
+        enableConfirmDesc:
+          'Om MCP aktiveras stoppas PicoClaw och alla aktiva PicoClaw-sessioner stängs.',
+        failed: 'MCP-åtgärden misslyckades',
+        copyFailed: 'Kopiering misslyckades. Kopiera manuellt.',
+        okBtn: 'Bekräfta',
+        cancelBtn: 'Avbryt'
+      },
       about: {
         title: 'Om NanoKVM',
         information: 'Information',
@@ -220,12 +323,37 @@ const se = {
       },
       appearance: {
         title: 'Utseende',
-        display: 'Display',
+        display: 'Visning',
         language: 'Språk',
-        menuBar: 'Menyfält',
-        menuBarDesc: 'Visa ikoner i menyfältet',
+        languageDesc: 'Välj språk för gränssnittet',
         webTitle: 'Webbtitel',
-        webTitleDesc: 'Anpassa webbsidans titel'
+        webTitleDesc: 'Anpassa webbsidans titel',
+        menuBar: {
+          title: 'Menyrad',
+          mode: 'Visningsläge',
+          modeDesc: 'Visa menyraden på skärmen',
+          modeOff: 'Av',
+          modeAuto: 'Dölj automatiskt',
+          modeAlways: 'Alltid synlig',
+          keyboardLedStatus: 'Indikatorer för tangentbordslås',
+          keyboardLedStatusDesc:
+            'Visa Num Lock-, Caps Lock- och Scroll Lock-status för fjärrdatorn',
+          icons: 'Undermenyikoner',
+          iconsDesc: 'Visa undermenyikoner i menyraden'
+        }
+      },
+      keyboardLedStatus: {
+        groupLabel: 'Status för lås på fjärrtangentbord',
+        indicatorLabel: '{{label}}: {{state}}',
+        numLock: 'Num Lock',
+        numLockShort: 'Num',
+        capsLock: 'Caps Lock',
+        capsLockShort: 'Caps',
+        scrollLock: 'Scroll Lock',
+        scrollLockShort: 'Scr',
+        on: 'På',
+        off: 'Av',
+        unknown: 'Okänd'
       },
       device: {
         title: 'Enhet',
@@ -242,18 +370,9 @@ const se = {
           1800: '30 min',
           3600: '1 timme'
         },
-        wifi: {
-          title: 'Wi-Fi',
-          description: 'Konfigurera Wi-Fi',
-          setBtn: 'Konfigurera'
-        },
         ssh: {
           description: 'Aktivera SSH-fjärråtkomst',
           tip: 'Ställ in ett starkt lösenord innan du aktiverar (Konto - Byt lösenord)'
-        },
-        tls: {
-          description: 'Aktivera HTTPS-protokoll',
-          tip: 'Observera: Användning av HTTPS kan öka fördröjningen, särskilt med MJPEG-läge.'
         },
         advanced: 'Avancerade inställningar',
         swap: {
@@ -274,9 +393,25 @@ const se = {
           tip: 'Stäng av om det inte behövs'
         },
         hdmi: {
-          description: 'Aktivera HDMI/monitorutgång'
+          description: 'Aktivera HDMI/monitorutgång',
+          idleTimeoutTitle: 'Tidsgräns för inaktiv inspelning',
+          idleTimeoutDescription:
+            'Stoppa HDMI-inspelning efter att det inte har funnits aktiva tittare i',
+          minutes: 'min'
+        },
+        autostart: {
+          title: 'Autostart skriptinställningar',
+          description: 'Hantera skript som körs automatiskt vid systemstart',
+          new: 'Nytt',
+          deleteConfirm: 'Är du säker på att du vill ta bort denna fil?',
+          yes: 'Ja',
+          no: 'Nej',
+          scriptName: 'Autostart skriptnamn',
+          scriptContent: 'Autostart skriptinnehåll',
+          settings: 'Inställningar'
         },
         hidOnly: 'Endast-HID-läge',
+        hidOnlyDesc: 'Sluta emulera virtuella enheter, behåll bara grundläggande HID kontroll',
         disk: 'Virtuell disk',
         diskDesc: 'Montera virtuell U-disk på fjärrvärden',
         network: 'Virtuellt nätverk',
@@ -286,12 +421,61 @@ const se = {
         okBtn: 'Ja',
         cancelBtn: 'Nej'
       },
+      network: {
+        title: 'Nätverk',
+        wifi: {
+          title: 'Wi-Fi',
+          description: 'Konfigurera Wi-Fi',
+          apMode: 'AP-läge är aktiverat, anslut till Wi-Fi genom att skanna QR-koden',
+          connect: 'Anslut Wi-Fi',
+          connectDesc1: 'Ange nätverkets SSID och lösenord',
+          connectDesc2: 'Ange lösenordet för att ansluta till detta nätverk',
+          disconnect: 'Är du säker på att du vill koppla från nätverket?',
+          failed: 'Anslutningen misslyckades, försök igen.',
+          ssid: 'Namn',
+          password: 'Lösenord',
+          joinBtn: 'Anslut',
+          confirmBtn: 'OK',
+          cancelBtn: 'Avbryt'
+        },
+        tls: {
+          description: 'Aktivera HTTPS-protokoll',
+          tip: 'Observera: Användning av HTTPS kan öka fördröjningen, särskilt med MJPEG-läge.'
+        },
+        dns: {
+          title: 'DNS',
+          description: 'Konfigurera DNS-servrar för NanoKVM',
+          mode: 'Läge',
+          dhcp: 'DHCP',
+          manual: 'Manuell',
+          add: 'Lägg till DNS',
+          save: 'Spara',
+          invalid: 'Ange en giltig IP-adress',
+          noDhcp: 'Ingen DHCP-DNS är tillgänglig just nu',
+          saved: 'DNS-inställningar sparade',
+          saveFailed: 'Det gick inte att spara DNS-inställningar',
+          unsaved: 'Osparade ändringar',
+          maxServers: 'Maximalt {{count}} DNS-servrar tillåtna',
+          dnsServers: 'DNS-servrar',
+          dhcpServersDescription: 'DNS-servrar hämtas automatiskt från DHCP',
+          manualServersDescription: 'DNS-servrar kan redigeras manuellt',
+          networkDetails: 'Nätverksdetaljer',
+          interface: 'Gränssnitt',
+          ipAddress: 'IP-adress',
+          subnetMask: 'Subnätmask',
+          router: 'Router',
+          none: 'Ingen'
+        }
+      },
       tailscale: {
         title: 'Tailscale',
         memory: {
           title: 'Minnesoptimering',
-          tip: 'När minnesanvändningen överskrider gränsen utförs aggressivare skräpsamling för att frigöra minne. Rekommenderas att sättas till 75 MB om du använder Tailscale. Omstart krävs för att det ska gälla.',
-          disable: 'Inaktivera'
+          tip: 'När minnesanvändningen överskrider gränsen utförs aggressivare skräpsamling för att frigöra minne. Rekommenderas att sättas till 75 MB om du använder Tailscale. Omstart krävs för att det ska gälla.'
+        },
+        swap: {
+          title: 'Byt minne',
+          tip: 'Om problemen kvarstår efter att du har aktiverat minnesoptimering, försök att aktivera utbyte av minne. Detta ställer in växlingsfilens storlek till 256MB som standard, vilket kan justeras i "Inställningar > Enhet".'
         },
         restart: 'Starta om Tailscale?',
         stop: 'Stoppa Tailscale?',
@@ -306,10 +490,11 @@ const se = {
         package: 'installationspaketet',
         unzip: 'och packa upp det',
         upTailscale: 'Ladda upp tailscale till NanoKVM-katalogen /usr/bin/',
-        upTailscaled: 'Ladda upp tailscaled till katalogen /usr/sbin/',
+        upTailscaled: 'Ladda upp tailscaled till NanoKVM-katalogen /usr/sbin/',
         refresh: 'Uppdatera sidan',
-        notLogin:
-          'Enheten är ännu inte bunden. Logga in och bind enheten till ditt konto.',
+        notRunning: 'Tailscale körs inte. Starta den för att fortsätta.',
+        run: 'Start',
+        notLogin: 'Enheten är ännu inte bunden. Logga in och bind enheten till ditt konto.',
         urlPeriod: 'Denna URL är giltig i 10 minuter',
         login: 'Logga in',
         loginSuccess: 'Inloggning lyckades',
@@ -320,6 +505,7 @@ const se = {
         logout: 'Logga ut',
         logoutDesc: 'Är du säker på att du vill logga ut?',
         uninstall: 'Avinstallera Tailscale',
+        uninstallDesc: 'Är du säker på att du vill avinstallera Tailscale?',
         okBtn: 'Ja',
         cancelBtn: 'Nej'
       },
@@ -335,7 +521,33 @@ const se = {
         preview: 'Förhandsvisning av uppdateringar',
         previewDesc: 'Få tidig tillgång till nya funktioner och förbättringar',
         previewTip:
-          'Observera att förhandsversioner kan innehålla buggar eller ofullständig funktionalitet!'
+          'Observera att förhandsversioner kan innehålla buggar eller ofullständig funktionalitet!',
+        customServer: {
+          title: 'Anpassad uppdateringsserver',
+          desc: 'Sök efter och hämta onlineuppdateringar från en angiven server',
+          invalidUrl:
+            'Ange en giltig HTTP- eller HTTPS-serverkatalog utan frågesträng, fragment eller latest.json.',
+          loadFailed: 'Det gick inte att läsa in uppdateringsserverns konfiguration.',
+          saveFailed: 'Det gick inte att spara uppdateringsserverns konfiguration.',
+          saved: 'Uppdateringsserverns konfiguration har sparats.',
+          save: 'Spara',
+          confirmTitle: 'Vill du använda en anpassad uppdateringsserver?',
+          confirmDesc:
+            'SHA-512 kontrollerar endast att paketet överensstämmer med manifestet från den här servern. Det bevisar inte att paketet är en officiell NanoKVM-utgåva. En felaktig eller skadlig server kan göra enheten obrukbar, orsaka dataförlust eller äventyra systemets säkerhet.',
+          confirm: 'Använd ändå',
+          previewDisabled:
+            'Förhandsuppdateringar är inte tillgängliga när en anpassad uppdateringsserver är aktiverad.'
+        },
+        offline: {
+          title: 'Offlineuppdateringar',
+          desc: 'Uppdatera genom lokalt installationspaket',
+          upload: 'Ladda upp',
+          checksumPlaceholder: 'SHA-256-kontrollsumma (valfri)',
+          invalidChecksum: 'SHA-256-kontrollsumman måste innehålla 64 hexadecimala tecken.',
+          checksumMismatch: 'SHA-256-verifieringen misslyckades. Paketet kan vara skadat.',
+          invalidName: 'Ogiltigt filnamnsformat. Ladda ner från GitHub-versioner.',
+          updateFailed: 'Uppdatering misslyckades. Försök igen.'
+        }
       },
       account: {
         title: 'Konto',
@@ -346,6 +558,170 @@ const se = {
         logoutDesc: 'Är du säker på att du vill logga ut?',
         okBtn: 'Ja',
         cancelBtn: 'Nej'
+      }
+    },
+    picoclaw: {
+      title: 'PicoClaw Assistent',
+      empty: 'Öppna panelen och starta en uppgift för att börja.',
+      inputPlaceholder: 'Beskriv vad du vill att PicoClaw ska göra',
+      newConversation: 'Ny konversation',
+      processing: 'Bearbetar...',
+      agent: {
+        defaultTitle: 'Allmän assistent',
+        defaultDescription: 'Allmän hjälp för chatt, sökning och arbetsyta.',
+        kvmTitle: 'Fjärrstyrning',
+        kvmDescription: 'Manövrera fjärrvärden genom NanoKVM.',
+        switched: 'Agentroll bytte',
+        switchFailed: 'Det gick inte att byta agentroll'
+      },
+      send: 'Skicka',
+      cancel: 'Avbryt',
+      status: {
+        connecting: 'Ansluter till gateway...',
+        connected: 'PicoClaw-session ansluten',
+        disconnected: 'PicoClaw-session frånkopplad',
+        stopped: 'Stoppbegäran har skickats',
+        runtimeStarted: 'PicoClaw runtime startad',
+        runtimeStartFailed: 'Det gick inte att starta PicoClaw runtime',
+        runtimeStopped: 'PicoClaw runtime stoppad',
+        runtimeStopFailed: 'Det gick inte att stoppa PicoClaw runtime',
+        controlSwitchedToMCP: 'Styrningen har växlats till den externa MCP-tjänsten'
+      },
+      connection: {
+        runtime: {
+          checking: 'Kontrollerar',
+          restoring: 'Restoring PicoClaw',
+          ready: 'Runtime klar',
+          stopped: 'Runtime stoppad',
+          blockedByMCP: 'Extern MCP-styrning är aktiv',
+          readyBlockedByMCP:
+            'The runtime is running, but external MCP currently controls device input.',
+          readyWithoutControl:
+            'The runtime is running. Grant PicoClaw device control before reconnecting.',
+          unavailable: 'Runtime inte tillgänglig',
+          configError: 'Konfigurationsfel'
+        },
+        transport: {
+          connecting: 'Ansluter',
+          connected: 'Ansluten',
+          disconnected: 'Disconnected',
+          reconnect: 'Reconnect',
+          reconnectDescription: 'Reconnect to the running PicoClaw session.',
+          reconnectBlocked: 'PicoClaw needs device control before reconnecting.'
+        },
+        run: {
+          idle: 'Inaktiv',
+          busy: 'Upptagen'
+        }
+      },
+      message: {
+        toolAction: 'Åtgärd',
+        observation: 'Observation',
+        screenshot: 'Skärmdump'
+      },
+      overlay: {
+        locked: 'PicoClaw styr enheten. Manuell inmatning är pausad.'
+      },
+      control: {
+        picoclaw: 'Enhetsstyrning: PicoClaw',
+        picoclawDescription: 'PicoClaw can write keyboard and mouse input. Manual input may pause.',
+        mcp: 'Enhetsstyrning: extern MCP',
+        mcpDescription: 'External MCP can write to the device. PicoClaw will not take over input.',
+        off: 'Enhetsstyrning: av',
+        offDescription:
+          'AI will not write keyboard or mouse input. Manual control remains available.',
+        transitioning: 'Device control: switching',
+        transitioningDescription: 'Device control is syncing. Please wait.',
+        grant: 'Ge styrning',
+        release: 'Släpp',
+        releasing: 'Releasing...',
+        switching: 'Switching...',
+        releasingLabel: 'Device control: releasing',
+        releasingDescription:
+          'Device control is being returned. PicoClaw has stopped current writes.',
+        granted: 'PicoClaw-styrning beviljad',
+        released: 'PicoClaw-styrning släppt',
+        grantFailed: 'Det gick inte att ge PicoClaw styrning',
+        releaseFailed: 'Det gick inte att släppa PicoClaw styrning',
+        grantConfirmTitle: 'Växla enhetsstyrning till PicoClaw?',
+        grantConfirmDesc: 'Externa MCP-enhetsskrivningar kommer att avbrytas.'
+      },
+      install: {
+        install: 'Installera PicoClaw',
+        installing: 'Installerar PicoClaw',
+        success: 'PicoClaw har installerats framgångsrikt',
+        failed: 'Det gick inte att installera PicoClaw',
+        uninstalling: 'Avinstallerar runtime...',
+        uninstalled: 'Runtime avinstallerades framgångsrikt.',
+        uninstallFailed: 'Avinstallationen misslyckades.',
+        requiredTitle: 'PicoClaw är inte installerad',
+        requiredDescription: 'Installera PicoClaw innan du startar PicoClaw runtime.',
+        progressDescription: 'PicoClaw laddas ner och installeras.',
+        stages: {
+          preparing: 'Förbereder',
+          downloading: 'Laddar ner',
+          extracting: 'Packar upp',
+          verifying: 'Verifierar',
+          installing: 'Installerar',
+          installed: 'Installerad',
+          install_timeout: 'Timeout',
+          install_failed: 'Misslyckades'
+        }
+      },
+      model: {
+        requiredTitle: 'Modellkonfiguration krävs',
+        requiredDescription: 'Konfigurera PicoClaw-modellen innan du använder PicoClaw-chatten.',
+        docsTitle: 'Konfigurationsguide',
+        docsDesc: 'Modeller och protokoll som stöds',
+        menuLabel: 'Konfigurera modell',
+        modelIdentifier: 'Modellidentifierare',
+        modelIdentifierPlaceholder: 'openai/gpt-5.4',
+        apiBase: 'API Base URL',
+        apiBasePlaceholder: 'https://api.example.com/v1',
+        apiKey: 'API-nyckel',
+        apiKeyPlaceholder: 'Ange modellens API-nyckel',
+        save: 'Spara',
+        saving: 'Sparar',
+        saved: 'Modellkonfiguration sparad',
+        saveFailed: 'Det gick inte att spara modellkonfigurationen',
+        invalid: 'Modellidentifierare, API Base URL och API-nyckel krävs'
+      },
+      uninstall: {
+        menuLabel: 'Avinstallera',
+        confirmTitle: 'Avinstallera PicoClaw',
+        confirmContent:
+          'Är du säker på att du vill avinstallera PicoClaw? Detta kommer att radera den körbara filen och alla konfigurationsfiler.',
+        confirmOk: 'Avinstallera',
+        confirmCancel: 'Avbryt'
+      },
+      history: {
+        title: 'Historik',
+        loading: 'Laddar sessioner...',
+        emptyTitle: 'Ingen historik än',
+        emptyDescription: 'Tidigare PicoClaw-sessioner kommer att visas här.',
+        loadFailed: 'Det gick inte att ladda sessionshistoriken',
+        deleteFailed: 'Det gick inte att ta bort sessionen',
+        deleteConfirmTitle: 'Ta bort session',
+        deleteConfirmContent: 'Är du säker på att du vill ta bort "{{title}}"?',
+        deleteConfirmOk: 'Ta bort',
+        deleteConfirmCancel: 'Avbryt',
+        messageCount_one: '{{count}} meddelande',
+        messageCount_other: '{{count}} meddelanden',
+        messageCount: '{{count}} meddelanden'
+      },
+      config: {
+        startRuntime: 'Starta PicoClaw',
+        stopRuntime: 'Stoppa PicoClaw'
+      },
+      start: {
+        enableConfirmTitle: 'Växla styrningen till PicoClaw?',
+        enableConfirmDesc: 'När PicoClaw startas inaktiveras den externa MCP-tjänsten.',
+        enableConfirmOk: 'Starta PicoClaw',
+        enableConfirmCancel: 'Avbryt',
+        title: 'Starta PicoClaw',
+        description: 'Starta runtime för att börja använda PicoClaw-assistenten.',
+        switchFromMCP: 'Switch to PicoClaw and start',
+        takeoverAndStart: 'Take over and start'
       }
     },
     error: {

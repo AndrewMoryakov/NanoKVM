@@ -1,4 +1,4 @@
-import { Divider } from 'antd';
+import { useAuth } from '@/contexts/auth.ts';
 import { KeyboardIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,16 +11,14 @@ import { VirtualKeyboard } from './virtual-keyboard.tsx';
 
 export const Keyboard = () => {
   const { t } = useTranslation();
+  const { account } = useAuth();
 
   const content = (
     <div className="flex flex-col space-y-1">
       <Paste />
       <VirtualKeyboard />
       <Shortcuts />
-
-      <Divider style={{ margin: '5px 0', opacity: 0.5 }} />
-
-      <LeaderKey />
+      {account.role === 'admin' && <LeaderKey />}
     </div>
   );
 

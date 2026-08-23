@@ -26,46 +26,67 @@ server
 The configuration file path is `/etc/kvm/server.yaml`.
 
 ```yaml
-proto: http
+# Network Settings
+proto: http            # Access protocol. Can be changed to `https` only when certificates are configured. Default is `http`
+host: ""               # The listening address for the HTTP/HTTPS service. If left empty, all network interfaces will be bound
 port:
-    http: 80
-    https: 443
+    http: 80           # The listening port for the HTTP service. Default is `80`
+    https: 443         # The listening port for the HTTPS service (effective when HTTPS is enabled). Default is `443`
 cert:
-    crt: server.crt
-    key: server.key
+    crt: server.crt    # The path to the public key certificate for HTTPS
+    key: server.key    # The path to the private key file for HTTPS
 
-# Log level (debug/info/warn/error)
-# Note: Use 'info' or 'error' in production, 'debug' only for development
+
+# Logging Configuration
 logger:
-    level: info
-    file: stdout
+    level: info     # Global log output level. Evaluated options from highest to lowest detail: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `panic`. Default is `info`
+    file: stdout    # Log output destination. `stdout` outputs to the standard console. A file path directs log output to that file. Default is `stdout`
 
-# Authentication setting (enable/disable)
-# Note: Only disable authentication in development environment
-authentication: enable
 
+# Authentication & Security
+authentication: enable              # Whether to enable identity verification for HTTP API and Web endpoints. Options are `enable` or `disable`. Default is `enable`. Highly recommended to leave this enabled for internet-facing devices!
 jwt:
-   # JWT secret key. If left empty, a random 64-byte key will be generated automatically.
-   secretKey: ""
-   # JWT token expiration time in seconds. Default: 2678400 (31 days)
-   refreshTokenDuration: 2678400
-   # Invalidate all JWT tokens when the user logs out. Default: true
-   revokeTokensOnLogout: true
+   secretKey: ""                    # The secret key used to sign and verify JWT Tokens. If left empty, a random key will be generated automatically on startup
+   refreshTokenDuration: 2678400    # The token refresh duration threshold in seconds before forcing a re-login. Default is `2678400` (~31 days)
+   revokeTokensOnLogout: true       # Whether logout invalidates all sessions belonging to that user. Other users are never logged out. Setting this to false only clears the browser cookie and is not recommended. Default is `true`
+security:
+   loginLockoutDuration: 0,         # The duration (in seconds) to ban an IP from attempting to log in again after reaching the failure limit. If set to `0` or left empty, brute-force protection is disabled. Default is `0`
+   loginMaxFailures:     5,         # The maximum number of continuous failed login attempts allowed per IP before triggering protection. Default is `5`
 
-# Address for custom STUN server
-# Note: You can disable the STUN service by setting it to 'disable' (e.g., in a LAN environment)
-stun: stun.l.google.com:19302
 
-# Address and authentication for custom TURN server
+# WebRTC Traversal Settings
+stun: stun.l.google.com:19302 # The default STUN server address used for NAT hole-punching to establish P2P streams
 turn:
-    turnAddr: example_addr
-    turnUser: example_user
-    turnCred: example_cred
+    turnAddr: example_addr    # The relay (TURN) server address (format `ip:port`) used as a fallback when P2P connection fails. Leave empty to disable TURN relay
+    turnUser: example_user    # The username required for authorization to the TURN server
+    turnCred: example_cred    # The credential/password required for authorization to the TURN server
 ```
+
+## Web Users
+
+NanoKVM uses two device-wide roles:
+
+- `admin`: KVM access plus user, system, network, update, storage, terminal, script, MCP, and PicoClaw administration.
+- `user`: KVM video, keyboard, mouse, paste, power/reset, and Wake-on-LAN access.
+
+Administrators manage accounts from **Settings > Account**. Account data remains in
+`/etc/kvm/pwd`; the server migrates the legacy single-account JSON format in place and writes
+the multi-user format atomically with mode `0600`. Keeping the same path preserves the physical
+BOOT-button password reset behavior.
+Users must confirm their current password when changing it themselves; administrators can reset
+non-owner users from the account manager. Only the device owner can change the device owner's
+password, because that password is also synchronized to the Linux root account.
+
+All authenticated sessions are backed by the current account state. Disabling, deleting,
+changing the role or password of a user invalidates that user's HTTP and real-time connections
+without affecting other users. Multiple users may watch and control the KVM concurrently; input
+uses the existing cooperative HID coordinator, so simultaneous input can interleave.
+Video mode, quality, resolution, and MJPEG frame-detection controls remain shared KVM
+operations; when several users adjust them concurrently, the latest change applies device-wide.
 
 ## Compile & Deploy
 
-Note: Use Linux operating system (x86-64). This build process is not compatible with ARM, Windows or macOS.
+Note: The manual steps below require a Linux x86-64 host with Go 1.25 or newer; they are not compatible with ARM, Windows or macOS. With Docker you can skip them entirely and use the containerized flow instead — the root [Makefile](../Makefile) (`make shell`) or the dev container (see "Development" in the root [README](../README.md)) — which works on any host OS; run `server/build.sh` inside the container for a release-equivalent build.
 
 1. Install the Toolchain
     1. Download the toolchain from the following link: [Download Link](https://sophon-file.sophon.cn/sophon-prod-s3/drive/23/03/07/16/host-tools.tar.gz).
