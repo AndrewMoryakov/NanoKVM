@@ -67,12 +67,24 @@ case "$1" in
                     tailscale set --accept-dns=false
                 else
                     echo "FAIL"
+                    exit 1
                 fi
                 ;;
         stop)
                 printf "Stopping $DAEMON: "
-                start-stop-daemon -K -p "$PIDFILE"
-                [ $? = 0 ]  && (echo "OK"; rm -f "$PIDFILE") || echo "FAIL"
+                if start-stop-daemon -K -p "$PIDFILE"; then
+                    echo "OK"
+                    rm -f "$PIDFILE"
+                elif pidof "$DAEMON" >/dev/null 2>&1; then
+                    # A failed stop with the daemon still alive must not report
+                    # success: callers use the exit status to decide whether it
+                    # is safe to start something else.
+                    echo "FAIL"
+                    exit 1
+                else
+                    echo "OK"
+                    rm -f "$PIDFILE"
+                fi
                 printf "cleaning tailscaled: "
                 /usr/sbin/$DAEMON --cleanup >/dev/null 2>&1
                 [ $? = 0 ] && echo "OK" || echo "FAIL"

@@ -3,6 +3,7 @@ package tailscale
 import (
 	"NanoKVM-Server/utils"
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,12 +11,32 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const (
 	ScriptPath       = "/etc/init.d/S98tailscaled"
 	ScriptBackupPath = "/kvmapp/system/init.d/S98tailscaled"
 )
+
+// CommandTimeout bounds every init-script call. S98tailscaled sleeps 5 seconds
+// on start and then runs `tailscale set`, so without a deadline a wedged daemon
+// leaves the HTTP handler hanging past any client timeout.
+const CommandTimeout = 1 * time.Minute
+
+func runCommand(command string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), CommandTimeout)
+	defer cancel()
+
+	if err := exec.CommandContext(ctx, "sh", "-c", command).Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("command timed out after %s: %s", CommandTimeout, command)
+		}
+		return err
+	}
+
+	return nil
+}
 
 type Cli struct{}
 
@@ -49,7 +70,7 @@ func (c *Cli) Start() error {
 	}
 
 	command := strings.Join(commands, " && ")
-	return exec.Command("sh", "-c", command).Run()
+	return runCommand(command)
 }
 
 func (c *Cli) Restart() error {
@@ -59,12 +80,12 @@ func (c *Cli) Restart() error {
 	}
 
 	command := strings.Join(commands, " && ")
-	return exec.Command("sh", "-c", command).Run()
+	return runCommand(command)
 }
 
 func (c *Cli) Stop() error {
 	command := fmt.Sprintf("%s stop", ScriptPath)
-	err := exec.Command("sh", "-c", command).Run()
+	err := runCommand(command)
 	if err != nil {
 		return err
 	}
@@ -74,17 +95,21 @@ func (c *Cli) Stop() error {
 
 func (c *Cli) Up() error {
 	command := "tailscale up --accept-dns=false"
-	return exec.Command("sh", "-c", command).Run()
+	return runCommand(command)
 }
 
 func (c *Cli) Down() error {
 	command := "tailscale down"
-	return exec.Command("sh", "-c", command).Run()
+	return runCommand(command)
 }
 
 func (c *Cli) Status() (*TsStatus, error) {
 	command := "tailscale status --json"
-	cmd := exec.Command("sh", "-c", command)
+
+	ctx, cancel := context.WithTimeout(context.Background(), CommandTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "sh", "-c", command)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -111,6 +136,8 @@ func (c *Cli) Status() (*TsStatus, error) {
 }
 
 func (c *Cli) Login() (string, error) {
+	// Left without a context on purpose: the command carries its own --timeout,
+	// and the caller reads the login URL off stderr while it keeps running.
 	command := "tailscale login --accept-dns=false --timeout=10m"
 	cmd := exec.Command("sh", "-c", command)
 
@@ -143,5 +170,5 @@ func (c *Cli) Login() (string, error) {
 
 func (c *Cli) Logout() error {
 	command := "tailscale logout"
-	return exec.Command("sh", "-c", command).Run()
+	return runCommand(command)
 }
