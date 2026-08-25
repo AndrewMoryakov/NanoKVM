@@ -24,6 +24,21 @@ func (s *Service) GetPreference(c *gin.Context) {
 	rsp.OkRspWithData(c, &proto.GetVPNPreferenceRsp{VPN: vpnpref.Read()})
 }
 
+// SetPreference records which client autostarts, and — only when that is safe —
+// stops the other one.
+//
+// The preference governs boot. It is not a permission to run: both clients can be
+// started at any time, and the daemons coexist (only one tunnel is up, and the
+// memory cost is transient). That separation exists because of one scenario: this
+// device is normally reached *through* the VPN being switched away from. The old
+// design stopped the current client first and started the new one, which on a
+// remote device meant the session died before the incoming client was usable —
+// and NetBird's first login is interactive, so it was never usable in time. The
+// device could not be recovered without physical or LAN access.
+//
+// So the rule is: never stop a working tunnel until the incoming one is proven
+// connected. If nothing is running there is nothing to lose, and the preference
+// is recorded without touching either client.
 func (s *Service) SetPreference(c *gin.Context) {
 	var req proto.SetVPNPreferenceReq
 	var rsp proto.Response
@@ -50,12 +65,21 @@ func (s *Service) SetPreference(c *gin.Context) {
 	}
 	defer vpnpref.Unlock()
 
-	// Stop the old client before starting the new one: the device cannot host
-	// both at once. If the new one fails to start, put the old one back — this
-	// device is usually reached through the very tunnel being switched.
-	if err := switchTo(vpn); err != nil {
-		rsp.ErrRsp(c, -3, err.Error())
-		return
+	other := otherVPN(vpn)
+
+	if running(other) {
+		if !connected(vpn) {
+			rsp.ErrRsp(c, -6, fmt.Sprintf(
+				"%s is not connected yet — start it and finish signing in before making it the autostart VPN, "+
+					"otherwise stopping %s now would cut the connection you are using", vpn, other))
+			return
+		}
+
+		if err := cliFor(other).Stop(); err != nil {
+			log.Errorf("failed to stop %s: %s", other, err)
+			rsp.ErrRsp(c, -3, fmt.Sprintf("%s is connected, but %s could not be stopped: %v", vpn, other, err))
+			return
+		}
 	}
 
 	// Written last, so the file never claims a state the device is not in.
@@ -65,50 +89,62 @@ func (s *Service) SetPreference(c *gin.Context) {
 		return
 	}
 
-	log.Infof("VPN preference set to %s", vpn)
+	log.Infof("VPN autostart set to %s", vpn)
 	rsp.OkRspWithData(c, &proto.GetVPNPreferenceRsp{VPN: vpn})
 }
 
-// stopper is the subset of a VPN cli needed to roll a failed switch back.
 type stopper interface {
-	Start() error
 	Stop() error
 }
 
-func switchTo(vpn string) error {
-	var old, target stopper
+func otherVPN(vpn string) string {
 	if vpn == vpnpref.Netbird {
-		old, target = tailscale.NewCli(), netbird.NewCli()
-	} else {
-		old, target = netbird.NewCli(), tailscale.NewCli()
+		return vpnpref.Tailscale
 	}
 
-	// A failed stop must abort the switch. S99netbird now confirms the daemon is
-	// actually gone before reporting success — signal senders like
-	// start-stop-daemon -K return 0 as soon as the signal is sent, which says
-	// nothing about whether the process died. Starting the new client on top of
-	// a live old one is the both-VPNs state this whole design exists to prevent.
-	//
-	// Strength differs by direction. Stopping NetBird is verified: S99netbird
-	// polls until the process is gone. Stopping Tailscale is not: S98tailscaled
-	// exits 0 from its stop branch whatever happens, so a daemon that ignored the
-	// signal looks like success here. Fixing that script is out of scope.
-	if err := old.Stop(); err != nil {
-		return fmt.Errorf("could not confirm the current VPN stopped, so %s was not started: %w", vpn, err)
+	return vpnpref.Netbird
+}
+
+func cliFor(vpn string) stopper {
+	if vpn == vpnpref.Netbird {
+		return netbird.NewCli()
 	}
 
-	if err := target.Start(); err != nil {
-		log.Errorf("failed to start %s: %s", vpn, err)
+	return tailscale.NewCli()
+}
 
-		if rbErr := old.Start(); rbErr != nil {
-			return fmt.Errorf("start %s failed: %v; rollback failed: %v", vpn, err, rbErr)
+// running reports whether the client's daemon is up. A client that is not
+// running cannot be cut off, so switching away from it is always safe.
+func running(vpn string) bool {
+	if vpn == vpnpref.Netbird {
+		isRunning, err := netbird.NewCli().ServiceRunning()
+		return err == nil && isRunning
+	}
+
+	// Tailscale has no equivalent service check; a readable status means the
+	// daemon answered.
+	_, err := tailscale.NewCli().Status()
+	return err == nil
+}
+
+// connected reports whether the client actually carries a tunnel right now —
+// not merely that its daemon is alive. This is the gate that prevents a remote
+// lockout, so it is deliberately strict: anything short of a confirmed
+// connection counts as not connected.
+func connected(vpn string) bool {
+	if vpn == vpnpref.Netbird {
+		status, err := netbird.NewCli().Status()
+		if err != nil {
+			return false
 		}
 
-		// S98tailscaled exits 0 even when the daemon did not come up, so a
-		// successful return here is not proof the tunnel is back. Say what we
-		// know, not what we hope.
-		return fmt.Errorf("start %s failed: %v; rollback attempted", vpn, err)
+		return status.Management.Connected && status.Signal.Connected
 	}
 
-	return nil
+	status, err := tailscale.NewCli().Status()
+	if err != nil {
+		return false
+	}
+
+	return status.BackendState == "Running"
 }
