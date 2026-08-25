@@ -470,6 +470,8 @@ const ca = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Inici automàtic',
+        autostartConfirm: "Canviar l'inici automàtic a Tailscale? S'aturarà NetBird.",
         memory: {
           title: 'Optimització de memòria',
           tip: 'Quan es supera el límit de memòria, es fa una neteja més agressiva. Recomanat: 75MB si uses Tailscale. Requereix reiniciar Tailscale.'
@@ -509,6 +511,45 @@ const ca = {
         uninstallDesc: 'Esteu segur que voleu desinstal·lar Tailscale?',
         okBtn: 'Sí',
         cancelBtn: 'No'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Inici automàtic',
+        autostartConfirm: "Canviar l'inici automàtic a NetBird? S'aturarà Tailscale.",
+        restart: 'Reiniciar NetBird?',
+        stop: 'Aturar NetBird?',
+        stopDesc:
+          "Atura el servei NetBird. Es tornarà a iniciar en arrencar si l'inici automàtic segueix actiu.",
+        loading: 'Carregant...',
+        notInstall: 'NetBird no instal·lat! Instal·la-ho.',
+        install: 'Instal·la',
+        installing: 'Instal·lant',
+        notRunning: "NetBird no s'està executant. Si us plau, inicieu-lo per continuar.",
+        run: 'Comença',
+        notLogin: 'El dispositiu no està vinculat. Inicia sessió per vincular-lo.',
+        urlPeriod: 'Aquesta URL és vàlida durant 10 minuts',
+        login: 'Inicia sessió',
+        loginSuccess: 'Sessió iniciada correctament',
+        enable: 'Activa NetBird',
+        deviceName: 'Nom del dispositiu',
+        deviceIP: 'IP del dispositiu',
+        uninstall: 'Desinstal·la NetBird',
+        uninstallDesc: 'Esteu segur que voleu desinstal·lar NetBird?',
+        version: 'Versió',
+        disconnect: 'Desconnecta',
+        disconnectConfirm: 'Segur que voleu desconnectar?',
+        okBtn: 'Sí',
+        cancelBtn: 'No',
+        error: {
+          title: "Ha fallat l'operació de NetBird",
+          intro: "Detalls de l'error:",
+          stepWait: '1. Espereu 10-15 segons i torneu-ho a provar.',
+          stepRestartUI: '2. Feu clic a «Reinicia el servei» a sota.',
+          stepRestartSSH: '3. Si cal, executeu: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Reinicieu el NanoKVM només si els passos anteriors no ajuden.',
+          restartButton: 'Reinicia el servei',
+          refreshButton: "Actualitza l'estat"
+        }
       },
       update: {
         title: 'Comprova actualitzacions',

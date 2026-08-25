@@ -476,6 +476,8 @@ const nl = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Automatisch starten',
+        autostartConfirm: 'Automatisch starten omzetten naar Tailscale? NetBird wordt gestopt.',
         memory: {
           title: 'Geheugen optimalisatie',
           tip: 'Wanneer geheugen gebruik de limiet overschreid, garbage collection wordt agressiever uitgevoerd om geheugen vrij te maken. geadviseerd om 50MB te kiezen als Tailscale wordt gebruikt. Tailscale moet worden herstart om de wijziging door te voeren.'
@@ -516,6 +518,46 @@ const nl = {
         uninstallDesc: 'Weet u zeker dat u Tailscale wilt verwijderen?',
         okBtn: 'Ja',
         cancelBtn: 'Nee'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Automatisch starten',
+        autostartConfirm: 'Automatisch starten omzetten naar NetBird? Tailscale wordt gestopt.',
+        restart: 'Weet u zeker dat u NetBird opnieuw wilt opstarten?',
+        stop: 'Weet u zeker dat u NetBird wilt stoppen?',
+        stopDesc:
+          'Stopt de NetBird-service. Bij ingeschakeld automatisch starten start deze bij de volgende keer opstarten opnieuw.',
+        loading: 'Laden...',
+        notInstall: 'NetBird niet gevonden! Installeer a.u.b.',
+        install: 'Installeren',
+        installing: 'Installeren bezig',
+        notRunning: 'NetBird is niet actief. Start het programma om door te gaan.',
+        run: 'Begin',
+        notLogin:
+          'Het apparaat is nog niet gekoppeld. Log in en koppel dit apparaat aan uw account.',
+        urlPeriod: 'Deze url is 10 minuten geldig',
+        login: 'Inloggen',
+        loginSuccess: 'Inloggen gelukt',
+        enable: 'NetBird inschakelen',
+        deviceName: 'Apparaatnaam',
+        deviceIP: 'Apparaat IP',
+        uninstall: 'Verwijderen NetBird',
+        uninstallDesc: 'Weet u zeker dat u NetBird wilt verwijderen?',
+        version: 'Versie',
+        disconnect: 'Verbreken',
+        disconnectConfirm: 'Weet u zeker dat u de verbinding wilt verbreken?',
+        okBtn: 'Ja',
+        cancelBtn: 'Nee',
+        error: {
+          title: 'NetBird-bewerking mislukt',
+          intro: 'Foutdetails:',
+          stepWait: '1. Wacht 10-15 seconden en probeer het opnieuw.',
+          stepRestartUI: '2. Klik hieronder op ‘Service herstarten’.',
+          stepRestartSSH: '3. Voer indien nodig uit: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Herstart de NanoKVM alleen als bovenstaande stappen niet helpen.',
+          restartButton: 'Service herstarten',
+          refreshButton: 'Status vernieuwen'
+        }
       },
       update: {
         title: 'Controleren op updates',

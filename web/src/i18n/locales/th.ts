@@ -464,6 +464,8 @@ const th = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'เริ่มอัตโนมัติ',
+        autostartConfirm: 'สลับการเริ่มอัตโนมัติไปที่ Tailscale หรือไม่? NetBird จะถูกหยุด',
         memory: {
           title: 'การปรับแต่งหน่วยความจำ',
           tip: 'เมื่อการใช้งานหน่วยความจำเกินขีดจำกัด การเก็บขยะจะทำงานอย่างเข้มงวดมากขึ้นเพื่อพยายามปล่อยหน่วยความจำ คำแนะนำคือการตั้งค่าเป็น 50MB หากใช้ Tailscale และต้องทำการรีสตาร์ท Tailscale เพื่อให้การเปลี่ยนแปลงมีผล'
@@ -503,6 +505,45 @@ const th = {
         uninstallDesc: 'คุณแน่ใจหรือไม่ว่าต้องการถอนการติดตั้ง Tailscale',
         okBtn: 'ใช่',
         cancelBtn: 'ไม่ใช่'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'เริ่มอัตโนมัติ',
+        autostartConfirm: 'สลับการเริ่มอัตโนมัติไปที่ NetBird หรือไม่? Tailscale จะถูกหยุด',
+        restart: 'คุณแน่ใจที่จะรีสตาร์ท NetBird หรือไม่?',
+        stop: 'คุณแน่ใจที่จะปิด NetBird หรือไม่?',
+        stopDesc:
+          'หยุดบริการ NetBird หากเปิดเริ่มอัตโนมัติไว้ จะเริ่มทำงานอีกครั้งเมื่อบูตครั้งถัดไป',
+        loading: 'กำลังโหลด...',
+        notInstall: 'ไม่พบ NetBird! กรุณาติดตั้ง',
+        install: 'ติดตั้ง',
+        installing: 'กำลังติดตั้ง',
+        notRunning: 'NetBird ไม่ทำงาน กรุณาเริ่มต้นเพื่อดำเนินการต่อ',
+        run: 'เริ่ม',
+        notLogin: 'อุปกรณ์ยังไม่ได้ผูกบัญชี กรุณาล็อกอินและผูกอุปกรณ์นี้กับบัญชีของคุณ',
+        urlPeriod: 'ลิงก์นี้ใช้ได้ 10 นาที',
+        login: 'ล็อกอิน',
+        loginSuccess: 'ล็อกอินสำเร็จ',
+        enable: 'เปิดใช้งาน NetBird',
+        deviceName: 'ชื่ออุปกรณ์',
+        deviceIP: 'IP อุปกรณ์',
+        uninstall: 'ถอนการติดตั้ง NetBird',
+        uninstallDesc: 'คุณแน่ใจหรือไม่ว่าต้องการถอนการติดตั้ง NetBird',
+        version: 'เวอร์ชัน',
+        disconnect: 'ตัดการเชื่อมต่อ',
+        disconnectConfirm: 'ยืนยันการตัดการเชื่อมต่อหรือไม่?',
+        okBtn: 'ใช่',
+        cancelBtn: 'ไม่ใช่',
+        error: {
+          title: 'การทำงานของ NetBird ล้มเหลว',
+          intro: 'รายละเอียดข้อผิดพลาด:',
+          stepWait: '1. รอ 10-15 วินาทีแล้วลองใหม่',
+          stepRestartUI: '2. คลิก “รีสตาร์ตบริการ” ด้านล่าง',
+          stepRestartSSH: '3. หากจำเป็น ให้รัน: /etc/init.d/S99netbird restart',
+          stepReboot: '4. รีบูต NanoKVM เฉพาะเมื่อขั้นตอนข้างต้นไม่ช่วย',
+          restartButton: 'รีสตาร์ตบริการ',
+          refreshButton: 'รีเฟรชสถานะ'
+        }
       },
       update: {
         title: 'ตรวจสอบการอัปเดต',

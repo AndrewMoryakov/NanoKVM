@@ -519,7 +519,8 @@ const en = {
         autostartConfirm: 'Switch autostart to NetBird? Tailscale will be stopped.',
         restart: 'Restart NetBird?',
         stop: 'Stop NetBird?',
-        stopDesc: 'Disconnect NetBird and disable automatic startup on boot.',
+        stopDesc:
+          'Stop the NetBird service. It starts again on the next boot while NetBird autostart is on.',
         loading: 'Loading...',
         notInstall: 'NetBird is not installed.',
         install: 'Install',
@@ -534,6 +535,8 @@ const en = {
         enable: 'Enable NetBird',
         deviceName: 'Device Name',
         deviceIP: 'Device IP',
+        uninstall: 'Uninstall NetBird',
+        uninstallDesc: 'Are you sure you want to uninstall NetBird?',
         version: 'Version',
         disconnect: 'Disconnect',
         disconnectConfirm: 'Are you sure you want to disconnect?',

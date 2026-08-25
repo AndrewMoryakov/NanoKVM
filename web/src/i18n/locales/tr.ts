@@ -473,6 +473,8 @@ const tr = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Otomatik başlat',
+        autostartConfirm: "Otomatik başlatma Tailscale'e geçirilsin mi? NetBird durdurulacak.",
         memory: {
           title: 'Bellek optimizasyonu',
           tip: "Bellek kullanımı sınırı aştığında, belleği boşaltmak amacıyla çöp toplama işlemi daha agresif bir şekilde gerçekleştirilir. Tailscale kullanıyorsanız bu değerin 75 MB olarak ayarlanması önerilir. Değişikliğin etkili olabilmesi için Tailscale'in yeniden başlatılması gerekir."
@@ -512,6 +514,45 @@ const tr = {
         uninstallDesc: "Tailscale'i kaldırmak istediğinizden emin misiniz?",
         okBtn: 'Evet',
         cancelBtn: 'Hayır'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Otomatik başlat',
+        autostartConfirm: "Otomatik başlatma NetBird'e geçirilsin mi? Tailscale durdurulacak.",
+        restart: "NetBird'i yeniden başlat?",
+        stop: "NetBird'i durdur?",
+        stopDesc:
+          'NetBird servisini durdurur. Otomatik başlatma açıksa bir sonraki açılışta yeniden başlar.',
+        loading: 'Yükleniyor...',
+        notInstall: 'NetBird bulunamadı! Lütfen indirin.',
+        install: 'İndir',
+        installing: 'İndiriliyor',
+        notRunning: 'NetBird çalışmıyor. Devam etmek için lütfen başlatın.',
+        run: 'Başlat',
+        notLogin: 'Cihaz bağlı değil. Lütfen giriş yapıp cihazınızı hesabınıza bağlayın.',
+        urlPeriod: 'Adres sadece 10 ndakika boyunca geçerlidir',
+        login: 'Giriş yap',
+        loginSuccess: 'Giriş yapıldı',
+        enable: "NetBird'i etkinleştir",
+        deviceName: 'Cihaz Adı',
+        deviceIP: 'Cihaz IP adresi',
+        uninstall: "NetBird'i kaldır",
+        uninstallDesc: "NetBird'i kaldırmak istediğinizden emin misiniz?",
+        version: 'Sürüm',
+        disconnect: 'Bağlantıyı kes',
+        disconnectConfirm: 'Bağlantıyı kesmek istediğinize emin misiniz?',
+        okBtn: 'Evet',
+        cancelBtn: 'Hayır',
+        error: {
+          title: 'NetBird işlemi başarısız oldu',
+          intro: 'Hata ayrıntıları:',
+          stepWait: '1. 10-15 saniye bekleyip yeniden deneyin.',
+          stepRestartUI: '2. Aşağıdaki “Servisi yeniden başlat”a tıklayın.',
+          stepRestartSSH: '3. Gerekirse çalıştırın: /etc/init.d/S99netbird restart',
+          stepReboot: "4. NanoKVM'i yalnızca yukarıdaki adımlar işe yaramazsa yeniden başlatın.",
+          restartButton: 'Servisi yeniden başlat',
+          refreshButton: 'Durumu yenile'
+        }
       },
       update: {
         title: 'Güncelleştirmeleri kontrol et',

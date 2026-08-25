@@ -474,6 +474,8 @@ const ja = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: '自動起動',
+        autostartConfirm: '自動起動を Tailscale に切り替えますか？NetBird は停止します。',
         memory: {
           title: 'メモリ最適化',
           tip: 'メモリ使用量が上限を超えると、メモリ解放のためにより積極的にガベージコレクションが実行されます。Tailscale を使用する場合は 50MB に設定することをお勧めします。この設定を有効にするには Tailscale を再起動する必要があります。'
@@ -514,6 +516,46 @@ const ja = {
         uninstallDesc: 'Tailscale をアンインストールしてもよろしいですか？',
         okBtn: 'はい',
         cancelBtn: 'いいえ'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: '自動起動',
+        autostartConfirm: '自動起動を NetBird に切り替えますか？Tailscale は停止します。',
+        restart: 'NetBird を再起動しますか？',
+        stop: 'NetBird を停止しますか？',
+        stopDesc:
+          'NetBird サービスを停止します。自動起動が有効なままなら次回起動時に再び開始します。',
+        loading: '読み込み中...',
+        notInstall: 'NetBird が見つかりません。インストールしてください。',
+        install: 'インストール',
+        installing: 'インストール中',
+        notRunning: 'NetBird はまだ実行されていません。起動操作を実行してください',
+        run: '起動',
+        notLogin:
+          'このデバイスはまだバインドされていません。ログインしてデバイスをアカウントにバインドしてください。',
+        urlPeriod: 'この URL は 10 分間有効です',
+        login: 'ログイン',
+        loginSuccess: 'ログイン成功',
+        enable: 'NetBird を有効化',
+        deviceName: 'デバイス名',
+        deviceIP: 'デバイスアドレス',
+        uninstall: 'NetBird をアンインストール',
+        uninstallDesc: 'NetBird をアンインストールしてもよろしいですか？',
+        version: 'バージョン',
+        disconnect: '切断',
+        disconnectConfirm: '切断してもよろしいですか？',
+        okBtn: 'はい',
+        cancelBtn: 'いいえ',
+        error: {
+          title: 'NetBird の操作に失敗しました',
+          intro: 'エラーの詳細:',
+          stepWait: '1. 10〜15 秒待ってから再試行してください。',
+          stepRestartUI: '2. 下の「サービスを再起動」をクリックしてください。',
+          stepRestartSSH: '3. 必要に応じて実行: /etc/init.d/S99netbird restart',
+          stepReboot: '4. 上記で解決しない場合のみ NanoKVM を再起動してください。',
+          restartButton: 'サービスを再起動',
+          refreshButton: '状態を更新'
+        }
       },
       update: {
         title: 'アップデート',

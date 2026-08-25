@@ -33,6 +33,9 @@ export const Install = ({ setIsLocked, onSuccess }: InstallProps) => {
 
         onSuccess();
       })
+      .catch((err) => {
+        setErrMsg(err.message || 'Install failed');
+      })
       .finally(() => {
         setIsLoading(false);
         setIsLocked(false);

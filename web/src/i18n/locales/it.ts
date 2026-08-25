@@ -476,6 +476,8 @@ const it = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Avvio automatico',
+        autostartConfirm: "Passare l'avvio automatico a Tailscale? NetBird verrà arrestato.",
         memory: {
           title: 'Ottimizzazione memoria',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -516,6 +518,46 @@ const it = {
         uninstallDesc: 'Sei sicuro di voler disinstallare Tailscale?',
         okBtn: 'Yes',
         cancelBtn: 'No'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Avvio automatico',
+        autostartConfirm: "Passare l'avvio automatico a NetBird? Tailscale verrà arrestato.",
+        restart: 'Are you sure to restart NetBird?',
+        stop: 'Are you sure to stop NetBird?',
+        stopDesc:
+          "Arresta il servizio NetBird. Si riavvierà al prossimo avvio se l'avvio automatico è attivo.",
+        loading: 'Caricamento...',
+        notInstall: 'NetBird non trovato! Per favore, installa.',
+        install: 'Installa',
+        installing: 'Installazione in corso',
+        notRunning: 'NetBird non è in esecuzione. Per favore avvialo per continuare.',
+        run: 'Inizio',
+        notLogin:
+          'Il dispositivo non è ancora stato associato. Effettua il login e associa questo dispositivo al tuo account.',
+        urlPeriod: 'Questo URL è valido per 10 minuti',
+        login: 'Accedi',
+        loginSuccess: 'Accesso riuscito',
+        enable: 'Abilita NetBird',
+        deviceName: 'Nome Dispositivo',
+        deviceIP: 'IP Dispositivo',
+        uninstall: 'Disinstalla NetBird',
+        uninstallDesc: 'Sei sicuro di voler disinstallare NetBird?',
+        version: 'Versione',
+        disconnect: 'Disconnetti',
+        disconnectConfirm: 'Vuoi davvero disconnetterti?',
+        okBtn: 'Yes',
+        cancelBtn: 'No',
+        error: {
+          title: 'Operazione NetBird non riuscita',
+          intro: "Dettagli dell'errore:",
+          stepWait: '1. Attendi 10-15 secondi e riprova.',
+          stepRestartUI: '2. Fai clic su «Riavvia servizio» qui sotto.',
+          stepRestartSSH: '3. Se necessario, esegui: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Riavvia il NanoKVM solo se i passaggi precedenti non aiutano.',
+          restartButton: 'Riavvia servizio',
+          refreshButton: 'Aggiorna stato'
+        }
       },
       update: {
         title: 'Controlla Aggiornamenti',

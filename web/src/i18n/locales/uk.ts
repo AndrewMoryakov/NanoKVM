@@ -471,6 +471,8 @@ const uk = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Автозапуск',
+        autostartConfirm: 'Перемкнути автозапуск на Tailscale? NetBird буде зупинено.',
         memory: {
           title: "Оптимізація пам'яті",
           tip: 'Коли використання пам’яті перевищує обмеження, збирання сміття проводиться більш агресивно, щоб спробувати звільнити пам’ять. Рекомендується встановити 50 Мб, якщо використовувати Tailscale. Після зміни налаштувань потрібно перезавантажити Tailscale.'
@@ -511,6 +513,46 @@ const uk = {
         uninstallDesc: 'Ви впевнені, що хочете видалити Tailscale?',
         okBtn: 'Так',
         cancelBtn: 'Ні'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Автозапуск',
+        autostartConfirm: 'Перемкнути автозапуск на NetBird? Tailscale буде зупинено.',
+        restart: 'Ви впевнені, що бажаєте перезавантажити NetBird?',
+        stop: 'Ви впевнені, що бажаєте зупинити NetBird?',
+        stopDesc:
+          'Зупиняє службу NetBird. За увімкненого автозапуску вона знову стартує після перезавантаження.',
+        loading: 'Завантаження...',
+        notInstall: 'NetBird не знайдено! Будь ласка, встановіть його.',
+        install: 'Встановити',
+        installing: 'Встановлення',
+        notRunning: 'NetBird не працює. Щоб продовжити, запустіть його.',
+        run: 'Початок',
+        notLogin:
+          "Пристрій ще не прив'язаний. Будь ласка, увійдіть і прив'яжіть цей пристрій до вашого облікового запису.",
+        urlPeriod: 'Ця URL-адреса дійсна протягом 10 хвилин',
+        login: 'Увійти',
+        loginSuccess: 'Успішний вхід',
+        enable: 'Увімкнути NetBird',
+        deviceName: 'Назва пристрою',
+        deviceIP: 'IP пристрою',
+        uninstall: 'Видалити NetBird',
+        uninstallDesc: 'Ви впевнені, що хочете видалити NetBird?',
+        version: 'Версія',
+        disconnect: "Від'єднати",
+        disconnectConfirm: "Ви впевнені, що хочете від'єднатися?",
+        okBtn: 'Так',
+        cancelBtn: 'Ні',
+        error: {
+          title: 'Не вдалося виконати операцію NetBird',
+          intro: 'Деталі помилки:',
+          stepWait: '1. Зачекайте 10-15 секунд і повторіть дію.',
+          stepRestartUI: '2. Натисніть «Перезапустити службу» нижче.',
+          stepRestartSSH: '3. За потреби виконайте: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Перезавантажуйте NanoKVM, лише якщо кроки вище не допомогли.',
+          restartButton: 'Перезапустити службу',
+          refreshButton: 'Оновити стан'
+        }
       },
       update: {
         title: 'Перевірити оновлення',

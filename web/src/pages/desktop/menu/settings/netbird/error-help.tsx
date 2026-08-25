@@ -29,6 +29,9 @@ export const ErrorHelp = ({ error, onRefresh }: ErrorHelpProps) => {
 
         onRefresh();
       })
+      .catch((err) => {
+        setActionError(err.message || 'Restart failed');
+      })
       .finally(() => {
         setIsRestarting(false);
       });

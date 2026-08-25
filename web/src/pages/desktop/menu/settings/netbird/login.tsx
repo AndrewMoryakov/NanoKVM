@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import * as api from '@/api/extensions/netbird.ts';
 
 import { ErrorHelp } from './error-help.tsx';
+import { LoginUrl } from './login-url.tsx';
 
 type LoginProps = {
   onSuccess: () => void;
@@ -40,6 +41,9 @@ export const Login = ({ onSuccess }: LoginProps) => {
         window.open(url, '_blank');
         setTimeout(() => setLoginUrl(''), 10 * 60 * 1000);
       })
+      .catch((err) => {
+        setErrMsg(err.message || 'Login failed');
+      })
       .finally(() => {
         setIsLoading(false);
       });
@@ -61,17 +65,7 @@ export const Login = ({ onSuccess }: LoginProps) => {
           {t('settings.netbird.login')}
         </Button>
       ) : (
-        <div className="flex w-full flex-col items-center justify-center space-y-5">
-          <Button type="link" href={loginUrl} target="_blank">
-            {loginUrl}
-          </Button>
-
-          <span className="text-xs text-neutral-600">{t('settings.netbird.urlPeriod')}</span>
-
-          <Button type="primary" size="large" shape="round" onClick={onSuccess}>
-            {t('settings.netbird.loginSuccess')}
-          </Button>
-        </div>
+        <LoginUrl url={loginUrl} onConfirm={onSuccess} />
       )}
 
       {errMsg && <ErrorHelp error={errMsg} onRefresh={onSuccess} />}

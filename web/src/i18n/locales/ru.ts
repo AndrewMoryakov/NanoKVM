@@ -522,7 +522,8 @@ const ru = {
         autostartConfirm: 'Переключить автозапуск на NetBird? Tailscale будет остановлен.',
         restart: 'Перезапустить NetBird?',
         stop: 'Остановить NetBird?',
-        stopDesc: 'Отключить NetBird и выключить автозапуск при загрузке.',
+        stopDesc:
+          'Остановить службу NetBird. При включённом автозапуске она снова стартует после перезагрузки.',
         loading: 'Загрузка...',
         notInstall: 'NetBird не установлен.',
         install: 'Установить',
@@ -536,6 +537,8 @@ const ru = {
         enable: 'Включить NetBird',
         deviceName: 'Имя устройства',
         deviceIP: 'IP адрес устройства',
+        uninstall: 'Удалить NetBird',
+        uninstallDesc: 'Вы уверены, что хотите удалить NetBird?',
         version: 'Версия',
         disconnect: 'Отключить',
         disconnectConfirm: 'Вы уверены, что хотите отключиться?',

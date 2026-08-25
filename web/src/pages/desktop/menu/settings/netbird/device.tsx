@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import * as api from '@/api/extensions/netbird.ts';
 
 import { ErrorHelp } from './error-help.tsx';
+import { LoginUrl } from './login-url.tsx';
 import { Status } from './types.ts';
 
 type DeviceProps = {
@@ -20,6 +21,7 @@ export const Device = ({ status, onLogout }: DeviceProps) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [errMsg, setErrMsg] = useState('');
+  const [loginUrl, setLoginUrl] = useState('');
 
   useEffect(() => {
     setIsRunning(status.state === 'running');
@@ -36,7 +38,19 @@ export const Device = ({ status, onLogout }: DeviceProps) => {
         return;
       }
 
+      // Enabling an unbound device returns an interactive login URL. Showing it
+      // is the whole point: flipping the switch instead would claim the tunnel
+      // is up while the device waits for an authorization nobody opened.
+      const url = !isRunning ? rsp.data?.url : '';
+      if (url) {
+        setLoginUrl(url);
+        window.open(url, '_blank');
+        return;
+      }
+
       setIsRunning(!isRunning);
+    } catch (err: any) {
+      setErrMsg(err?.message || 'Request failed');
     } finally {
       setIsUpdating(false);
     }
@@ -56,9 +70,21 @@ export const Device = ({ status, onLogout }: DeviceProps) => {
 
         onLogout();
       })
+      .catch((err) => {
+        setErrMsg(err.message || 'Disconnect failed');
+      })
       .finally(() => {
         setIsDisconnecting(false);
       });
+  }
+
+  if (loginUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-10 pt-5">
+        <LoginUrl url={loginUrl} onConfirm={onLogout} onCancel={() => setLoginUrl('')} />
+        {errMsg && <ErrorHelp error={errMsg} onRefresh={onLogout} />}
+      </div>
+    );
   }
 
   return (

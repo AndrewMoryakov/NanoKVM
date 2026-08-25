@@ -470,6 +470,8 @@ const nb = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Automatisk oppstart',
+        autostartConfirm: 'Bytte automatisk oppstart til Tailscale? NetBird stoppes.',
         memory: {
           title: 'Minneoptimalisering',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -510,6 +512,46 @@ const nb = {
         uninstallDesc: 'Er du sikker på at du vil avinstallere Tailscale?',
         okBtn: 'Yes',
         cancelBtn: 'No'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Automatisk oppstart',
+        autostartConfirm: 'Bytte automatisk oppstart til NetBird? Tailscale stoppes.',
+        restart: 'Are you sure to restart NetBird?',
+        stop: 'Are you sure to stop NetBird?',
+        stopDesc:
+          'Stopper NetBird-tjenesten. Den starter igjen ved neste oppstart hvis automatisk oppstart er på.',
+        loading: 'Laster...',
+        notInstall: 'NetBird er ikke funnet! Vennligst installer.',
+        install: 'Installér',
+        installing: 'Installerer',
+        notRunning: 'NetBird kjører ikke. Start den for å fortsette.',
+        run: 'Start',
+        notLogin:
+          'Denne enheten er ikke knyttet til din konto enda. Vennligst logg inn og knytt den til kontoen din..',
+        urlPeriod: 'Denne lenken er gyldig i 10 minutter',
+        login: 'Logg inn',
+        loginSuccess: 'Logget inn',
+        enable: 'Skru på NetBird',
+        deviceName: 'Enhetens navn',
+        deviceIP: 'Enhetens IP',
+        uninstall: 'Avinstaller NetBird',
+        uninstallDesc: 'Er du sikker på at du vil avinstallere NetBird?',
+        version: 'Versjon',
+        disconnect: 'Koble fra',
+        disconnectConfirm: 'Er du sikker på at du vil koble fra?',
+        okBtn: 'Yes',
+        cancelBtn: 'No',
+        error: {
+          title: 'NetBird-operasjonen mislyktes',
+          intro: 'Feildetaljer:',
+          stepWait: '1. Vent 10-15 sekunder og prøv igjen.',
+          stepRestartUI: '2. Klikk «Start tjenesten på nytt» nedenfor.',
+          stepRestartSSH: '3. Kjør om nødvendig: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Start NanoKVM på nytt bare hvis stegene over ikke hjelper.',
+          restartButton: 'Start tjenesten på nytt',
+          refreshButton: 'Oppdater status'
+        }
       },
       update: {
         title: 'Se etter oppdatering',

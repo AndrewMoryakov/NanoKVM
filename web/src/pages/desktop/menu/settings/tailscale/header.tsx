@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Popconfirm, Popover, Switch } from 'antd';
+import { message, Popconfirm, Popover, Switch } from 'antd';
 import { CircleStopIcon, EllipsisIcon, LoaderIcon, RotateCwIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -26,11 +26,17 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
   const [autostartLoading, setAutostartLoading] = useState(false);
 
   useEffect(() => {
-    vpnApi.getPreference().then((rsp: any) => {
-      if (rsp.data?.vpn) {
-        setIsAutostart(rsp.data.vpn === 'tailscale');
-      }
-    });
+    vpnApi
+      .getPreference()
+      .then((rsp: any) => {
+        if (rsp.data?.vpn) {
+          setIsAutostart(rsp.data.vpn === 'tailscale');
+        }
+      })
+      .catch(() => {
+        // Leaving the switch off is the safe default; the state is re-read on
+        // every visit to this tab.
+      });
   }, []);
 
   function handleAutostartChange(checked: boolean) {
@@ -39,9 +45,19 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
 
     vpnApi
       .setPreference('tailscale')
-      .then(() => {
+      // Failure codes arrive with HTTP 200, so switching on `then` alone would
+      // show autostart as enabled while the device may have no VPN running.
+      .then((rsp: any) => {
+        if (rsp.code !== 0) {
+          message.error(rsp.msg);
+          return;
+        }
+
         setIsAutostart(true);
         onSuccess();
+      })
+      .catch((err) => {
+        message.error(err.message || 'Failed to switch autostart');
       })
       .finally(() => {
         setAutostartLoading(false);

@@ -469,6 +469,8 @@ const se = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Starta automatiskt',
+        autostartConfirm: 'Byta automatisk start till Tailscale? NetBird stoppas.',
         memory: {
           title: 'Minnesoptimering',
           tip: 'När minnesanvändningen överskrider gränsen utförs aggressivare skräpsamling för att frigöra minne. Rekommenderas att sättas till 75 MB om du använder Tailscale. Omstart krävs för att det ska gälla.'
@@ -508,6 +510,45 @@ const se = {
         uninstallDesc: 'Är du säker på att du vill avinstallera Tailscale?',
         okBtn: 'Ja',
         cancelBtn: 'Nej'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Starta automatiskt',
+        autostartConfirm: 'Byta automatisk start till NetBird? Tailscale stoppas.',
+        restart: 'Starta om NetBird?',
+        stop: 'Stoppa NetBird?',
+        stopDesc:
+          'Stoppar NetBird-tjänsten. Den startar igen vid nästa uppstart om automatisk start är på.',
+        loading: 'Laddar...',
+        notInstall: 'NetBird hittades inte! Installera först.',
+        install: 'Installera',
+        installing: 'Installerar',
+        notRunning: 'NetBird körs inte. Starta den för att fortsätta.',
+        run: 'Start',
+        notLogin: 'Enheten är ännu inte bunden. Logga in och bind enheten till ditt konto.',
+        urlPeriod: 'Denna URL är giltig i 10 minuter',
+        login: 'Logga in',
+        loginSuccess: 'Inloggning lyckades',
+        enable: 'Aktivera NetBird',
+        deviceName: 'Enhetsnamn',
+        deviceIP: 'Enhets-IP',
+        uninstall: 'Avinstallera NetBird',
+        uninstallDesc: 'Är du säker på att du vill avinstallera NetBird?',
+        version: 'Version',
+        disconnect: 'Koppla från',
+        disconnectConfirm: 'Vill du verkligen koppla från?',
+        okBtn: 'Ja',
+        cancelBtn: 'Nej',
+        error: {
+          title: 'NetBird-åtgärden misslyckades',
+          intro: 'Felinformation:',
+          stepWait: '1. Vänta 10-15 sekunder och försök igen.',
+          stepRestartUI: '2. Klicka på ”Starta om tjänsten” nedan.',
+          stepRestartSSH: '3. Kör vid behov: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Starta om NanoKVM endast om stegen ovan inte hjälper.',
+          restartButton: 'Starta om tjänsten',
+          refreshButton: 'Uppdatera status'
+        }
       },
       update: {
         title: 'Sök efter uppdateringar',

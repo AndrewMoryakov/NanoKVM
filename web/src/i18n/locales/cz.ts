@@ -472,6 +472,8 @@ const cz = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Spuštění při startu',
+        autostartConfirm: 'Přepnout automatické spuštění na Tailscale? NetBird bude zastaven.',
         memory: {
           title: 'Optimalizace paměti',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -512,6 +514,46 @@ const cz = {
         uninstallDesc: 'Opravdu chcete odinstalovat Tailscale?',
         okBtn: 'Yes',
         cancelBtn: 'No'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Spuštění při startu',
+        autostartConfirm: 'Přepnout automatické spuštění na NetBird? Tailscale bude zastaven.',
+        restart: 'Are you sure to restart NetBird?',
+        stop: 'Are you sure to stop NetBird?',
+        stopDesc:
+          'Zastaví službu NetBird. Při zapnutém automatickém spuštění se po restartu spustí znovu.',
+        loading: 'Načítání...',
+        notInstall: 'NetBird nebyl nalezen! Prosím nainstalujte.',
+        install: 'Nainstalovat',
+        installing: 'Instalace probíhá',
+        notRunning: 'NetBird neběží. Chcete-li pokračovat, spusťte jej.',
+        run: 'Spustit',
+        notLogin:
+          'Zařízení nebylo dosud spárováno. Přihlaste se prosím a spárujte toto zařízení s vaším účtem.',
+        urlPeriod: 'Tento odkaz je platný po dobu 10 minut',
+        login: 'Přihlášení',
+        loginSuccess: 'Přihlášení úspěšné',
+        enable: 'Povolit NetBird',
+        deviceName: 'Název zařízení',
+        deviceIP: 'IP zařízení',
+        uninstall: 'Odinstalovat NetBird',
+        uninstallDesc: 'Opravdu chcete odinstalovat NetBird?',
+        version: 'Verze',
+        disconnect: 'Odpojit',
+        disconnectConfirm: 'Opravdu se chcete odpojit?',
+        okBtn: 'Yes',
+        cancelBtn: 'No',
+        error: {
+          title: 'Operace NetBird selhala',
+          intro: 'Podrobnosti chyby:',
+          stepWait: '1. Počkejte 10-15 sekund a akci zopakujte.',
+          stepRestartUI: '2. Klikněte níže na „Restartovat službu“.',
+          stepRestartSSH: '3. V případě potřeby spusťte: /etc/init.d/S99netbird restart',
+          stepReboot: '4. NanoKVM restartujte jen tehdy, pokud předchozí kroky nepomohou.',
+          restartButton: 'Restartovat službu',
+          refreshButton: 'Obnovit stav'
+        }
       },
       update: {
         title: 'Zkontrolovat aktualizaci',

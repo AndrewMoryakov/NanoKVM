@@ -471,6 +471,8 @@ const id = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Mulai otomatis',
+        autostartConfirm: 'Alihkan mulai otomatis ke Tailscale? NetBird akan dihentikan.',
         memory: {
           title: 'Optimasi memori',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -511,6 +513,46 @@ const id = {
         uninstallDesc: 'Apakah Anda yakin ingin menghapus instalan Tailscale?',
         okBtn: 'Yes',
         cancelBtn: 'No'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Mulai otomatis',
+        autostartConfirm: 'Alihkan mulai otomatis ke NetBird? Tailscale akan dihentikan.',
+        restart: 'Are you sure to restart NetBird?',
+        stop: 'Are you sure to stop NetBird?',
+        stopDesc:
+          'Menghentikan layanan NetBird. Layanan akan berjalan lagi saat boot berikutnya jika mulai otomatis aktif.',
+        loading: 'Memuat...',
+        notInstall: 'NetBird tidak ditemukan! Silahkan pasang.',
+        install: 'Memasang',
+        installing: 'Memasangkan',
+        notRunning: 'NetBird tidak berjalan. Silakan mulai untuk melanjutkan.',
+        run: 'Mulai',
+        notLogin:
+          'Perangkat belum ditautkan. Silakan masuk dan tautkan perangkat ini ke akun Anda.',
+        urlPeriod: 'Url ini berlaku selama 10 menit',
+        login: 'Masuk',
+        loginSuccess: 'Berhasil masuk',
+        enable: 'Aktifkan NetBird',
+        deviceName: 'Nama Perangkat',
+        deviceIP: 'IP Perangkat',
+        uninstall: 'Copot pemasangan NetBird',
+        uninstallDesc: 'Apakah Anda yakin ingin menghapus instalan NetBird?',
+        version: 'Versi',
+        disconnect: 'Putuskan',
+        disconnectConfirm: 'Yakin ingin memutuskan koneksi?',
+        okBtn: 'Yes',
+        cancelBtn: 'No',
+        error: {
+          title: 'Operasi NetBird gagal',
+          intro: 'Detail kesalahan:',
+          stepWait: '1. Tunggu 10-15 detik lalu coba lagi.',
+          stepRestartUI: '2. Klik “Mulai ulang layanan” di bawah.',
+          stepRestartSSH: '3. Jika perlu, jalankan: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Nyalakan ulang NanoKVM hanya jika langkah di atas tidak membantu.',
+          restartButton: 'Mulai ulang layanan',
+          refreshButton: 'Segarkan status'
+        }
       },
       update: {
         title: 'Periksa pembaruan',

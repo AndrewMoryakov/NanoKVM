@@ -31,6 +31,9 @@ export const Run = ({ onSuccess }: RunProps) => {
 
         onSuccess();
       })
+      .catch((err) => {
+        setErrMsg(err.message || 'Start failed');
+      })
       .finally(() => {
         setIsLoading(false);
       });

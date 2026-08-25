@@ -71,7 +71,15 @@ export const Netbird = ({ setIsLocked }: NetbirdProps) => {
 
           {status?.state === 'notLogin' && <Login onSuccess={getStatus} />}
 
-          {(status?.state === 'stopped' || status?.state === 'running') && (
+          {/*
+            `stopped` covers two situations the CLI status does not separate:
+            bound but disconnected, and never bound at all. Rendering the device
+            panel for the second leaves empty Name/IP and no way forward, so an
+            unnamed device is routed to Login instead.
+          */}
+          {status?.state === 'stopped' && !status.name && <Login onSuccess={getStatus} />}
+
+          {((status?.state === 'stopped' && !!status.name) || status?.state === 'running') && (
             <Device status={status} onLogout={getStatus} />
           )}
 
