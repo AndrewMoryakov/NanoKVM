@@ -490,7 +490,7 @@ const ja = {
         stop: 'Tailscale を停止しますか？',
         stopDesc: 'Tailscale からログアウトし、起動時の自動実行を無効にします。',
         stopWarning:
-          'Tailscale 経由で接続している場合、この操作でその接続は切断されます。 自動的には復帰しません。別の接続手段があることを確認してください。',
+          'Tailscale 経由で接続している場合、この操作でその接続は切断されます。自動的には復帰しません。別の接続手段があることを確認してください。',
         loading: '読み込み中...',
         notInstall: 'Tailscale が見つかりません。インストールしてください。',
         install: 'インストール',
@@ -519,7 +519,7 @@ const ja = {
         uninstall: 'Tailscale をアンインストール',
         uninstallDesc: 'Tailscale をアンインストールしてもよろしいですか？',
         uninstallWarning:
-          'Tailscale 経由で接続している場合、この操作でその接続は切断されます。 自動的には復帰しません。別の接続手段があることを確認してください。',
+          'Tailscale 経由で接続している場合、この操作でその接続は切断されます。自動的には復帰しません。別の接続手段があることを確認してください。',
         okBtn: 'はい',
         cancelBtn: 'いいえ'
       },
@@ -534,7 +534,7 @@ const ja = {
         stopDesc:
           'NetBird サービスを停止します。自動起動が有効なままなら次回起動時に再び開始します。',
         stopWarning:
-          'NetBird 経由で接続している場合、この操作でその接続は切断されます。 NetBird の自動起動が有効なままなら、次回起動時に復帰します。',
+          'NetBird 経由で接続している場合、この操作でその接続は切断されます。NetBird の自動起動が有効なままなら、次回起動時に復帰します。',
         loading: '読み込み中...',
         notInstall: 'NetBird が見つかりません。インストールしてください。',
         install: 'インストール',
@@ -552,7 +552,7 @@ const ja = {
         uninstall: 'NetBird をアンインストール',
         uninstallDesc: 'NetBird をアンインストールしてもよろしいですか？',
         uninstallWarning:
-          'NetBird 経由で接続している場合、この操作でその接続は切断されます。 自動起動は Tailscale に戻ります。Tailscale が導入済みで動作している必要があります。',
+          'NetBird 経由で接続している場合、この操作でその接続は切断されます。自動起動は Tailscale に戻ります。Tailscale が導入済みで動作している必要があります。',
         version: 'バージョン',
         disconnect: '切断',
         disconnectConfirm: '切断してもよろしいですか？',

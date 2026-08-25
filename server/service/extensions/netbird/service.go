@@ -6,6 +6,7 @@ import (
 	"NanoKVM-Server/service/extensions/vpnpref"
 	"fmt"
 	"net"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,18 @@ import (
 )
 
 type Service struct{}
+
+// tailscaleBootable mirrors the boot script's condition for Tailscale. It is
+// duplicated rather than shared because the vpn package, which owns the shared
+// version, imports this one.
+func tailscaleBootable() bool {
+	if _, err := os.Stat("/usr/sbin/tailscaled"); err != nil {
+		return false
+	}
+
+	_, err := os.Stat("/etc/init.d/S98tailscaled")
+	return err == nil
+}
 
 func NewService() *Service {
 	return &Service{}
@@ -102,6 +115,16 @@ func (s *Service) Uninstall(c *gin.Context) {
 	if vpnpref.Read() == vpnpref.Netbird {
 		if err := tailscale.NewCli().Start(); err != nil {
 			log.Warnf("failed to start tailscale after netbird uninstall: %s", err)
+		}
+
+		// Only hand autostart over if the boot script could actually start
+		// Tailscale. Otherwise leaving the preference on the client that was just
+		// removed is the lesser evil: select_vpn will find nothing to start either
+		// way, but it will not have deleted the other client's script for nothing.
+		if !tailscaleBootable() {
+			log.Warnf("tailscale cannot start at boot; leaving VPN autostart unchanged")
+			rsp.OkRsp(c)
+			return
 		}
 
 		if err := vpnpref.Write(vpnpref.Tailscale); err != nil {

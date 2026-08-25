@@ -30,6 +30,18 @@ var StateMap = map[string]proto.TailscaleState{
 	"Stopped":          proto.TailscaleStopped,
 }
 
+// netbirdBootable mirrors the boot script's condition for NetBird without
+// importing the netbird package, which would create an import cycle through vpn.
+func netbirdBootable() bool {
+	info, err := os.Stat("/usr/bin/netbird")
+	if err != nil || info.Mode()&0o111 == 0 {
+		return false
+	}
+
+	_, err = os.Stat("/kvmapp/system/init.d/S99netbird")
+	return err == nil
+}
+
 func NewService() *Service {
 	return &Service{}
 }
@@ -89,6 +101,15 @@ func (s *Service) Uninstall(c *gin.Context) {
 
 	_ = os.Remove(TailscalePath)
 	_ = os.Remove(TailscaledPath)
+
+	// Removing Tailscale while it owns autostart would leave select_vpn deleting
+	// the NetBird init script at the next boot with nothing to put in its place.
+	// Hand autostart over when NetBird can actually take it.
+	if vpnpref.Read() == vpnpref.Tailscale && netbirdBootable() {
+		if err := vpnpref.Write(vpnpref.Netbird); err != nil {
+			log.Errorf("failed to hand autostart to netbird after tailscale uninstall: %s", err)
+		}
+	}
 
 	rsp.OkRsp(c)
 	log.Debugf("uninstall tailscale successfully")

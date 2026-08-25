@@ -529,7 +529,7 @@ const ca = {
         stopDesc:
           "Atura el servei NetBird. Es tornarà a iniciar en arrencar si l'inici automàtic segueix actiu.",
         stopWarning:
-          "Si esteu connectat mitjançant NetBird, això tallarà la connexió. Es restablirà en el proper arrencada mentre l'inici automàtic de NetBird estigui actiu.",
+          "Si esteu connectat mitjançant NetBird, això tallarà la connexió. Es restablirà a la propera arrencada mentre l'inici automàtic de NetBird estigui actiu.",
         loading: 'Carregant...',
         notInstall: 'NetBird no instal·lat! Instal·la-ho.',
         install: 'Instal·la',

@@ -529,7 +529,7 @@ const vi = {
         stopDesc:
           'Dừng dịch vụ NetBird. Nếu tự khởi động đang bật, dịch vụ sẽ chạy lại ở lần khởi động sau.',
         stopWarning:
-          'Nếu bạn đang kết nối qua NetBird, thao tác này sẽ ngắt kết nối đó. Kết nối trở lại ở lần khởi động sau khi tự khởi động NetBird còn bật.',
+          'Nếu bạn đang kết nối qua NetBird, thao tác này sẽ ngắt kết nối đó. Kết nối trở lại ở lần khởi động sau, miễn là tự khởi động NetBird còn bật.',
         loading: 'Đang tải...',
         notInstall: 'Không tìm thấy NetBird! Vui lòng cài đặt.',
         install: 'Cài đặt',

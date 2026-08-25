@@ -25,6 +25,11 @@ const (
 // holding the lock past the point where anyone is listening.
 const UpTimeout = 45 * time.Second
 
+// StatusTimeout bounds the status probes SetPreference makes before deciding a
+// switch. It is much shorter than UpTimeout because two probes run in sequence
+// under the VPN lock, and their total has to stay under the browser's own 60s.
+const StatusTimeout = 10 * time.Second
+
 type Cli struct{}
 
 type TsStatus struct {
@@ -68,6 +73,21 @@ func (c *Cli) Restart() error {
 
 	command := strings.Join(commands, " && ")
 	return exec.Command("sh", "-c", command).Run()
+}
+
+// Resume starts the client from the init script already on disk. Unlike netbird's
+// it can genuinely fail: Stop() removes that script, so after a stop there is
+// nothing to resume without copying — and copying is what a read-only filesystem
+// refuses. Callers must treat failure here as "could not put it back".
+func (c *Cli) Resume() error {
+	if _, err := os.Stat(ScriptPath); err != nil {
+		return fmt.Errorf("no init script at %s to resume from", ScriptPath)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), UpTimeout)
+	defer cancel()
+
+	return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("%s start", ScriptPath)).Run()
 }
 
 func (c *Cli) Stop() error {
@@ -130,10 +150,16 @@ func (c *Cli) Status() (*TsStatus, error) {
 
 	// Bounded: this now runs under the VPN lock while deciding a switch, and a
 	// wedged daemon would otherwise hold that lock until the server restarts.
-	ctx, cancel := context.WithTimeout(context.Background(), UpTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), StatusTimeout)
 	defer cancel()
 
 	output, err := exec.CommandContext(ctx, "sh", "-c", command).CombinedOutput()
+	if err != nil && ctx.Err() == context.DeadlineExceeded {
+		// exec reports a killed process as "signal: killed", which is
+		// indistinguishable from an external SIGKILL. Wrap it so callers can ask
+		// the question properly instead of matching on the text.
+		return nil, fmt.Errorf("tailscale status timed out after %s: %w", StatusTimeout, context.DeadlineExceeded)
+	}
 	if err != nil {
 		return nil, err
 	}

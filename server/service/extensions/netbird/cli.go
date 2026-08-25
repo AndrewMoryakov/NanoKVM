@@ -64,6 +64,18 @@ func (c *Cli) Restart() error {
 	return runCommand(strings.Join(commands, " && "), false)
 }
 
+// Resume starts the client from the init script already on disk, without copying
+// anything first. Start() begins with a cp from /kvmapp, which is exactly what
+// fails when the filesystem went read-only — the case a rollback exists for.
+func (c *Cli) Resume() error {
+	info, err := os.Stat(ScriptPath)
+	if err != nil || info.Mode()&0o111 == 0 {
+		return fmt.Errorf("no usable init script at %s", ScriptPath)
+	}
+
+	return runCommand(fmt.Sprintf("%s start", ScriptPath), false)
+}
+
 func (c *Cli) Stop() error {
 	// Stopping is idempotent: "no init script" and "not running" both mean the
 	// client is down, which is what the caller asked about. The one real failure

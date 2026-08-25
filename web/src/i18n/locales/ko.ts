@@ -483,7 +483,7 @@ const ko = {
         stop: '정말로 Tailscale을 중지하시겠습니까?',
         stopDesc: 'Tailscale에서 로그아웃하고 자동 시작을 비활성화합니다.',
         stopWarning:
-          'Tailscale(으)로 접속 중이라면 그 연결이 끊깁니다. 저절로 복구되지 않습니다. 다른 접속 경로가 있는지 확인하세요.',
+          'Tailscale로 접속 중이라면 그 연결이 끊깁니다. 저절로 복구되지 않습니다. 다른 접속 경로가 있는지 확인하세요.',
         loading: '불러오는 중...',
         notInstall: 'Tailscale이 없습니다. 설치해주세요.',
         install: '설치',
@@ -511,7 +511,7 @@ const ko = {
         uninstall: 'Tailscale 제거',
         uninstallDesc: '정말로 Tailscale을 제거할까요?',
         uninstallWarning:
-          'Tailscale(으)로 접속 중이라면 그 연결이 끊깁니다. 저절로 복구되지 않습니다. 다른 접속 경로가 있는지 확인하세요.',
+          'Tailscale로 접속 중이라면 그 연결이 끊깁니다. 저절로 복구되지 않습니다. 다른 접속 경로가 있는지 확인하세요.',
         okBtn: '네',
         cancelBtn: '아니오'
       },
@@ -526,7 +526,7 @@ const ko = {
         stopDesc:
           'NetBird 서비스를 중지합니다. 자동 시작이 켜져 있으면 다음 부팅 때 다시 시작됩니다.',
         stopWarning:
-          'NetBird(으)로 접속 중이라면 그 연결이 끊깁니다. NetBird 자동 시작이 켜져 있으면 다음 부팅 때 복구됩니다.',
+          'NetBird로 접속 중이라면 그 연결이 끊깁니다. NetBird 자동 시작이 켜져 있으면 다음 부팅 때 복구됩니다.',
         loading: '불러오는 중...',
         notInstall: 'NetBird가 없습니다. 설치해주세요.',
         install: '설치',
@@ -543,7 +543,7 @@ const ko = {
         uninstall: 'NetBird 제거',
         uninstallDesc: '정말로 NetBird를 제거할까요?',
         uninstallWarning:
-          'NetBird(으)로 접속 중이라면 그 연결이 끊깁니다. 자동 시작은 Tailscale로 돌아갑니다. Tailscale이 이미 설치되어 동작해야 합니다.',
+          'NetBird로 접속 중이라면 그 연결이 끊깁니다. 자동 시작은 Tailscale로 돌아갑니다. Tailscale이 이미 설치되어 동작해야 합니다.',
         version: '버전',
         disconnect: '연결 끊기',
         disconnectConfirm: '연결을 끊으시겠습니까?',

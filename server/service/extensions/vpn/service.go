@@ -5,6 +5,8 @@ import (
 	"NanoKVM-Server/service/extensions/netbird"
 	"NanoKVM-Server/service/extensions/tailscale"
 	"NanoKVM-Server/service/extensions/vpnpref"
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -68,11 +70,10 @@ func (s *Service) SetPreference(c *gin.Context) {
 
 	other := otherVPN(vpn)
 
-	// Autostarting a client that is not installed would leave the device with
-	// nothing at the next boot: select_vpn removes the other client's init script
-	// and has none to put in its place.
-	if !installed(vpn) {
-		rsp.ErrRsp(c, -7, fmt.Sprintf("%s is not installed", vpn))
+	// select_vpn removes the other client's init script at the next boot, so the
+	// incoming one has to be something it can actually start.
+	if !bootable(vpn) {
+		rsp.ErrRsp(c, -7, fmt.Sprintf("%s cannot start at boot: install it, and for Tailscale start it once", vpn))
 		return
 	}
 
@@ -86,19 +87,19 @@ func (s *Service) SetPreference(c *gin.Context) {
 
 		if err := cliFor(other).Stop(); err != nil {
 			log.Errorf("failed to stop %s: %s", other, err)
-			rsp.ErrRsp(c, -3, fmt.Sprintf("%s is connected, but %s could not be stopped: %v", vpn, other, err))
+			rsp.ErrRsp(c, -3, fmt.Sprintf("%s is connected, but stopping %s did not complete: %v", vpn, other, err))
 			return
 		}
 	}
 
 	// Written last, so the file never claims a state the device is not in. If it
-	// cannot be written the device has just lost the client it was using and the
-	// file still names it, so the next boot would start neither — put the stopped
-	// client back rather than leave that.
+	// cannot be written, the client that was carrying the session has just been
+	// stopped while the file still names it — put it back rather than leave the
+	// device relying on whatever the next boot happens to do.
 	if err := vpnpref.Write(vpn); err != nil {
 		log.Errorf("failed to write VPN preference: %s", err)
 
-		if rbErr := cliFor(other).Start(); rbErr != nil {
+		if rbErr := cliFor(other).Resume(); rbErr != nil {
 			rsp.ErrRsp(c, -4, fmt.Sprintf("write preference failed: %v; %s could not be restarted: %v", err, other, rbErr))
 			return
 		}
@@ -112,7 +113,7 @@ func (s *Service) SetPreference(c *gin.Context) {
 }
 
 type vpnClient interface {
-	Start() error
+	Resume() error
 	Stop() error
 }
 
@@ -148,24 +149,39 @@ func running(vpn string) bool {
 	}
 
 	// Tailscale has no equivalent service check; a readable status means the
-	// daemon answered. An unreadable one is uncertainty, not absence.
+	// daemon answered. A timeout is uncertainty and counts as running; a non-zero
+	// exit (no binary, no daemon) is absence and does not.
 	_, err := tailscale.NewCli().Status()
 	return err == nil || isTimeout(err)
 }
 
-// installed reports whether the client's binary is on the device at all.
-func installed(vpn string) bool {
-	path := "/usr/sbin/tailscaled"
+// bootable reports whether select_vpn could actually start this client at the
+// next boot. "Installed" is not enough, and the two clients differ: the boot
+// script restores S99netbird from /kvmapp when the NetBird binary is executable,
+// but never restores S98tailscaled — a Tailscale that was stopped through the UI
+// stays stopped, by design. Handing autostart to a client the boot script cannot
+// start would leave the device with nothing.
+func bootable(vpn string) bool {
 	if vpn == vpnpref.Netbird {
-		path = "/usr/bin/netbird"
+		info, err := os.Stat(netbird.NetbirdPath)
+		if err != nil || info.Mode()&0o111 == 0 {
+			return false
+		}
+
+		_, err = os.Stat(netbird.ScriptBackupPath)
+		return err == nil
 	}
 
-	_, err := os.Stat(path)
+	if _, err := os.Stat(tailscale.TailscaledPath); err != nil {
+		return false
+	}
+
+	_, err := os.Stat(tailscale.ScriptPath)
 	return err == nil
 }
 
 func isTimeout(err error) bool {
-	return err != nil && strings.Contains(err.Error(), "killed")
+	return errors.Is(err, context.DeadlineExceeded)
 }
 
 // connected reports whether the client actually carries a tunnel right now —
