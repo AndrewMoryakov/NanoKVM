@@ -1,39 +1,6 @@
 #!/bin/sh
 # nanokvm Rev3.1
 
-stop_tailscale() {
-  if [ -x /etc/init.d/S98tailscaled ]; then
-    /etc/init.d/S98tailscaled stop >/dev/null 2>&1
-  fi
-}
-
-stop_netbird() {
-  if [ -x /etc/init.d/S99netbird ]; then
-    /etc/init.d/S99netbird stop >/dev/null 2>&1
-  fi
-  killall netbird 2>/dev/null
-}
-
-start_tailscale() {
-  if [ -x /usr/sbin/tailscaled ] && [ -x /usr/bin/tailscale ] && [ -f /kvmapp/system/init.d/S98tailscaled ]; then
-    cp -f /kvmapp/system/init.d/S98tailscaled /etc/init.d/S98tailscaled
-    chmod 755 /etc/init.d/S98tailscaled
-    /etc/init.d/S98tailscaled start >/dev/null 2>&1 &
-  fi
-}
-
-start_netbird() {
-  if [ -f /kvmapp/system/netbird/netbird ]; then
-    cp -f /kvmapp/system/netbird/netbird /usr/bin/netbird
-    chmod 755 /usr/bin/netbird
-  fi
-
-  if [ -x /usr/bin/netbird ] && [ -f /kvmapp/system/init.d/S99netbird ]; then
-    cp -f /kvmapp/system/init.d/S99netbird /etc/init.d/S99netbird
-    chmod 755 /etc/init.d/S99netbird
-    /etc/init.d/S99netbird start >/dev/null 2>&1 &
-  fi
-}
 
 wait_for_exit() {
     process="$1"
@@ -108,20 +75,35 @@ start_services() {
 }
 
 # Only one VPN may run at a time: the device has too little RAM for both.
-start_vpn() {
+#
+# This runs at S95, before rc reaches S98tailscaled and S99netbird, so the
+# selected client is started by rc as usual and only the other one has to go.
+#
+# The two directions are not symmetric, for a reason outside this script:
+# kvm_system's new_app_init() runs `rm -f /etc/init.d/S99*` after an application
+# update. The glob does not reach S98tailscaled, which that same function instead
+# refreshes from /kvmapp when it is already present. So S99 usually goes missing
+# because that rm ran, and restoring it is what keeps NetBird alive across an
+# update, while S98 goes missing only when something removed it deliberately —
+# Cli.Stop() does exactly that, and for Tailscale the UI says stopping disables
+# autostart. For NetBird the UI says the opposite: stopping is "stop now", and
+# the preference file stays the authority on what runs at boot.
+select_vpn() {
     vpn_pref="tailscale"
     if [ -f /etc/kvm/vpn ]; then
-        vpn_pref=$(cat /etc/kvm/vpn)
+        vpn_pref=$(cat /etc/kvm/vpn 2>/dev/null | tr -d '[:space:]')
     fi
 
     case "$vpn_pref" in
       netbird)
         rm -f /etc/init.d/S98tailscaled
-        start_netbird
+        if [ -x /usr/bin/netbird ] && [ -f /kvmapp/system/init.d/S99netbird ]; then
+            cp -f /kvmapp/system/init.d/S99netbird /etc/init.d/S99netbird
+            chmod 755 /etc/init.d/S99netbird
+        fi
         ;;
       *)
         rm -f /etc/init.d/S99netbird
-        start_tailscale
         ;;
     esac
 }
@@ -140,7 +122,6 @@ case "$1" in
         second_uint=$(echo "$str_value" | cut -d'_' -f2)
         echo "$first_uint$second_uint" > /device_key
     fi
-
 
     # Set iptables rules (skip if already present)
     iptables -C INPUT -i eth0 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT 2>/dev/null || \
@@ -172,13 +153,11 @@ case "$1" in
 
     # Start services
     start_services
-    start_vpn
+    select_vpn
    ;;
 
   stop)
     stop_services
-    stop_netbird
-    stop_tailscale
     echo "OK"
    ;;
 
@@ -192,7 +171,7 @@ case "$1" in
     sync
     echo "OK"
    ;;
-
+    
   *)
     echo "Usage: $0 {start|stop|restart}"
     exit 1

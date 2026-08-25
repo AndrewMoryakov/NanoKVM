@@ -20,6 +20,29 @@ is_running() {
   [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null
 }
 
+is_running_without_pidfile() {
+  pidof "$DAEMON" >/dev/null 2>&1
+}
+
+# start-stop-daemon -K and killall both return as soon as the signal is SENT.
+# A zero exit status says nothing about whether the process is gone, so every
+# stop has to confirm by polling. Callers use this answer to decide whether it
+# is safe to start the other VPN client.
+wait_for_exit() {
+  timeout="$1"
+  elapsed=0
+
+  while pidof "$DAEMON" >/dev/null 2>&1; do
+    if [ "$elapsed" -ge "$timeout" ]; then
+      return 1
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+
+  return 0
+}
+
 case "$1" in
   start)
     [ -x "$DAEMON_PATH" ] || {
@@ -50,10 +73,35 @@ case "$1" in
   stop)
     printf "Stopping %s: " "$DAEMON"
     if [ -f "$PIDFILE" ]; then
+      # A pidfile holding a stale, recycled pid signals a stranger here. Adding
+      # -x "$DAEMON_PATH" would pin the signal to a process running this binary,
+      # but that has not been confirmed against the busybox build on the device;
+      # if it failed to match, the stop would fall through to the SIGKILL below
+      # after a ten-second wait instead of terminating gracefully. Both outcomes
+      # are rare, and the wait below bounds either of them.
       start-stop-daemon -K -p "$PIDFILE" >/dev/null 2>&1
-      [ $? = 0 ] && (echo "OK"; rm -f "$PIDFILE") || (echo "FAIL"; exit 1)
+    elif is_running_without_pidfile; then
+      # A missing pidfile is not proof the daemon is gone.
+      killall "$DAEMON" 2>/dev/null
     else
       echo "not running"
+      rm -f "$PIDFILE"
+      exit 0
+    fi
+
+    # Whatever the signal senders reported, only the process table decides.
+    if wait_for_exit 10; then
+      echo "OK"
+      rm -f "$PIDFILE"
+    else
+      killall -9 "$DAEMON" 2>/dev/null
+      if wait_for_exit 5; then
+        echo "OK"
+        rm -f "$PIDFILE"
+      else
+        echo "FAIL"
+        exit 1
+      fi
     fi
     ;;
 

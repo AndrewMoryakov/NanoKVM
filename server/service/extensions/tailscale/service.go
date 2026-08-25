@@ -2,6 +2,7 @@ package tailscale
 
 import (
 	"NanoKVM-Server/proto"
+	"NanoKVM-Server/service/extensions/vpnpref"
 	"NanoKVM-Server/utils"
 	"net"
 	"os"
@@ -33,8 +34,30 @@ func NewService() *Service {
 	return &Service{}
 }
 
+// claim mirrors netbird.claim: only the selected VPN may start, and VPN state
+// transitions must not interleave. Kept in the HTTP layer for the same reason —
+// SetPreference calls Cli.Start() before the preference file is updated.
+func claim(c *gin.Context, rsp *proto.Response) bool {
+	if vpnpref.Read() != vpnpref.Tailscale {
+		rsp.ErrRsp(c, -6, "Tailscale is not the selected VPN: enable Tailscale autostart first")
+		return false
+	}
+
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
+		return false
+	}
+
+	return true
+}
+
 func (s *Service) Install(c *gin.Context) {
 	var rsp proto.Response
+
+	if !claim(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	if !isInstalled() {
 		if err := install(); err != nil {
@@ -52,6 +75,12 @@ func (s *Service) Install(c *gin.Context) {
 func (s *Service) Uninstall(c *gin.Context) {
 	var rsp proto.Response
 
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
+		return
+	}
+	defer vpnpref.Unlock()
+
 	_ = NewCli().Stop()
 	_ = utils.DelGoMemLimit()
 
@@ -64,6 +93,11 @@ func (s *Service) Uninstall(c *gin.Context) {
 
 func (s *Service) Start(c *gin.Context) {
 	var rsp proto.Response
+
+	if !claim(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Start()
 	if err != nil {
@@ -83,6 +117,11 @@ func (s *Service) Start(c *gin.Context) {
 func (s *Service) Restart(c *gin.Context) {
 	var rsp proto.Response
 
+	if !claim(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
+
 	err := NewCli().Restart()
 	if err != nil {
 		rsp.ErrRsp(c, -1, "restart failed")
@@ -96,6 +135,12 @@ func (s *Service) Restart(c *gin.Context) {
 
 func (s *Service) Stop(c *gin.Context) {
 	var rsp proto.Response
+
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Stop()
 	if err != nil {
@@ -112,6 +157,12 @@ func (s *Service) Stop(c *gin.Context) {
 
 func (s *Service) Up(c *gin.Context) {
 	var rsp proto.Response
+
+	// `tailscale up` brings the tunnel up — same guard as Start.
+	if !claim(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Up()
 	if err != nil {
@@ -145,7 +196,14 @@ func (s *Service) Login(c *gin.Context) {
 	cli := NewCli()
 	status, err := cli.Status()
 	if err != nil {
-		_ = cli.Start()
+		// Recovering by starting the daemon is only allowed when Tailscale is the
+		// selected VPN: on a device set to NetBird this would raise a second
+		// tunnel, which 161 MB of RAM does not allow.
+		if vpnpref.Read() == vpnpref.Tailscale && vpnpref.TryLock() {
+			_ = cli.Start()
+			vpnpref.Unlock()
+		}
+
 		status, err = cli.Status()
 	}
 

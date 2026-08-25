@@ -5,15 +5,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
 	ScriptPath       = "/etc/init.d/S99netbird"
 	ScriptBackupPath = "/kvmapp/system/init.d/S99netbird"
+	PidFile          = "/var/run/netbird.pid"
 	CommandTimeout   = 1 * time.Minute
 )
 
@@ -60,7 +65,52 @@ func (c *Cli) Restart() error {
 }
 
 func (c *Cli) Stop() error {
+	// Stopping is idempotent: "no init script" and "not running" both mean the
+	// client is down, which is what the caller asked about. The one real failure
+	// is a daemon that outlived the signal.
+	//
+	// The binary gate below governs the script refresh only — stopping still runs
+	// whenever a script is in place. That matters because a process outlives the
+	// unlink of its own executable: a missing /usr/bin/netbird does not prove the
+	// daemon is gone, and reporting success there would let a VPN switch raise a
+	// second tunnel. The one path that still escapes is binary AND script both
+	// gone with the daemon alive, which takes a manual rm of both over SSH.
+	if _, err := os.Stat(NetbirdPath); err == nil {
+		refreshScript()
+	}
+
+	// Nothing to stop if no usable script is in place. The executable bit matters:
+	// sh exits 126 on a non-executable file, and ServiceRunning() reads that same
+	// state as "not running" — the two must agree.
+	info, err := os.Stat(ScriptPath)
+	if err != nil || info.Mode()&0o111 == 0 {
+		return nil
+	}
+
 	return runCommand(fmt.Sprintf("%s stop", ScriptPath), false)
+}
+
+// refreshScript copies the firmware's init script over the installed one. The
+// stop semantics — polling until the process is actually gone — live in that
+// script, and after an OTA the copy in /etc/init.d can predate the firmware.
+// No version comparison is made: the firmware copy is always the authority.
+//
+// Nothing here fails the stop. A missing backup returns silently — it is a normal
+// state, not an error — and a failed copy is logged. A stop error aborts a VPN
+// switch, and neither condition is a reason to refuse to stop.
+func refreshScript() {
+	if _, err := os.Stat(ScriptBackupPath); err != nil {
+		return
+	}
+
+	commands := []string{
+		fmt.Sprintf("cp -f %s %s", ScriptBackupPath, ScriptPath),
+		fmt.Sprintf("chmod 755 %s", ScriptPath),
+	}
+
+	if err := runCommand(strings.Join(commands, " && "), false); err != nil {
+		log.Warnf("could not refresh the netbird init script, stopping with the installed one: %s", err)
+	}
 }
 
 func (c *Cli) WaitForSocket(timeout time.Duration) error {
@@ -115,12 +165,19 @@ func (c *Cli) Login() (string, error) {
 		}
 	}
 
-	go scanForURL(bufio.NewReader(stdout))
-	go scanForURL(bufio.NewReader(stderr))
+	// os/exec closes these pipes inside Wait, so Wait must not run while the
+	// readers are still going: a fast-exiting command would race them and drop
+	// the URL. Wait is called only after both readers have finished.
+	var readers sync.WaitGroup
+	readers.Add(2)
+	go func() { defer readers.Done(); scanForURL(bufio.NewReader(stdout)) }()
+	go func() { defer readers.Done(); scanForURL(bufio.NewReader(stderr)) }()
 
-	// Wait for URL or command to finish
 	done := make(chan error, 1)
-	go func() { done <- cmd.Wait() }()
+	go func() {
+		readers.Wait()
+		done <- cmd.Wait()
+	}()
 
 	select {
 	case url := <-urlCh:
@@ -161,17 +218,24 @@ func (c *Cli) Status() (*NbStatus, error) {
 }
 
 func (c *Cli) ServiceRunning() (bool, error) {
-	output, err := runCommandWithOutput(fmt.Sprintf("%s status", ScriptPath), false)
-	if err == nil {
-		return strings.Contains(strings.ToLower(output), "running"), nil
-	}
-
-	lower := strings.ToLower(output)
-	if strings.Contains(lower, "not running") || strings.Contains(lower, "stopped") {
+	// A missing or non-executable init script means the service is not running.
+	// It is a normal state: select_vpn removes the script when the other VPN is preferred.
+	info, err := os.Stat(ScriptPath)
+	if err != nil || info.Mode()&0o111 == 0 {
 		return false, nil
 	}
 
-	return false, err
+	output, err := runCommandWithOutput(fmt.Sprintf("%s status", ScriptPath), false)
+	if err != nil {
+		lower := strings.ToLower(output)
+		if strings.Contains(lower, "not running") || strings.Contains(lower, "stopped") {
+			return false, nil
+		}
+		return false, err
+	}
+
+	// Match on the negative: "not running" also contains "running".
+	return !strings.Contains(strings.ToLower(output), "not running"), nil
 }
 
 func runCommand(command string, restartOnTimeout bool) error {
