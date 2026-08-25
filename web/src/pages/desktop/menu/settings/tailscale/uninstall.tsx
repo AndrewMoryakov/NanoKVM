@@ -45,6 +45,7 @@ export const Uninstall = ({ onSuccess }: UninstallProps) => {
       <Modal
         title={title}
         open={isModalOpen}
+        centered={true}
         okType="danger"
         okText={t('settings.tailscale.okBtn')}
         cancelText={t('settings.tailscale.cancelBtn')}
@@ -54,6 +55,9 @@ export const Uninstall = ({ onSuccess }: UninstallProps) => {
       >
         <div className="py-5">
           <p className="text-base">{t('settings.tailscale.uninstallDesc')}</p>
+          <p className="pt-2 text-sm text-neutral-400">
+            {t('settings.tailscale.uninstallWarning')}
+          </p>
         </div>
       </Modal>
     </>

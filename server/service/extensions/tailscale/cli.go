@@ -3,6 +3,7 @@ package tailscale
 import (
 	"NanoKVM-Server/utils"
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,12 +11,24 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 )
 
 const (
 	ScriptPath       = "/etc/init.d/S98tailscaled"
 	ScriptBackupPath = "/kvmapp/system/init.d/S98tailscaled"
 )
+
+// UpTimeout bounds `tailscale up`, which is otherwise unbounded and runs under
+// the VPN lock. Kept below the 60s browser timeout (web/src/lib/http.ts) so the
+// server can answer with a real error before the client gives up, rather than
+// holding the lock past the point where anyone is listening.
+const UpTimeout = 45 * time.Second
+
+// StatusTimeout bounds the status probes SetPreference makes before deciding a
+// switch. It is much shorter than UpTimeout because two probes run in sequence
+// under the VPN lock, and their total has to stay under the browser's own 60s.
+const StatusTimeout = 10 * time.Second
 
 type Cli struct{}
 
@@ -62,19 +75,69 @@ func (c *Cli) Restart() error {
 	return exec.Command("sh", "-c", command).Run()
 }
 
+// Resume starts the client from the init script already on disk. Unlike netbird's
+// it can genuinely fail: Stop() removes that script, so after a stop there is
+// nothing to resume without copying — and copying is what a read-only filesystem
+// refuses. Callers must treat failure here as "could not put it back".
+func (c *Cli) Resume() error {
+	if _, err := os.Stat(ScriptPath); err != nil {
+		return fmt.Errorf("no init script at %s to resume from", ScriptPath)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), UpTimeout)
+	defer cancel()
+
+	return exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("%s start", ScriptPath)).Run()
+}
+
 func (c *Cli) Stop() error {
+	// Idempotent: a client that is not installed is already stopped, and a caller
+	// switching VPNs must not read that as a failure.
+	//
+	// The binary check is deliberately not symmetric with netbird's. S98tailscaled
+	// exits 1 for every verb when /usr/sbin/tailscaled is missing — its preamble
+	// runs before the case — so without this a device that never installed
+	// Tailscale would report a stop failure and could never switch to NetBird.
+	// The cost is real but far narrower: a daemon still running from a deleted
+	// binary would be reported as stopped.
+	if _, err := os.Stat(TailscaledPath); err != nil {
+		return nil
+	}
+
+	if _, err := os.Stat(ScriptPath); err != nil {
+		return nil
+	}
+
 	command := fmt.Sprintf("%s stop", ScriptPath)
-	err := exec.Command("sh", "-c", command).Run()
-	if err != nil {
+	if err := exec.Command("sh", "-c", command).Run(); err != nil {
 		return err
 	}
 
-	return os.Remove(ScriptPath)
+	// Removing the script is what keeps a stopped client stopped across reboots.
+	// A concurrent remover winning the race is not an error.
+	if err := os.Remove(ScriptPath); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Cli) Up() error {
+	// Bounded because this runs while the VPN lock is held: `tailscale up` blocks
+	// until the node authenticates, and an unauthenticated device would otherwise
+	// hold the lock until the server restarts, failing every VPN request with -5.
+	ctx, cancel := context.WithTimeout(context.Background(), UpTimeout)
+	defer cancel()
+
 	command := "tailscale up --accept-dns=false"
-	return exec.Command("sh", "-c", command).Run()
+	if err := exec.CommandContext(ctx, "sh", "-c", command).Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return fmt.Errorf("tailscale up timed out after %s", UpTimeout)
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (c *Cli) Down() error {
@@ -84,9 +147,19 @@ func (c *Cli) Down() error {
 
 func (c *Cli) Status() (*TsStatus, error) {
 	command := "tailscale status --json"
-	cmd := exec.Command("sh", "-c", command)
 
-	output, err := cmd.CombinedOutput()
+	// Bounded: this now runs under the VPN lock while deciding a switch, and a
+	// wedged daemon would otherwise hold that lock until the server restarts.
+	ctx, cancel := context.WithTimeout(context.Background(), StatusTimeout)
+	defer cancel()
+
+	output, err := exec.CommandContext(ctx, "sh", "-c", command).CombinedOutput()
+	if err != nil && ctx.Err() == context.DeadlineExceeded {
+		// exec reports a killed process as "signal: killed", which is
+		// indistinguishable from an external SIGKILL. Wrap it so callers can ask
+		// the question properly instead of matching on the text.
+		return nil, fmt.Errorf("tailscale status timed out after %s: %w", StatusTimeout, context.DeadlineExceeded)
+	}
 	if err != nil {
 		return nil, err
 	}

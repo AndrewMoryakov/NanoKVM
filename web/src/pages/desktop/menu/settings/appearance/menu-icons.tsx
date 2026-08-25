@@ -1,3 +1,4 @@
+import { useAuth } from '@/contexts/auth.ts';
 import { Switch } from 'antd';
 import { useAtom } from 'jotai';
 import {
@@ -14,22 +15,29 @@ import { useTranslation } from 'react-i18next';
 
 import * as ls from '@/lib/localstorage.ts';
 import { menuDisabledItemsAtom } from '@/jotai/settings.ts';
+import { Robot } from '@/components/icons/robot.tsx';
 
 export const MenuIcons = () => {
   const { t } = useTranslation();
+  const { account } = useAuth();
 
   const [menuDisabledItems, setMenuDisabledItems] = useAtom(menuDisabledItemsAtom);
 
   const items = [
     { key: 'image', icon: <DiscIcon size={16} /> },
     { key: 'download', icon: <DownloadIcon size={16} /> },
-    { key: 'script', icon: <FileJsonIcon size={16} /> },
     { key: 'terminal', icon: <TerminalSquareIcon size={16} /> },
+    { key: 'script', icon: <FileJsonIcon size={16} /> },
     { key: 'wol', icon: <NetworkIcon size={16} /> },
+    { key: 'picoclaw', icon: <Robot size={16} /> },
     { key: 'power', icon: <PowerIcon size={16} /> },
     { key: 'fullscreen', icon: <MaximizeIcon size={16} />, label: 'fullscreen.toggle' },
     { key: 'collapse', icon: <XIcon size={16} />, label: 'menu.collapse' }
-  ];
+  ].filter(
+    (item) =>
+      account.role === 'admin' ||
+      !['image', 'download', 'terminal', 'script', 'picoclaw'].includes(item.key)
+  );
 
   function updateItems(key: string) {
     const exist = menuDisabledItems.includes(key);

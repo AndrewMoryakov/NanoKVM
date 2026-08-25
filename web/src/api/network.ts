@@ -1,5 +1,7 @@
 import { http } from '@/lib/http.ts';
 
+export type DNSMode = 'manual' | 'dhcp';
+
 // wake on lan
 export function wol(mac: string) {
   const data = {
@@ -31,12 +33,29 @@ export function getWiFi() {
 }
 
 // connect wifi without auth (only available in wifi configuration mode)
-export function connectWifiNoAuth(ssid: string, password: string) {
+export function connectWifiNoAuth(ssid: string, password: string, apPassword?: string) {
   const data = {
     ssid,
     password
   };
-  return http.post('/api/network/wifi', data);
+  return http.post('/api/network/wifi', data, {
+    headers: {
+      'X-AP-Key': apPassword || ''
+    }
+  });
+}
+
+// verify ap login
+export function verifyApLogin(apPassword: string) {
+  return http.post(
+    '/api/network/wifi/verify',
+    {},
+    {
+      headers: {
+        'X-AP-Key': apPassword || ''
+      }
+    }
+  );
 }
 
 // connect wifi
@@ -51,4 +70,12 @@ export function connectWifi(ssid: string, password: string) {
 // disconnect wifi
 export function disconnectWifi() {
   return http.post('/api/network/wifi/disconnect');
+}
+
+export function getDNS() {
+  return http.get('/api/network/dns');
+}
+
+export function setDNS(mode: DNSMode, servers: string[]) {
+  return http.post('/api/network/dns', { mode, servers });
 }

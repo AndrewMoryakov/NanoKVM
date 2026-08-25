@@ -1,32 +1,54 @@
-import { useEffect } from 'react';
-import { useAtom } from 'jotai';
+import { useEffect, useState } from 'react';
+import { Splitter } from 'antd';
+import { useAtom, useAtomValue } from 'jotai';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'react-responsive';
 
 import * as storage from '@/lib/localstorage.ts';
 import { client } from '@/lib/websocket.ts';
+import { picoclawChatOpenAtom } from '@/jotai/picoclaw.ts';
 import { resolutionAtom, videoModeAtom } from '@/jotai/screen.ts';
 import { Head } from '@/components/head.tsx';
 
+import { CaptureStatusOverlay, useCaptureStatus } from './capture-status';
 import { Keyboard } from './keyboard';
 import { Menu } from './menu';
 import { Mouse } from './mouse';
-import { Notification } from './notification.tsx';
+import { H264ModeNotification, Notification } from './notification.tsx';
+import { Sidebar as PicoclawSidebar } from './picoclaw';
+import { ActionOverlay } from './picoclaw/action-overlay.tsx';
 import { Screen } from './screen';
 import { VirtualKeyboard } from './virtual-keyboard';
+
+function getVideoMode() {
+  const defaultVideoMode = window.RTCPeerConnection ? 'h264' : 'mjpeg';
+
+  const cookieVideoMode = storage.getVideoMode();
+  if (cookieVideoMode) {
+    if (cookieVideoMode === 'direct' && !window.VideoDecoder) {
+      return defaultVideoMode;
+    }
+    return cookieVideoMode;
+  }
+
+  return defaultVideoMode;
+}
 
 export const Desktop = () => {
   const { t } = useTranslation();
   const isBigScreen = useMediaQuery({ minWidth: 850 });
+  const [activeVideoMode] = useState(getVideoMode);
+  const [picoclawSidebarWidth, setPicoclawSidebarWidth] = useState(420);
+  const captureStatus = useCaptureStatus(activeVideoMode);
 
   const [videoMode, setVideoMode] = useAtom(videoModeAtom);
   const [resolution, setResolution] = useAtom(resolutionAtom);
+  const isPicoclawChatOpen = useAtomValue(picoclawChatOpenAtom);
 
   useEffect(() => {
     client.connect();
 
-    const mode = getVideoMode();
-    setVideoMode(mode);
+    setVideoMode(activeVideoMode);
 
     const res = storage.getResolution() || { width: 0, height: 0 };
     setResolution(res);
@@ -34,38 +56,60 @@ export const Desktop = () => {
     return () => {
       client.close();
     };
-  }, []);
+  }, [activeVideoMode, setResolution, setVideoMode]);
 
-  function getVideoMode() {
-    const defaultVideoMode = window.RTCPeerConnection ? 'h264' : 'mjpeg';
-
-    const cookieVideoMode = storage.getVideoMode();
-    if (cookieVideoMode) {
-      if (cookieVideoMode === 'direct' && !window.VideoDecoder) {
-        return defaultVideoMode;
-      }
-      return cookieVideoMode;
+  function handleSplitterResize(sizes: number[]) {
+    const nextSidebarWidth = sizes[1];
+    if (typeof nextSidebarWidth === 'number' && nextSidebarWidth > 0) {
+      setPicoclawSidebarWidth(nextSidebarWidth);
     }
-
-    return defaultVideoMode;
   }
 
   return (
-    <>
+    <div className="h-screen w-screen overflow-hidden bg-neutral-950">
       <Head title={t('head.desktop')} />
 
       {isBigScreen && <Notification />}
+      <H264ModeNotification />
 
       {videoMode && resolution && (
-        <>
+        <div className="relative flex h-full min-h-0 w-full min-w-0">
           <Menu />
-          <Screen />
+          <div className="h-full min-h-0 w-full min-w-0">
+            <Splitter
+              className="h-full w-full"
+              style={{ height: '100%', width: '100%' }}
+              onResize={handleSplitterResize}
+            >
+              <Splitter.Panel min="45%">
+                <div className="relative h-full min-h-0 w-full min-w-0 overflow-hidden bg-black">
+                  <Screen />
+                  <CaptureStatusOverlay status={captureStatus} />
+                </div>
+              </Splitter.Panel>
+              <Splitter.Panel
+                size={isBigScreen && isPicoclawChatOpen ? picoclawSidebarWidth : 0}
+                min={isBigScreen && isPicoclawChatOpen ? 340 : 0}
+                max="45%"
+                resizable={isBigScreen && isPicoclawChatOpen}
+              >
+                {isBigScreen && isPicoclawChatOpen ? <PicoclawSidebar /> : null}
+              </Splitter.Panel>
+            </Splitter>
+          </div>
+          <ActionOverlay />
           <Mouse />
           <Keyboard />
-        </>
+        </div>
       )}
 
+      {!isBigScreen && isPicoclawChatOpen ? (
+        <div className="fixed inset-x-0 bottom-0 top-14 z-[980] overflow-hidden bg-[#0d0d0f] shadow-2xl">
+          <PicoclawSidebar />
+        </div>
+      ) : null}
+
       <VirtualKeyboard />
-    </>
+    </div>
   );
 };

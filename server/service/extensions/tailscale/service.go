@@ -2,6 +2,7 @@ package tailscale
 
 import (
 	"NanoKVM-Server/proto"
+	"NanoKVM-Server/service/extensions/vpnpref"
 	"NanoKVM-Server/utils"
 	"net"
 	"os"
@@ -20,19 +21,58 @@ const (
 )
 
 var StateMap = map[string]proto.TailscaleState{
-	"NoState":    proto.TailscaleNotRunning,
-	"Starting":   proto.TailscaleNotRunning,
-	"NeedsLogin": proto.TailscaleNotLogin,
-	"Running":    proto.TailscaleRunning,
-	"Stopped":    proto.TailscaleStopped,
+	"NoState":          proto.TailscaleNotRunning,
+	"Starting":         proto.TailscaleNotRunning,
+	"NeedsLogin":       proto.TailscaleNotLogin,
+	"NeedsMachineAuth": proto.TailscaleNotLogin,
+	"InUseOtherUser":   proto.TailscaleNotLogin,
+	"Running":          proto.TailscaleRunning,
+	"Stopped":          proto.TailscaleStopped,
+}
+
+// netbirdBootable mirrors the boot script's condition for NetBird without
+// importing the netbird package, which would create an import cycle through vpn.
+func netbirdBootable() bool {
+	info, err := os.Stat("/usr/bin/netbird")
+	if err != nil || info.Mode()&0o111 == 0 {
+		return false
+	}
+
+	_, err = os.Stat("/kvmapp/system/init.d/S99netbird")
+	return err == nil
 }
 
 func NewService() *Service {
 	return &Service{}
 }
 
+// lockVPN serializes operations that start or stop a client.
+//
+// It deliberately does NOT check the autostart preference. That preference says
+// what runs at boot, not who may run now: gating these handlers on it made the
+// first NetBird login unreachable (login needs the preference, the preference
+// needs a connected client) and, worse, let a switch cut the tunnel the caller
+// was connected through. Mutual exclusion is enforced where it belongs — in
+// SetPreference, which stops the other client only once this one is connected.
+//
+// Both daemons may therefore be up briefly while a user sets the new one up. That
+// overlap is deliberate: the alternative — refusing — is what locked devices out.
+func lockVPN(c *gin.Context, rsp *proto.Response) bool {
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
+		return false
+	}
+
+	return true
+}
+
 func (s *Service) Install(c *gin.Context) {
 	var rsp proto.Response
+
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	if !isInstalled() {
 		if err := install(); err != nil {
@@ -50,11 +90,26 @@ func (s *Service) Install(c *gin.Context) {
 func (s *Service) Uninstall(c *gin.Context) {
 	var rsp proto.Response
 
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
+		return
+	}
+	defer vpnpref.Unlock()
+
 	_ = NewCli().Stop()
 	_ = utils.DelGoMemLimit()
 
 	_ = os.Remove(TailscalePath)
 	_ = os.Remove(TailscaledPath)
+
+	// Removing Tailscale while it owns autostart would leave select_vpn deleting
+	// the NetBird init script at the next boot with nothing to put in its place.
+	// Hand autostart over when NetBird can actually take it.
+	if vpnpref.Read() == vpnpref.Tailscale && netbirdBootable() {
+		if err := vpnpref.Write(vpnpref.Netbird); err != nil {
+			log.Errorf("failed to hand autostart to netbird after tailscale uninstall: %s", err)
+		}
+	}
 
 	rsp.OkRsp(c)
 	log.Debugf("uninstall tailscale successfully")
@@ -62,6 +117,11 @@ func (s *Service) Uninstall(c *gin.Context) {
 
 func (s *Service) Start(c *gin.Context) {
 	var rsp proto.Response
+
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Start()
 	if err != nil {
@@ -81,6 +141,11 @@ func (s *Service) Start(c *gin.Context) {
 func (s *Service) Restart(c *gin.Context) {
 	var rsp proto.Response
 
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
+
 	err := NewCli().Restart()
 	if err != nil {
 		rsp.ErrRsp(c, -1, "restart failed")
@@ -94,6 +159,12 @@ func (s *Service) Restart(c *gin.Context) {
 
 func (s *Service) Stop(c *gin.Context) {
 	var rsp proto.Response
+
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Stop()
 	if err != nil {
@@ -110,6 +181,12 @@ func (s *Service) Stop(c *gin.Context) {
 
 func (s *Service) Up(c *gin.Context) {
 	var rsp proto.Response
+
+	// `tailscale up` brings the tunnel up — same guard as Start.
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Up()
 	if err != nil {
@@ -143,7 +220,14 @@ func (s *Service) Login(c *gin.Context) {
 	cli := NewCli()
 	status, err := cli.Status()
 	if err != nil {
-		_ = cli.Start()
+		// Recover by starting the daemon, serialized against other VPN work. No
+		// preference check: refusing here is what used to make signing in
+		// impossible on a device set to the other client.
+		if vpnpref.TryLock() {
+			_ = cli.Start()
+			vpnpref.Unlock()
+		}
+
 		status, err = cli.Status()
 	}
 

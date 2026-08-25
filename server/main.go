@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
-	"strings"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -15,6 +13,7 @@ import (
 	"NanoKVM-Server/logger"
 	"NanoKVM-Server/middleware"
 	"NanoKVM-Server/router"
+	"NanoKVM-Server/service/vm"
 	"NanoKVM-Server/service/vm/jiggler"
 	"NanoKVM-Server/utils"
 
@@ -30,18 +29,22 @@ func main() {
 }
 
 func initialize() {
+	if err := config.EnsurePicoclawInternalToken(); err != nil {
+		log.Fatalf("failed to initialize picoclaw internal token: %v", err)
+	}
+
 	logger.Init()
 
 	// init screen parameters
 	_ = common.GetScreen()
 
 	// init HDMI
-	vision := common.GetKvmVision()
-	vision.SetHDMI(false)
+	vm.DisableHdmiCapture()
 	time.Sleep(10 * time.Millisecond)
 	if !utils.IsHdmiDisabled() {
-		vision.SetHDMI(true)
+		vm.EnableHdmiCapture()
 	}
+	vm.SetHdmiViewerCount(0)
 
 	// run mouse jiggler
 	jiggler.GetJiggler().Run()
@@ -69,43 +72,53 @@ func run() {
 
 	router.Init(r)
 
-	httpAddr := fmt.Sprintf(":%d", conf.Port.Http)
-	httpsAddr := fmt.Sprintf(":%d", conf.Port.Https)
+	httpAddr := utils.ListenAddr(conf.Host, strconv.Itoa(conf.Port.Http))
+	loopbackHTTPAddr := utils.ListenAddr("127.0.0.1", strconv.Itoa(conf.Port.Http))
+	needsLoopbackHTTP := utils.NeedsDedicatedLoopbackListener(conf.Host)
 
 	if conf.Proto == "https" {
+		httpsPortStr := strconv.Itoa(conf.Port.Https)
+
 		go func() {
-			r.Use(middleware.Tls())
-			err := r.RunTLS(httpsAddr, conf.Cert.Crt, conf.Cert.Key)
+			err := r.RunTLS(utils.ListenAddr(conf.Host, httpsPortStr), conf.Cert.Crt, conf.Cert.Key)
 			if err != nil {
 				panic("start https server failed")
 			}
 		}()
 
-		runRedirect(httpAddr, httpsAddr)
+		if needsLoopbackHTTP {
+			go func() {
+				if err := middleware.ListenAndServeLoopbackHTTPRedirect(
+					loopbackHTTPAddr,
+					httpsPortStr,
+					r,
+					router.LoopbackHTTPAllowedPaths()...,
+				); err != nil {
+					panic("start loopback http server failed")
+				}
+			}()
+		}
+
+		if err := middleware.ListenAndServeLoopbackHTTPRedirect(
+			httpAddr,
+			httpsPortStr,
+			r,
+			router.LoopbackHTTPAllowedPaths()...,
+		); err != nil {
+			panic("start http server failed")
+		}
 	} else {
+		if needsLoopbackHTTP {
+			go func() {
+				if err := r.Run(loopbackHTTPAddr); err != nil {
+					panic("start loopback http server failed")
+				}
+			}()
+		}
+
 		if err := r.Run(httpAddr); err != nil {
 			panic("start http server failed")
 		}
-	}
-}
-
-func runRedirect(httpPort string, httpsPort string) {
-	err := http.ListenAndServe(httpPort, http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		host := req.Host
-		if strings.Contains(host, httpPort) {
-			host = strings.Split(host, httpPort)[0]
-		}
-
-		targetURL := "https://" + host + req.URL.String()
-		if httpsPort != ":443" {
-			targetURL = "https://" + host + httpsPort + req.URL.String()
-		}
-
-		http.Redirect(w, req, targetURL, http.StatusTemporaryRedirect)
-	}))
-
-	if err != nil {
-		panic("start http server failed")
 	}
 }
 

@@ -1,0 +1,246 @@
+name: NanoKVM Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing numeric tag to release, e.g. 2.5.0
+        required: true
+        type: string
+      release_action:
+        description: Publish a release or promote a tested prerelease
+        required: true
+        type: choice
+        options:
+          - publish-prerelease
+          - publish-stable
+          - promote-stable
+
+# Latest is repository-global, so all Release changes must be serialized.
+concurrency:
+  group: nanokvm-github-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Resolve release tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      source_sha: ${{ steps.tag.outputs.source_sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify tag
+        id: tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          SOURCE_SHA=$(./scripts/verify-release-tag.sh "$TAG")
+          echo "source_sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+
+  package:
+    name: Build tag package
+    needs: validate
+    if: inputs.release_action != 'promote-stable'
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/package.yml
+    with:
+      ref: ${{ needs.validate.outputs.source_sha }}
+      version: ${{ inputs.tag }}
+
+  publish:
+    name: Publish GitHub release
+    needs:
+      - validate
+      - package
+    if: inputs.release_action != 'promote-stable'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout release tooling
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.package.outputs.artifact_name }}
+          path: build/release
+
+      - name: Publish release
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ACTION: ${{ inputs.release_action }}
+          SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          ./scripts/verify-release-assets.sh build/release "$TAG"
+
+          case "$RELEASE_ACTION" in
+            publish-prerelease) IS_PRERELEASE=true ;;
+            publish-stable) IS_PRERELEASE=false ;;
+            *)
+              echo "::error::invalid publish action '$RELEASE_ACTION'"
+              exit 1
+              ;;
+          esac
+
+          ENDPOINT="repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}"
+          set +e
+          HEADERS=$(gh api --include --silent "$ENDPOINT" 2>&1)
+          API_STATUS=$?
+          set -e
+          HTTP_STATUS=$(printf '%s\n' "$HEADERS" | awk '
+            $1 ~ /^HTTP\// { status = $2 }
+            END { print status }
+          ')
+          if [ "$API_STATUS" -eq 0 ] && [ "$HTTP_STATUS" = 200 ]; then
+            echo "::error::release or draft '$TAG' already exists"
+            echo "Publishing is one-shot. Inspect it at https://github.com/${GITHUB_REPOSITORY}/releases."
+            exit 1
+          fi
+          if [ "$API_STATUS" -eq 0 ] || [ "$HTTP_STATUS" != 404 ]; then
+            echo "::error::failed to query release '$TAG' (HTTP status: ${HTTP_STATUS:-unknown})"
+            printf '%s\n' "$HEADERS" >&2
+            exit 1
+          fi
+
+          TARBALL="build/release/nanokvm_${TAG}.tar.gz"
+          SHA256=$(sha256sum "$TARBALL" | cut -d' ' -f1)
+          SHA512=$(jq -er '.sha512' build/release/latest.json)
+          # Backticks below are intentional Markdown, not command substitution.
+          # shellcheck disable=SC2016
+          NOTES=$(printf '%s\n' \
+            "Application package for NanoKVM ${TAG}." \
+            '' \
+            '### Checksums' \
+            '' \
+            '`SHA-256` (hex):' \
+            '' \
+            "    ${SHA256}" \
+            '' \
+            '`SHA-512` (base64, as expected by the on-device updater):' \
+            '' \
+            "    ${SHA512}" \
+            '' \
+            'To offer this build over OTA, publish it through the separate CDN workflow.')
+
+          STATE_ARGS=(--prerelease="$IS_PRERELEASE")
+          if [ "$IS_PRERELEASE" = true ]; then
+            STATE_ARGS+=(--latest=false)
+          fi
+
+          ./scripts/verify-release-tag.sh "$TAG" "$SOURCE_SHA" >/dev/null
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "nanokvm@${TAG}" \
+            --notes "$NOTES" \
+            "${STATE_ARGS[@]}" \
+            "$TARBALL" build/release/latest.json build/release/sha256.txt \
+            build/release/netbird_riscv64.tgz
+
+      - name: Summary
+        env:
+          RELEASE_ACTION: ${{ inputs.release_action }}
+          SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          {
+            echo '### NanoKVM GitHub Release published'
+            echo
+            echo "- Tag: \`$TAG\`"
+            echo "- Commit: \`$SOURCE_SHA\`"
+            echo "- Action: \`$RELEASE_ACTION\`"
+            echo
+            echo 'No CDN object was uploaded.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  promote:
+    name: Promote verified prerelease
+    needs: validate
+    if: inputs.release_action == 'promote-stable'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout release tooling
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify and promote release
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          RELEASE_JSON=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}")
+          if [ "$(jq -r '.draft' <<< "$RELEASE_JSON")" != false ]; then
+            echo "::error::release '$TAG' is a draft"
+            exit 1
+          fi
+          if [ "$(jq -r '.prerelease' <<< "$RELEASE_JSON")" != true ]; then
+            echo "::error::release '$TAG' is not a prerelease"
+            exit 1
+          fi
+
+          CURRENT_ASSETS=$(jq -r '.assets[].name' <<< "$RELEASE_JSON" | LC_ALL=C sort)
+          EXPECTED_ASSETS=$(printf '%s\n' \
+            latest.json "nanokvm_${TAG}.tar.gz" sha256.txt netbird_riscv64.tgz | LC_ALL=C sort)
+          if [ "$CURRENT_ASSETS" != "$EXPECTED_ASSETS" ]; then
+            echo "::error::release '$TAG' does not have the exact expected asset set"
+            exit 1
+          fi
+
+          mkdir -p build/release
+          gh release download "$TAG" --dir build/release \
+            --pattern "nanokvm_${TAG}.tar.gz" \
+            --pattern latest.json \
+            --pattern sha256.txt \
+            --pattern netbird_riscv64.tgz
+          ./scripts/verify-release-assets.sh build/release "$TAG"
+
+          ./scripts/verify-release-tag.sh "$TAG" "$SOURCE_SHA" >/dev/null
+          gh release edit "$TAG" --prerelease=false --latest
+          ./scripts/verify-release-tag.sh "$TAG" "$SOURCE_SHA" >/dev/null
+
+          if [ "$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq '.prerelease')" != false ]; then
+            echo "::error::release '$TAG' was not promoted"
+            exit 1
+          fi
+          if [ "$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq '.tag_name')" != "$TAG" ]; then
+            echo "::error::release '$TAG' was not marked latest"
+            exit 1
+          fi
+
+      - name: Summary
+        env:
+          SOURCE_SHA: ${{ needs.validate.outputs.source_sha }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          {
+            echo '### NanoKVM prerelease promoted'
+            echo
+            echo "- Tag: \`$TAG\`"
+            echo "- Commit: \`$SOURCE_SHA\`"
+            echo '- Assets: unchanged and checksum-verified'
+            echo
+            echo 'No package was rebuilt and no CDN object was uploaded.'
+          } >> "$GITHUB_STEP_SUMMARY"
