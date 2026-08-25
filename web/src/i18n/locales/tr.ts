@@ -475,6 +475,8 @@ const tr = {
         title: 'Tailscale',
         autostart: 'Otomatik başlat',
         autostartConfirm: "Otomatik başlatma Tailscale'e geçirilsin mi? NetBird durdurulacak.",
+        autostartWarning:
+          'Önce bu cihaza Tailscale üzerinden erişebildiğinizi doğrulayın. NetBird durdurulduğunda şu anda kullandığınız bağlantı kesilir.',
         memory: {
           title: 'Bellek optimizasyonu',
           tip: "Bellek kullanımı sınırı aştığında, belleği boşaltmak amacıyla çöp toplama işlemi daha agresif bir şekilde gerçekleştirilir. Tailscale kullanıyorsanız bu değerin 75 MB olarak ayarlanması önerilir. Değişikliğin etkili olabilmesi için Tailscale'in yeniden başlatılması gerekir."
@@ -519,6 +521,8 @@ const tr = {
         title: 'NetBird',
         autostart: 'Otomatik başlat',
         autostartConfirm: "Otomatik başlatma NetBird'e geçirilsin mi? Tailscale durdurulacak.",
+        autostartWarning:
+          'Önce bu cihaza NetBird üzerinden erişebildiğinizi doğrulayın. Tailscale durdurulduğunda şu anda kullandığınız bağlantı kesilir.',
         restart: "NetBird'i yeniden başlat?",
         stop: "NetBird'i durdur?",
         stopDesc:

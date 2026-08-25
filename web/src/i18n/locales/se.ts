@@ -471,6 +471,8 @@ const se = {
         title: 'Tailscale',
         autostart: 'Starta automatiskt',
         autostartConfirm: 'Byta automatisk start till Tailscale? NetBird stoppas.',
+        autostartWarning:
+          'Kontrollera först att du når den här enheten via Tailscale. När NetBird stoppas bryts anslutningen du använder nu.',
         memory: {
           title: 'Minnesoptimering',
           tip: 'När minnesanvändningen överskrider gränsen utförs aggressivare skräpsamling för att frigöra minne. Rekommenderas att sättas till 75 MB om du använder Tailscale. Omstart krävs för att det ska gälla.'
@@ -515,6 +517,8 @@ const se = {
         title: 'NetBird',
         autostart: 'Starta automatiskt',
         autostartConfirm: 'Byta automatisk start till NetBird? Tailscale stoppas.',
+        autostartWarning:
+          'Kontrollera först att du når den här enheten via NetBird. När Tailscale stoppas bryts anslutningen du använder nu.',
         restart: 'Starta om NetBird?',
         stop: 'Stoppa NetBird?',
         stopDesc:

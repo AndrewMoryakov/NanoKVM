@@ -92,6 +92,11 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
         {state && state !== 'notInstall' && (
           <Popconfirm
             title={t('settings.tailscale.autostartConfirm')}
+            description={
+              <div className="max-w-[320px] text-xs text-neutral-400">
+                {t('settings.tailscale.autostartWarning')}
+              </div>
+            }
             onConfirm={() => handleAutostartChange(true)}
             okText={t('settings.tailscale.okBtn')}
             cancelText={t('settings.tailscale.cancelBtn')}

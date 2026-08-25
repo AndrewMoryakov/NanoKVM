@@ -479,6 +479,8 @@ const de = {
         title: 'Tailscale',
         autostart: 'Autostart',
         autostartConfirm: 'Autostart auf Tailscale umstellen? NetBird wird gestoppt.',
+        autostartWarning:
+          'Prüfen Sie zuerst, ob dieses Gerät über Tailscale erreichbar ist. Das Stoppen von NetBird beendet die Verbindung, die Sie gerade nutzen.',
         memory: {
           title: 'Speicher Optimierung',
           tip: 'Wenn die Speichernutzung das Limit überschreitet, wird die Speicherbereinigung aggressiver durchgeführt, um Speicher freizugeben. Es wird empfohlen, den Wert auf 75 MB zu setzen, wenn Tailscale verwendet wird. Ein Neustart von Tailscale ist erforderlich, damit die Änderung wirksam wird.'
@@ -524,6 +526,8 @@ const de = {
         title: 'NetBird',
         autostart: 'Autostart',
         autostartConfirm: 'Autostart auf NetBird umstellen? Tailscale wird gestoppt.',
+        autostartWarning:
+          'Prüfen Sie zuerst, ob dieses Gerät über NetBird erreichbar ist. Das Stoppen von Tailscale beendet die Verbindung, die Sie gerade nutzen.',
         restart: 'NetBird neu starten?',
         stop: 'NetBird stoppen?',
         stopDesc:

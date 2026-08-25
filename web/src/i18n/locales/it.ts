@@ -478,6 +478,8 @@ const it = {
         title: 'Tailscale',
         autostart: 'Avvio automatico',
         autostartConfirm: "Passare l'avvio automatico a Tailscale? NetBird verrà arrestato.",
+        autostartWarning:
+          'Verifica prima di poter raggiungere questo dispositivo tramite Tailscale. Arrestare NetBird interromperà la connessione che stai usando.',
         memory: {
           title: 'Ottimizzazione memoria',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -523,6 +525,8 @@ const it = {
         title: 'NetBird',
         autostart: 'Avvio automatico',
         autostartConfirm: "Passare l'avvio automatico a NetBird? Tailscale verrà arrestato.",
+        autostartWarning:
+          'Verifica prima di poter raggiungere questo dispositivo tramite NetBird. Arrestare Tailscale interromperà la connessione che stai usando.',
         restart: 'Are you sure to restart NetBird?',
         stop: 'Are you sure to stop NetBird?',
         stopDesc:

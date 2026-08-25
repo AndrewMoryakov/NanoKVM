@@ -476,6 +476,8 @@ const hu = {
         title: 'Tailscale',
         autostart: 'Automatikus indítás',
         autostartConfirm: 'Átváltja az automatikus indítást Tailscale-re? A NetBird leáll.',
+        autostartWarning:
+          'Előbb ellenőrizze, hogy eléri-e az eszközt Tailscale útján. A NetBird leállítása megszakítja a most használt kapcsolatot.',
         memory: {
           title: 'Memóriaoptimalizálás',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -521,6 +523,8 @@ const hu = {
         title: 'NetBird',
         autostart: 'Automatikus indítás',
         autostartConfirm: 'Átváltja az automatikus indítást NetBirdre? A Tailscale leáll.',
+        autostartWarning:
+          'Előbb ellenőrizze, hogy eléri-e az eszközt NetBird útján. A Tailscale leállítása megszakítja a most használt kapcsolatot.',
         restart: 'Are you sure to restart NetBird?',
         stop: 'Are you sure to stop NetBird?',
         stopDesc:

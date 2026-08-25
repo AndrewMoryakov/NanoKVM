@@ -478,6 +478,8 @@ const nl = {
         title: 'Tailscale',
         autostart: 'Automatisch starten',
         autostartConfirm: 'Automatisch starten omzetten naar Tailscale? NetBird wordt gestopt.',
+        autostartWarning:
+          'Controleer eerst of dit apparaat via Tailscale bereikbaar is. Het stoppen van NetBird verbreekt de verbinding die u nu gebruikt.',
         memory: {
           title: 'Geheugen optimalisatie',
           tip: 'Wanneer geheugen gebruik de limiet overschreid, garbage collection wordt agressiever uitgevoerd om geheugen vrij te maken. geadviseerd om 50MB te kiezen als Tailscale wordt gebruikt. Tailscale moet worden herstart om de wijziging door te voeren.'
@@ -523,6 +525,8 @@ const nl = {
         title: 'NetBird',
         autostart: 'Automatisch starten',
         autostartConfirm: 'Automatisch starten omzetten naar NetBird? Tailscale wordt gestopt.',
+        autostartWarning:
+          'Controleer eerst of dit apparaat via NetBird bereikbaar is. Het stoppen van Tailscale verbreekt de verbinding die u nu gebruikt.',
         restart: 'Weet u zeker dat u NetBird opnieuw wilt opstarten?',
         stop: 'Weet u zeker dat u NetBird wilt stoppen?',
         stopDesc:

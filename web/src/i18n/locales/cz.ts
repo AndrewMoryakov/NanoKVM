@@ -474,6 +474,8 @@ const cz = {
         title: 'Tailscale',
         autostart: 'Spuštění při startu',
         autostartConfirm: 'Přepnout automatické spuštění na Tailscale? NetBird bude zastaven.',
+        autostartWarning:
+          'Nejprve ověřte, že se k tomuto zařízení dostanete přes Tailscale. Zastavení NetBird ukončí spojení, které právě používáte.',
         memory: {
           title: 'Optimalizace paměti',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -519,6 +521,8 @@ const cz = {
         title: 'NetBird',
         autostart: 'Spuštění při startu',
         autostartConfirm: 'Přepnout automatické spuštění na NetBird? Tailscale bude zastaven.',
+        autostartWarning:
+          'Nejprve ověřte, že se k tomuto zařízení dostanete přes NetBird. Zastavení Tailscale ukončí spojení, které právě používáte.',
         restart: 'Are you sure to restart NetBird?',
         stop: 'Are you sure to stop NetBird?',
         stopDesc:

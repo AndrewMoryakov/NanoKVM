@@ -472,6 +472,8 @@ const ca = {
         title: 'Tailscale',
         autostart: 'Inici automàtic',
         autostartConfirm: "Canviar l'inici automàtic a Tailscale? S'aturarà NetBird.",
+        autostartWarning:
+          'Comproveu primer que podeu accedir a aquest dispositiu per Tailscale. Aturar NetBird tallarà la connexió que utilitzeu ara.',
         memory: {
           title: 'Optimització de memòria',
           tip: 'Quan es supera el límit de memòria, es fa una neteja més agressiva. Recomanat: 75MB si uses Tailscale. Requereix reiniciar Tailscale.'
@@ -516,6 +518,8 @@ const ca = {
         title: 'NetBird',
         autostart: 'Inici automàtic',
         autostartConfirm: "Canviar l'inici automàtic a NetBird? S'aturarà Tailscale.",
+        autostartWarning:
+          'Comproveu primer que podeu accedir a aquest dispositiu per NetBird. Aturar Tailscale tallarà la connexió que utilitzeu ara.',
         restart: 'Reiniciar NetBird?',
         stop: 'Aturar NetBird?',
         stopDesc:

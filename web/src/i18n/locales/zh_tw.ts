@@ -460,6 +460,8 @@ const zh_tw = {
         title: 'Tailscale',
         autostart: '開機自動啟動',
         autostartConfirm: '將開機自動啟動切換為 Tailscale？NetBird 將被停止。',
+        autostartWarning:
+          '請先確認可以透過 Tailscale 存取本裝置。停止 NetBird 會中斷您目前使用的連線。',
         memory: {
           title: '記憶體最佳化',
           tip: '當記憶體使用量超過限制時，會更積極的進行垃圾回收來嘗試釋放記憶體。若使用 Tailscale 建議設定為 50MB，於重啟 Tailscale 後生效。'
@@ -504,6 +506,8 @@ const zh_tw = {
         title: 'NetBird',
         autostart: '開機自動啟動',
         autostartConfirm: '將開機自動啟動切換為 NetBird？Tailscale 將被停止。',
+        autostartWarning:
+          '請先確認可以透過 NetBird 存取本裝置。停止 Tailscale 會中斷您目前使用的連線。',
         restart: '確認要重新啟動 NetBird 嗎？',
         stop: '確認要停止 NetBird 嗎？',
         stopDesc: '停止 NetBird 服務。若開機自動啟動仍啟用，重新開機後會再次啟動。',

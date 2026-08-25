@@ -476,6 +476,8 @@ const ja = {
         title: 'Tailscale',
         autostart: '自動起動',
         autostartConfirm: '自動起動を Tailscale に切り替えますか？NetBird は停止します。',
+        autostartWarning:
+          '先に Tailscale 経由でこの装置に到達できることを確認してください。NetBird を停止すると、現在使用中の接続が切断されます。',
         memory: {
           title: 'メモリ最適化',
           tip: 'メモリ使用量が上限を超えると、メモリ解放のためにより積極的にガベージコレクションが実行されます。Tailscale を使用する場合は 50MB に設定することをお勧めします。この設定を有効にするには Tailscale を再起動する必要があります。'
@@ -521,6 +523,8 @@ const ja = {
         title: 'NetBird',
         autostart: '自動起動',
         autostartConfirm: '自動起動を NetBird に切り替えますか？Tailscale は停止します。',
+        autostartWarning:
+          '先に NetBird 経由でこの装置に到達できることを確認してください。Tailscale を停止すると、現在使用中の接続が切断されます。',
         restart: 'NetBird を再起動しますか？',
         stop: 'NetBird を停止しますか？',
         stopDesc:

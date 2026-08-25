@@ -463,6 +463,8 @@ const zh = {
         title: 'Tailscale',
         autostart: '开机自启',
         autostartConfirm: '将开机自启切换为 Tailscale？NetBird 将被停止。',
+        autostartWarning:
+          '请先确认可以通过 Tailscale 访问本设备。停止 NetBird 会中断您当前使用的连接。',
         memory: {
           title: '内存优化',
           tip: '当内存占用超过限制时，会更积极地执行垃圾回收来尝试释放内存。需重启 Tailscale 后生效。'
@@ -507,6 +509,8 @@ const zh = {
         title: 'NetBird',
         autostart: '开机自启',
         autostartConfirm: '将开机自启切换为 NetBird？Tailscale 将被停止。',
+        autostartWarning:
+          '请先确认可以通过 NetBird 访问本设备。停止 Tailscale 会中断您当前使用的连接。',
         restart: '确定要重启 NetBird 吗？',
         stop: '确定要停止 NetBird 吗？',
         stopDesc: '停止 NetBird 服务。若开机自启仍启用，重启后会再次启动。',

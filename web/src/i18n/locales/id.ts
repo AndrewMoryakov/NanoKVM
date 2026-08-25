@@ -473,6 +473,8 @@ const id = {
         title: 'Tailscale',
         autostart: 'Mulai otomatis',
         autostartConfirm: 'Alihkan mulai otomatis ke Tailscale? NetBird akan dihentikan.',
+        autostartWarning:
+          'Pastikan dulu perangkat ini bisa dijangkau lewat Tailscale. Menghentikan NetBird akan memutus koneksi yang sedang Anda pakai.',
         memory: {
           title: 'Optimasi memori',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -518,6 +520,8 @@ const id = {
         title: 'NetBird',
         autostart: 'Mulai otomatis',
         autostartConfirm: 'Alihkan mulai otomatis ke NetBird? Tailscale akan dihentikan.',
+        autostartWarning:
+          'Pastikan dulu perangkat ini bisa dijangkau lewat NetBird. Menghentikan Tailscale akan memutus koneksi yang sedang Anda pakai.',
         restart: 'Are you sure to restart NetBird?',
         stop: 'Are you sure to stop NetBird?',
         stopDesc:

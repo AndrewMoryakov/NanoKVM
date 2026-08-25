@@ -471,6 +471,8 @@ const vi = {
         title: 'Tailscale',
         autostart: 'Tự khởi động',
         autostartConfirm: 'Chuyển tự khởi động sang Tailscale? NetBird sẽ bị dừng.',
+        autostartWarning:
+          'Hãy kiểm tra trước rằng bạn có thể truy cập thiết bị này qua Tailscale. Dừng NetBird sẽ ngắt kết nối bạn đang dùng.',
         memory: {
           title: 'Tối ưu bộ nhớ',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -516,6 +518,8 @@ const vi = {
         title: 'NetBird',
         autostart: 'Tự khởi động',
         autostartConfirm: 'Chuyển tự khởi động sang NetBird? Tailscale sẽ bị dừng.',
+        autostartWarning:
+          'Hãy kiểm tra trước rằng bạn có thể truy cập thiết bị này qua NetBird. Dừng Tailscale sẽ ngắt kết nối bạn đang dùng.',
         restart: 'Are you sure to restart NetBird?',
         stop: 'Are you sure to stop NetBird?',
         stopDesc:
