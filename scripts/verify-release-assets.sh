@@ -1,5 +1,5 @@
 #!/bin/bash
-# Verify the three assets that make up a NanoKVM GitHub release.
+# Verify the four assets that make up a NanoKVM GitHub release.
 
 set -euo pipefail
 
@@ -19,13 +19,47 @@ TARBALL_NAME="nanokvm_${VERSION}.tar.gz"
 TARBALL="$ASSET_DIR/$TARBALL_NAME"
 MANIFEST="$ASSET_DIR/latest.json"
 CHECKSUM="$ASSET_DIR/sha256.txt"
+NETBIRD="$ASSET_DIR/netbird_riscv64.tgz"
 
-for path in "$TARBALL" "$MANIFEST" "$CHECKSUM"; do
+for path in "$TARBALL" "$MANIFEST" "$CHECKSUM" "$NETBIRD"; do
     if [ ! -f "$path" ]; then
         echo "[ERROR] missing release asset: $path" >&2
         exit 1
     fi
 done
+
+# The NetBird client is built by scripts/build-netbird.sh and published alongside
+# the package; the device downloads it on demand. Nothing else would notice a
+# host-architecture build or a version that drifted away from the firmware pin.
+PINNED_NETBIRD=$(tr -d '[:space:]' < "$(dirname "$0")/../kvmapp/system/netbird/VERSION")
+NETBIRD_ROOT="netbird_${PINNED_NETBIRD}_riscv64"
+
+NETBIRD_ENTRIES=$(tar -tzf "$NETBIRD" | cut -d/ -f1 | sort -u)
+if [ "$NETBIRD_ENTRIES" != "$NETBIRD_ROOT" ]; then
+    echo "[ERROR] $NETBIRD must contain exactly one top-level dir '$NETBIRD_ROOT'" >&2
+    echo "        got: $(echo "$NETBIRD_ENTRIES" | tr '\n' ' ')" >&2
+    exit 1
+fi
+
+NETBIRD_TMP=$(mktemp -d)
+# ENTRY_LIST/VERBOSE_LIST are created further down; :- keeps `set -u` from
+# turning an early failure here into an unbound-variable error.
+trap 'rm -rf "$NETBIRD_TMP" "${ENTRY_LIST:-}" "${VERBOSE_LIST:-}"' EXIT
+tar -xzf "$NETBIRD" -C "$NETBIRD_TMP"
+
+ASSET_VERSION=$(tr -d '[:space:]' < "$NETBIRD_TMP/$NETBIRD_ROOT/VERSION")
+if [ "$ASSET_VERSION" != "$PINNED_NETBIRD" ]; then
+    echo "[ERROR] netbird asset reports $ASSET_VERSION, firmware pins $PINNED_NETBIRD" >&2
+    exit 1
+fi
+
+NETBIRD_BIN="$NETBIRD_TMP/$NETBIRD_ROOT/netbird"
+NETBIRD_MAGIC=$(od -An -tx1 -N4 "$NETBIRD_BIN" | tr -d ' \n')
+NETBIRD_MACHINE=$(od -An -tu1 -j18 -N1 "$NETBIRD_BIN" | tr -d ' \n')
+if [ "$NETBIRD_MAGIC" != "7f454c46" ] || [ "$NETBIRD_MACHINE" != "243" ]; then
+    echo "[ERROR] netbird binary is not a riscv64 ELF (e_machine=$NETBIRD_MACHINE)" >&2
+    exit 1
+fi
 
 PACKAGE_ROOT="nanokvm_${VERSION}"
 MAX_PACKAGE_SIZE=$((1 << 30))
@@ -33,7 +67,7 @@ MAX_UNPACKED_SIZE=$((2 << 30))
 MAX_ARCHIVE_ENTRIES=100000
 ENTRY_LIST=$(mktemp)
 VERBOSE_LIST=$(mktemp)
-trap 'rm -f "$ENTRY_LIST" "$VERBOSE_LIST"' EXIT
+# EXIT trap is already installed above and covers these too.
 
 if ! tar -tzf "$TARBALL" > "$ENTRY_LIST"; then
     echo "[ERROR] could not list release tarball" >&2

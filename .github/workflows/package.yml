@@ -205,6 +205,41 @@ jobs:
       - name: Assemble package
         run: make package VERSION="${{ steps.version.outputs.version }}"
 
+      - name: Read pinned NetBird version
+        id: netbird
+        run: |
+          version=$(tr -d '[:space:]' < kvmapp/system/netbird/VERSION)
+          case "$version" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::invalid NetBird version '$version'"; exit 1 ;;
+          esac
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # The NetBird client is a release asset, not part of the OTA package: it is
+      # ~38 MB and most devices never enable it. The device downloads it on demand,
+      # exactly as it downloads Tailscale from the vendor. Cached on the pinned
+      # version, so it is rebuilt only when that version changes.
+      # Must stay AFTER "Assemble package": scripts/package.sh does `rm -rf build/release`,
+      # which would delete a cache restored earlier while `if: cache-hit` skips the rebuild.
+      - name: Cache NetBird client
+        id: netbird-cache
+        uses: actions/cache@v4
+        with:
+          path: build/release/netbird_riscv64.tgz
+          # The script and the toolchain decide what the binary is, so a change to
+          # either must miss the cache even when the pinned version is unchanged.
+          key: netbird-riscv64-${{ runner.os }}-${{ steps.netbird.outputs.version }}-${{ hashFiles('scripts/build-netbird.sh') }}-go1.25
+
+      - name: Set up Go
+        if: steps.netbird-cache.outputs.cache-hit != 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Build NetBird client (riscv64)
+        if: steps.netbird-cache.outputs.cache-hit != 'true'
+        run: ./scripts/build-netbird.sh build/release
+
       - name: Compare against the published release
         # Informational only: highlights what changed relative to what devices
         # are currently running. Never blocks the build.
@@ -292,5 +327,6 @@ jobs:
             build/release/latest.json
             build/release/sha256.txt
             build/release/BUILD_INFO.txt
+            build/release/netbird_riscv64.tgz
           if-no-files-found: error
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 90 }}

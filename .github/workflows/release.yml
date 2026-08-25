@@ -150,7 +150,8 @@ jobs:
             --title "nanokvm@${TAG}" \
             --notes "$NOTES" \
             "${STATE_ARGS[@]}" \
-            "$TARBALL" build/release/latest.json build/release/sha256.txt
+            "$TARBALL" build/release/latest.json build/release/sha256.txt \
+            build/release/netbird_riscv64.tgz
 
       - name: Summary
         env:
@@ -202,7 +203,7 @@ jobs:
 
           CURRENT_ASSETS=$(jq -r '.assets[].name' <<< "$RELEASE_JSON" | LC_ALL=C sort)
           EXPECTED_ASSETS=$(printf '%s\n' \
-            latest.json "nanokvm_${TAG}.tar.gz" sha256.txt | LC_ALL=C sort)
+            latest.json "nanokvm_${TAG}.tar.gz" sha256.txt netbird_riscv64.tgz | LC_ALL=C sort)
           if [ "$CURRENT_ASSETS" != "$EXPECTED_ASSETS" ]; then
             echo "::error::release '$TAG' does not have the exact expected asset set"
             exit 1
@@ -212,7 +213,8 @@ jobs:
           gh release download "$TAG" --dir build/release \
             --pattern "nanokvm_${TAG}.tar.gz" \
             --pattern latest.json \
-            --pattern sha256.txt
+            --pattern sha256.txt \
+            --pattern netbird_riscv64.tgz
           ./scripts/verify-release-assets.sh build/release "$TAG"
 
           ./scripts/verify-release-tag.sh "$TAG" "$SOURCE_SHA" >/dev/null
