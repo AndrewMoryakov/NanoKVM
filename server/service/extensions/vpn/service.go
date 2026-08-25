@@ -6,6 +6,7 @@ import (
 	"NanoKVM-Server/service/extensions/tailscale"
 	"NanoKVM-Server/service/extensions/vpnpref"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -67,6 +68,14 @@ func (s *Service) SetPreference(c *gin.Context) {
 
 	other := otherVPN(vpn)
 
+	// Autostarting a client that is not installed would leave the device with
+	// nothing at the next boot: select_vpn removes the other client's init script
+	// and has none to put in its place.
+	if !installed(vpn) {
+		rsp.ErrRsp(c, -7, fmt.Sprintf("%s is not installed", vpn))
+		return
+	}
+
 	if running(other) {
 		if !connected(vpn) {
 			rsp.ErrRsp(c, -6, fmt.Sprintf(
@@ -82,10 +91,19 @@ func (s *Service) SetPreference(c *gin.Context) {
 		}
 	}
 
-	// Written last, so the file never claims a state the device is not in.
+	// Written last, so the file never claims a state the device is not in. If it
+	// cannot be written the device has just lost the client it was using and the
+	// file still names it, so the next boot would start neither — put the stopped
+	// client back rather than leave that.
 	if err := vpnpref.Write(vpn); err != nil {
 		log.Errorf("failed to write VPN preference: %s", err)
-		rsp.ErrRsp(c, -4, fmt.Sprintf("write preference failed: %v", err))
+
+		if rbErr := cliFor(other).Start(); rbErr != nil {
+			rsp.ErrRsp(c, -4, fmt.Sprintf("write preference failed: %v; %s could not be restarted: %v", err, other, rbErr))
+			return
+		}
+
+		rsp.ErrRsp(c, -4, fmt.Sprintf("write preference failed: %v; %s was restarted", err, other))
 		return
 	}
 
@@ -93,7 +111,8 @@ func (s *Service) SetPreference(c *gin.Context) {
 	rsp.OkRspWithData(c, &proto.GetVPNPreferenceRsp{VPN: vpn})
 }
 
-type stopper interface {
+type vpnClient interface {
+	Start() error
 	Stop() error
 }
 
@@ -105,7 +124,7 @@ func otherVPN(vpn string) string {
 	return vpnpref.Netbird
 }
 
-func cliFor(vpn string) stopper {
+func cliFor(vpn string) vpnClient {
 	if vpn == vpnpref.Netbird {
 		return netbird.NewCli()
 	}
@@ -118,13 +137,35 @@ func cliFor(vpn string) stopper {
 func running(vpn string) bool {
 	if vpn == vpnpref.Netbird {
 		isRunning, err := netbird.NewCli().ServiceRunning()
-		return err == nil && isRunning
+		if err != nil {
+			// Uncertainty is treated as "running". Guessing "not running" would
+			// skip the connectivity gate below and stop nothing, which is how a
+			// live client keeps carrying a tunnel the preference says is gone.
+			return true
+		}
+
+		return isRunning
 	}
 
 	// Tailscale has no equivalent service check; a readable status means the
-	// daemon answered.
+	// daemon answered. An unreadable one is uncertainty, not absence.
 	_, err := tailscale.NewCli().Status()
+	return err == nil || isTimeout(err)
+}
+
+// installed reports whether the client's binary is on the device at all.
+func installed(vpn string) bool {
+	path := "/usr/sbin/tailscaled"
+	if vpn == vpnpref.Netbird {
+		path = "/usr/bin/netbird"
+	}
+
+	_, err := os.Stat(path)
 	return err == nil
+}
+
+func isTimeout(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "killed")
 }
 
 // connected reports whether the client actually carries a tunnel right now —
@@ -133,7 +174,7 @@ func running(vpn string) bool {
 // connection counts as not connected.
 func connected(vpn string) bool {
 	if vpn == vpnpref.Netbird {
-		status, err := netbird.NewCli().Status()
+		status, err := netbird.NewCli().StatusOnly()
 		if err != nil {
 			return false
 		}

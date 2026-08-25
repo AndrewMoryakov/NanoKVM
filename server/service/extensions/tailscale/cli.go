@@ -127,9 +127,13 @@ func (c *Cli) Down() error {
 
 func (c *Cli) Status() (*TsStatus, error) {
 	command := "tailscale status --json"
-	cmd := exec.Command("sh", "-c", command)
 
-	output, err := cmd.CombinedOutput()
+	// Bounded: this now runs under the VPN lock while deciding a switch, and a
+	// wedged daemon would otherwise hold that lock until the server restarts.
+	ctx, cancel := context.WithTimeout(context.Background(), UpTimeout)
+	defer cancel()
+
+	output, err := exec.CommandContext(ctx, "sh", "-c", command).CombinedOutput()
 	if err != nil {
 		return nil, err
 	}

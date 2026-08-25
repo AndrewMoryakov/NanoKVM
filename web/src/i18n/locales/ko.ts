@@ -470,7 +470,7 @@ const ko = {
         autostart: '자동 시작',
         autostartConfirm: '자동 시작을 Tailscale로 전환할까요? NetBird가 중지됩니다.',
         autostartWarning:
-          '먼저 Tailscale(으)로 이 장치에 접속할 수 있는지 확인하세요. NetBird을(를) 중지하면 지금 사용 중인 연결이 끊깁니다.',
+          '먼저 Tailscale로 이 장치에 접속할 수 있는지 확인하세요. NetBird를 중지하면 지금 사용 중인 연결이 끊깁니다.',
         memory: {
           title: '메모리 최적화',
           tip: '메모리 사용량이 제한을 초과하면 가비지 컬렉션이 더 적극적으로 실행되어 메모리를 확보하려고 시도합니다. Tailscale을 사용할 경우 50MB로 설정하는 것이 좋습니다. 변경 사항을 적용하려면 Tailscale을 다시 시작해야 합니다.'
@@ -516,7 +516,7 @@ const ko = {
         autostart: '자동 시작',
         autostartConfirm: '자동 시작을 NetBird로 전환할까요? Tailscale이 중지됩니다.',
         autostartWarning:
-          '먼저 NetBird(으)로 이 장치에 접속할 수 있는지 확인하세요. Tailscale을(를) 중지하면 지금 사용 중인 연결이 끊깁니다.',
+          '먼저 NetBird로 이 장치에 접속할 수 있는지 확인하세요. Tailscale을 중지하면 지금 사용 중인 연결이 끊깁니다.',
         restart: '정말로 NetBird를 다시 시작하시겠습니까?',
         stop: '정말로 NetBird를 중지하시겠습니까?',
         stopDesc:

@@ -199,7 +199,19 @@ func (c *Cli) Down() error {
 }
 
 func (c *Cli) Status() (*NbStatus, error) {
-	output, err := runCommandWithOutput("netbird status --json --daemon-addr unix:///var/run/netbird.sock", true)
+	return c.status(true)
+}
+
+// StatusOnly is Status without the restart-on-timeout recovery. A caller using
+// the result as a predicate needs it: recovering by restarting the service means
+// the observation changes what it observes, and during a VPN switch that bounces
+// the very tunnel the caller is deciding about.
+func (c *Cli) StatusOnly() (*NbStatus, error) {
+	return c.status(false)
+}
+
+func (c *Cli) status(restartOnTimeout bool) (*NbStatus, error) {
+	output, err := runCommandWithOutput("netbird status --json --daemon-addr unix:///var/run/netbird.sock", restartOnTimeout)
 	if err != nil {
 		return nil, err
 	}

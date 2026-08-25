@@ -51,7 +51,7 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
 
     vpnApi
       .setPreference('netbird')
-      // Every failure code (-1..-5) arrives with HTTP 200, so flipping the
+      // Every failure code arrives with HTTP 200, so flipping the
       // switch on `then` alone reports success while the device may have no
       // VPN running at all.
       .then((rsp: any) => {
