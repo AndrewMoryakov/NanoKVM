@@ -1,23 +1,5 @@
 #!/bin/sh
-# nanokvm Rev3.2
-
-SWAPFILE="/data/swapfile"
-SWAP_SIZE_MB=128
-SERVER_GOMEMLIMIT=20MiB
-
-setup_swap() {
-  if [ -f "$SWAPFILE" ]; then
-    swapon "$SWAPFILE" 2>/dev/null
-    return
-  fi
-
-  echo "Creating ${SWAP_SIZE_MB}MB swap file..."
-  dd if=/dev/zero of="$SWAPFILE" bs=1M count=$SWAP_SIZE_MB 2>/dev/null
-  chmod 600 "$SWAPFILE"
-  mkswap "$SWAPFILE" >/dev/null 2>&1
-  swapon "$SWAPFILE" 2>/dev/null
-  echo "Swap enabled: $SWAPFILE"
-}
+# nanokvm Rev3.1
 
 stop_tailscale() {
   if [ -x /etc/init.d/S98tailscaled ]; then
@@ -121,14 +103,7 @@ start_services() {
     if ! pidof NanoKVM-Server >/dev/null 2>&1; then
         rm -rf /tmp/server
         cp -r /kvmapp/server /tmp/
-        GOMEMLIMIT=$SERVER_GOMEMLIMIT /tmp/server/NanoKVM-Server &
-        server_pid=$!
-
-        # Protect NanoKVM-Server from the OOM killer
-        sleep 1
-        if [ -d "/proc/$server_pid" ]; then
-            echo -800 > "/proc/$server_pid/oom_score_adj" 2>/dev/null
-        fi
+        /tmp/server/NanoKVM-Server &
     fi
 }
 
@@ -166,8 +141,6 @@ case "$1" in
         echo "$first_uint$second_uint" > /device_key
     fi
 
-    # Enable swap before starting Go services
-    setup_swap
 
     # Set iptables rules (skip if already present)
     iptables -C INPUT -i eth0 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT 2>/dev/null || \
@@ -213,7 +186,6 @@ case "$1" in
     if [ -f /tmp/.nanokvm_migrating ]; then
         exit 0
     fi
-    setup_swap
     stop_services
     start_services
 
