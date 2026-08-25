@@ -68,6 +68,7 @@ export const Uninstall = ({ onSuccess }: UninstallProps) => {
       >
         <div className="py-5">
           <p className="text-base">{t('settings.netbird.uninstallDesc')}</p>
+          <p className="pt-2 text-sm text-neutral-400">{t('settings.netbird.uninstallWarning')}</p>
           {errMsg && <p className="pt-3 text-sm text-red-500">{errMsg}</p>}
         </div>
       </Modal>

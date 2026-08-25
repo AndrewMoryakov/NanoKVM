@@ -169,7 +169,14 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
               {/* stop button */}
               <Popconfirm
                 title={t('settings.netbird.stop')}
-                description={t('settings.netbird.stopDesc')}
+                description={
+                  <div className="max-w-[320px] space-y-1">
+                    <div>{t('settings.netbird.stopDesc')}</div>
+                    <div className="text-xs text-neutral-400">
+                      {t('settings.netbird.stopWarning')}
+                    </div>
+                  </div>
+                }
                 onConfirm={stop}
                 okText={t('settings.netbird.okBtn')}
                 cancelText={t('settings.netbird.cancelBtn')}

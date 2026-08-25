@@ -473,6 +473,8 @@ const zh_tw = {
         restart: '確定要重啟 Tailscale 嗎？',
         stop: '確定要停止 Tailscale 嗎？',
         stopDesc: '登出 Tailscale 並停用開機自動啟動。',
+        stopWarning:
+          '如果您正透過 Tailscale 連線，此操作會中斷該連線。 它不會自行恢復，請確認您還有其他連線方式。',
         loading: '載入中...',
         notInstall: '未找到 Tailscale ！請先安裝。',
         install: '安裝',
@@ -499,6 +501,8 @@ const zh_tw = {
         logoutDesc: '確認要登出嗎？',
         uninstall: '移除 Tailscale',
         uninstallDesc: '確定要解除安裝 Tailscale 嗎？',
+        uninstallWarning:
+          '如果您正透過 Tailscale 連線，此操作會中斷該連線。 它不會自行恢復，請確認您還有其他連線方式。',
         okBtn: '確認',
         cancelBtn: '取消'
       },
@@ -511,6 +515,8 @@ const zh_tw = {
         restart: '確認要重新啟動 NetBird 嗎？',
         stop: '確認要停止 NetBird 嗎？',
         stopDesc: '停止 NetBird 服務。若開機自動啟動仍啟用，重新開機後會再次啟動。',
+        stopWarning:
+          '如果您正透過 NetBird 連線，此操作會中斷該連線。 只要 NetBird 的開機自動啟動仍啟用，重新開機後會恢復。',
         loading: '載入中...',
         notInstall: '尚未安裝 NetBird。',
         install: '安裝',
@@ -526,6 +532,8 @@ const zh_tw = {
         deviceIP: '裝置 IP',
         uninstall: '移除 NetBird',
         uninstallDesc: '確定要解除安裝 NetBird 嗎？',
+        uninstallWarning:
+          '如果您正透過 NetBird 連線，此操作會中斷該連線。 開機自動啟動將回到 Tailscale，它必須已安裝並可用。',
         version: '版本',
         disconnect: '中斷連線',
         disconnectConfirm: '確認要中斷連線嗎？',

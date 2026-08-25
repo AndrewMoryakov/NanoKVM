@@ -491,6 +491,8 @@ const fr = {
         restart: 'Êtes-vous sûr de vouloir redémarrer Tailscale ?',
         stop: 'Êtes-vous sûr de vouloir arrêter Tailscale ?',
         stopDesc: 'Arrêtez Tailscale et désactivez son démarrage automatique.',
+        stopWarning:
+          "Si vous êtes connecté via Tailscale, cette connexion sera coupée. Elle ne reviendra pas d'elle-même : assurez-vous d'avoir un autre accès.",
         loading: 'Chargement...',
         notInstall: "Tailscale non trouvé ! Veuillez l'installer.",
         install: 'Installer',
@@ -518,6 +520,8 @@ const fr = {
         logoutDesc: 'Êtes-vous sûr de vouloir vous déconnecter?',
         uninstall: 'Désinstaller Tailscale',
         uninstallDesc: 'Êtes-vous sûr de vouloir désinstaller Tailscale?',
+        uninstallWarning:
+          "Si vous êtes connecté via Tailscale, cette connexion sera coupée. Elle ne reviendra pas d'elle-même : assurez-vous d'avoir un autre accès.",
         okBtn: 'Oui',
         cancelBtn: 'Non'
       },
@@ -531,6 +535,8 @@ const fr = {
         stop: 'Êtes-vous sûr de vouloir arrêter NetBird ?',
         stopDesc:
           'Arrête le service NetBird. Il redémarrera au prochain démarrage si le démarrage automatique reste activé.',
+        stopWarning:
+          'Si vous êtes connecté via NetBird, cette connexion sera coupée. Elle reviendra au prochain démarrage tant que le démarrage automatique de NetBird est actif.',
         loading: 'Chargement...',
         notInstall: "NetBird non trouvé ! Veuillez l'installer.",
         install: 'Installer',
@@ -546,6 +552,8 @@ const fr = {
         deviceIP: "IP de l'appareil",
         uninstall: 'Désinstaller NetBird',
         uninstallDesc: 'Êtes-vous sûr de vouloir désinstaller NetBird?',
+        uninstallWarning:
+          'Si vous êtes connecté via NetBird, cette connexion sera coupée. Le démarrage automatique revient à Tailscale, qui doit déjà être installé et fonctionnel.',
         version: 'Version',
         disconnect: 'Déconnecter',
         disconnectConfirm: 'Voulez-vous vraiment vous déconnecter ?',

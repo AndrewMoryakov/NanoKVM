@@ -487,6 +487,8 @@ const cz = {
         restart: 'Are you sure to restart Tailscale?',
         stop: 'Are you sure to stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable its automatic startup on boot.',
+        stopWarning:
+          'Pokud jste připojeni přes Tailscale, toto spojení se ukončí. Samo se neobnoví — ujistěte se, že máte jinou cestu dovnitř.',
         loading: 'Načítání...',
         notInstall: 'Tailscale nebyl nalezen! Prosím nainstalujte.',
         install: 'Nainstalovat',
@@ -514,6 +516,8 @@ const cz = {
         logoutDesc: 'Opravdu se chcete odhlásit?',
         uninstall: 'Odinstalovat Tailscale',
         uninstallDesc: 'Opravdu chcete odinstalovat Tailscale?',
+        uninstallWarning:
+          'Pokud jste připojeni přes Tailscale, toto spojení se ukončí. Samo se neobnoví — ujistěte se, že máte jinou cestu dovnitř.',
         okBtn: 'Yes',
         cancelBtn: 'No'
       },
@@ -527,6 +531,8 @@ const cz = {
         stop: 'Are you sure to stop NetBird?',
         stopDesc:
           'Zastaví službu NetBird. Při zapnutém automatickém spuštění se po restartu spustí znovu.',
+        stopWarning:
+          'Pokud jste připojeni přes NetBird, toto spojení se ukončí. Obnoví se při dalším startu, dokud je automatické spuštění NetBird zapnuté.',
         loading: 'Načítání...',
         notInstall: 'NetBird nebyl nalezen! Prosím nainstalujte.',
         install: 'Nainstalovat',
@@ -543,6 +549,8 @@ const cz = {
         deviceIP: 'IP zařízení',
         uninstall: 'Odinstalovat NetBird',
         uninstallDesc: 'Opravdu chcete odinstalovat NetBird?',
+        uninstallWarning:
+          'Pokud jste připojeni přes NetBird, toto spojení se ukončí. Automatické spuštění se vrátí k Tailscale, který už musí být nainstalovaný a funkční.',
         version: 'Verze',
         disconnect: 'Odpojit',
         disconnectConfirm: 'Opravdu se chcete odpojit?',

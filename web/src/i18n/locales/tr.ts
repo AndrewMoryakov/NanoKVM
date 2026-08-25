@@ -488,6 +488,8 @@ const tr = {
         restart: "Tailscale'i yeniden başlat?",
         stop: "Tailscale'i durdur?",
         stopDesc: 'Tailscale oturumundan çıkış yap ve başlangıçta çalışmasını devre dışı bırak.',
+        stopWarning:
+          'Tailscale üzerinden bağlıysanız bu bağlantı kesilir. Kendiliğinden geri gelmez — başka bir erişim yolunuz olduğundan emin olun.',
         loading: 'Yükleniyor...',
         notInstall: 'Tailscale bulunamadı! Lütfen indirin.',
         install: 'İndir',
@@ -514,6 +516,8 @@ const tr = {
         logoutDesc: 'Çıkış yapmak istediğinizden emin misiniz?',
         uninstall: "Tailscale'i kaldır",
         uninstallDesc: "Tailscale'i kaldırmak istediğinizden emin misiniz?",
+        uninstallWarning:
+          'Tailscale üzerinden bağlıysanız bu bağlantı kesilir. Kendiliğinden geri gelmez — başka bir erişim yolunuz olduğundan emin olun.',
         okBtn: 'Evet',
         cancelBtn: 'Hayır'
       },
@@ -527,6 +531,8 @@ const tr = {
         stop: "NetBird'i durdur?",
         stopDesc:
           'NetBird servisini durdurur. Otomatik başlatma açıksa bir sonraki açılışta yeniden başlar.',
+        stopWarning:
+          'NetBird üzerinden bağlıysanız bu bağlantı kesilir. NetBird otomatik başlatma açık kaldığı sürece bir sonraki açılışta geri gelir.',
         loading: 'Yükleniyor...',
         notInstall: 'NetBird bulunamadı! Lütfen indirin.',
         install: 'İndir',
@@ -542,6 +548,8 @@ const tr = {
         deviceIP: 'Cihaz IP adresi',
         uninstall: "NetBird'i kaldır",
         uninstallDesc: "NetBird'i kaldırmak istediğinizden emin misiniz?",
+        uninstallWarning:
+          "NetBird üzerinden bağlıysanız bu bağlantı kesilir. Otomatik başlatma Tailscale'e döner; Tailscale kurulu ve çalışır durumda olmalıdır.",
         version: 'Sürüm',
         disconnect: 'Bağlantıyı kes',
         disconnectConfirm: 'Bağlantıyı kesmek istediğinize emin misiniz?',

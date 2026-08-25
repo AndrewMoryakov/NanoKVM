@@ -489,6 +489,8 @@ const hu = {
         restart: 'Are you sure to restart Tailscale?',
         stop: 'Are you sure to stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable its automatic startup on boot.',
+        stopWarning:
+          'Ha Tailscale útján csatlakozik, ez megszakítja a kapcsolatot. Magától nem tér vissza — gondoskodjon másik hozzáférési útról.',
         loading: 'Betöltés...',
         notInstall: 'Tailscale nem található! Kérem, telepítse.',
         install: 'Telepítés',
@@ -516,6 +518,8 @@ const hu = {
         logoutDesc: 'Biztos, hogy ki szeretne jelentkezni?',
         uninstall: 'Eltávolítás Tailscale',
         uninstallDesc: 'Biztosan eltávolítja a Tailscale alkalmazást?',
+        uninstallWarning:
+          'Ha Tailscale útján csatlakozik, ez megszakítja a kapcsolatot. Magától nem tér vissza — gondoskodjon másik hozzáférési útról.',
         okBtn: 'Yes',
         cancelBtn: 'No'
       },
@@ -529,6 +533,8 @@ const hu = {
         stop: 'Are you sure to stop NetBird?',
         stopDesc:
           'Leállítja a NetBird szolgáltatást. Bekapcsolt automatikus indítás mellett a következő indításkor újraindul.',
+        stopWarning:
+          'Ha NetBird útján csatlakozik, ez megszakítja a kapcsolatot. A következő indításkor visszatér, amíg a NetBird automatikus indítása be van kapcsolva.',
         loading: 'Betöltés...',
         notInstall: 'NetBird nem található! Kérem, telepítse.',
         install: 'Telepítés',
@@ -545,6 +551,8 @@ const hu = {
         deviceIP: 'Eszköz IP',
         uninstall: 'Eltávolítás NetBird',
         uninstallDesc: 'Biztosan eltávolítja a NetBird alkalmazást?',
+        uninstallWarning:
+          'Ha NetBird útján csatlakozik, ez megszakítja a kapcsolatot. Az automatikus indítás visszakerül a Tailscale-hez, amelynek telepítve és működnie kell.',
         version: 'Verzió',
         disconnect: 'Bontás',
         disconnectConfirm: 'Biztosan bontja a kapcsolatot?',

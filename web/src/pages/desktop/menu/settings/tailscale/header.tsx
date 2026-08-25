@@ -137,7 +137,14 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
             {/* stop button */}
             <Popconfirm
               title={t('settings.tailscale.stop')}
-              description={t('settings.tailscale.stopDesc')}
+              description={
+                <div className="max-w-[320px] space-y-1">
+                  <div>{t('settings.tailscale.stopDesc')}</div>
+                  <div className="text-xs text-neutral-400">
+                    {t('settings.tailscale.stopWarning')}
+                  </div>
+                </div>
+              }
               onConfirm={stop}
               okText={t('settings.tailscale.okBtn')}
               cancelText={t('settings.tailscale.cancelBtn')}

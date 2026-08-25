@@ -485,6 +485,8 @@ const en = {
         restart: 'Restart Tailscale?',
         stop: 'Stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable automatic startup on boot.',
+        stopWarning:
+          'If you are connected through Tailscale, this ends that connection. It will not come back on its own — make sure you have another way in.',
         loading: 'Loading...',
         notInstall: 'Tailscale not found! Please install.',
         install: 'Install',
@@ -512,6 +514,8 @@ const en = {
         logoutDesc: 'Are you sure you want to logout?',
         uninstall: 'Uninstall Tailscale',
         uninstallDesc: 'Are you sure you want to uninstall Tailscale?',
+        uninstallWarning:
+          'If you are connected through Tailscale, this ends that connection. It will not come back on its own — make sure you have another way in.',
         okBtn: 'Yes',
         cancelBtn: 'No'
       },
@@ -525,6 +529,8 @@ const en = {
         stop: 'Stop NetBird?',
         stopDesc:
           'Stop the NetBird service. It starts again on the next boot while NetBird autostart is on.',
+        stopWarning:
+          'If you are connected through NetBird, this ends that connection. It comes back at the next boot while NetBird autostart is on.',
         loading: 'Loading...',
         notInstall: 'NetBird is not installed.',
         install: 'Install',
@@ -541,6 +547,8 @@ const en = {
         deviceIP: 'Device IP',
         uninstall: 'Uninstall NetBird',
         uninstallDesc: 'Are you sure you want to uninstall NetBird?',
+        uninstallWarning:
+          'If you are connected through NetBird, this ends that connection. Autostart returns to Tailscale, which must already be installed and working.',
         version: 'Version',
         disconnect: 'Disconnect',
         disconnectConfirm: 'Are you sure you want to disconnect?',

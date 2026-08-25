@@ -485,6 +485,8 @@ const ca = {
         restart: 'Reiniciar Tailscale?',
         stop: 'Aturar Tailscale?',
         stopDesc: 'Tanca la sessió de Tailscale i desactiva l’inici automàtic en arrencar.',
+        stopWarning:
+          "Si esteu connectat mitjançant Tailscale, això tallarà la connexió. No es restablirà per si sola: assegureu-vos de tenir una altra via d'accés.",
         loading: 'Carregant...',
         notInstall: 'Tailscale no instal·lat! Instal·la-ho.',
         install: 'Instal·la',
@@ -511,6 +513,8 @@ const ca = {
         logoutDesc: 'Segur que vols tancar sessió?',
         uninstall: 'Desinstal·la Tailscale',
         uninstallDesc: 'Esteu segur que voleu desinstal·lar Tailscale?',
+        uninstallWarning:
+          "Si esteu connectat mitjançant Tailscale, això tallarà la connexió. No es restablirà per si sola: assegureu-vos de tenir una altra via d'accés.",
         okBtn: 'Sí',
         cancelBtn: 'No'
       },
@@ -524,6 +528,8 @@ const ca = {
         stop: 'Aturar NetBird?',
         stopDesc:
           "Atura el servei NetBird. Es tornarà a iniciar en arrencar si l'inici automàtic segueix actiu.",
+        stopWarning:
+          "Si esteu connectat mitjançant NetBird, això tallarà la connexió. Es restablirà en el proper arrencada mentre l'inici automàtic de NetBird estigui actiu.",
         loading: 'Carregant...',
         notInstall: 'NetBird no instal·lat! Instal·la-ho.',
         install: 'Instal·la',
@@ -539,6 +545,8 @@ const ca = {
         deviceIP: 'IP del dispositiu',
         uninstall: 'Desinstal·la NetBird',
         uninstallDesc: 'Esteu segur que voleu desinstal·lar NetBird?',
+        uninstallWarning:
+          "Si esteu connectat mitjançant NetBird, això tallarà la connexió. L'inici automàtic tornarà a Tailscale, que ha d'estar instal·lat i funcionant.",
         version: 'Versió',
         disconnect: 'Desconnecta',
         disconnectConfirm: 'Segur que voleu desconnectar?',

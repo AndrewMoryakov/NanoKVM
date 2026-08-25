@@ -484,6 +484,8 @@ const se = {
         restart: 'Starta om Tailscale?',
         stop: 'Stoppa Tailscale?',
         stopDesc: 'Logga ut från Tailscale och inaktivera autostart vid uppstart.',
+        stopWarning:
+          'Om du är ansluten via Tailscale bryts den anslutningen. Den kommer inte tillbaka av sig själv — se till att du har en annan väg in.',
         loading: 'Laddar...',
         notInstall: 'Tailscale hittades inte! Installera först.',
         install: 'Installera',
@@ -510,6 +512,8 @@ const se = {
         logoutDesc: 'Är du säker på att du vill logga ut?',
         uninstall: 'Avinstallera Tailscale',
         uninstallDesc: 'Är du säker på att du vill avinstallera Tailscale?',
+        uninstallWarning:
+          'Om du är ansluten via Tailscale bryts den anslutningen. Den kommer inte tillbaka av sig själv — se till att du har en annan väg in.',
         okBtn: 'Ja',
         cancelBtn: 'Nej'
       },
@@ -523,6 +527,8 @@ const se = {
         stop: 'Stoppa NetBird?',
         stopDesc:
           'Stoppar NetBird-tjänsten. Den startar igen vid nästa uppstart om automatisk start är på.',
+        stopWarning:
+          'Om du är ansluten via NetBird bryts den anslutningen. Den kommer tillbaka vid nästa uppstart så länge automatisk start för NetBird är på.',
         loading: 'Laddar...',
         notInstall: 'NetBird hittades inte! Installera först.',
         install: 'Installera',
@@ -538,6 +544,8 @@ const se = {
         deviceIP: 'Enhets-IP',
         uninstall: 'Avinstallera NetBird',
         uninstallDesc: 'Är du säker på att du vill avinstallera NetBird?',
+        uninstallWarning:
+          'Om du är ansluten via NetBird bryts den anslutningen. Automatisk start går tillbaka till Tailscale, som måste vara installerat och fungera.',
         version: 'Version',
         disconnect: 'Koppla från',
         disconnectConfirm: 'Vill du verkligen koppla från?',

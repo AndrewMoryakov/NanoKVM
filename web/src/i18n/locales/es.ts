@@ -489,6 +489,8 @@ const es = {
         restart: '¿Seguro que deseas reiniciar Tailscale?',
         stop: '¿Seguro que deseas detener Tailscale?',
         stopDesc: 'Cerrar sesión en Tailscale y desactivar su inicio automático al arrancar.',
+        stopWarning:
+          'Si está conectado a través de Tailscale, esto cortará esa conexión. No volverá por sí sola: asegúrese de tener otra vía de acceso.',
         loading: 'Cargando...',
         notInstall: '¡Tailscale no encontrado! Por favor, instálalo.',
         install: 'Instalar',
@@ -517,6 +519,8 @@ const es = {
         logoutDesc: '¿Estás seguro de que deseas cerrar sesión?',
         uninstall: 'Desinstalar Tailscale',
         uninstallDesc: '¿Estás seguro de que deseas desinstalar Tailscale?',
+        uninstallWarning:
+          'Si está conectado a través de Tailscale, esto cortará esa conexión. No volverá por sí sola: asegúrese de tener otra vía de acceso.',
         okBtn: 'Sí',
         cancelBtn: 'No'
       },
@@ -530,6 +534,8 @@ const es = {
         stop: '¿Seguro que deseas detener NetBird?',
         stopDesc:
           'Detiene el servicio NetBird. Volverá a iniciarse en el próximo arranque si el inicio automático sigue activo.',
+        stopWarning:
+          'Si está conectado a través de NetBird, esto cortará esa conexión. Volverá en el próximo arranque mientras el inicio automático de NetBird siga activo.',
         loading: 'Cargando...',
         notInstall: '¡NetBird no encontrado! Por favor, instálalo.',
         install: 'Instalar',
@@ -546,6 +552,8 @@ const es = {
         deviceIP: 'IP del dispositivo',
         uninstall: 'Desinstalar NetBird',
         uninstallDesc: '¿Estás seguro de que deseas desinstalar NetBird?',
+        uninstallWarning:
+          'Si está conectado a través de NetBird, esto cortará esa conexión. El inicio automático vuelve a Tailscale, que debe estar ya instalado y funcionando.',
         version: 'Versión',
         disconnect: 'Desconectar',
         disconnectConfirm: '¿Seguro que quiere desconectar?',

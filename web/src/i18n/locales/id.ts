@@ -486,6 +486,8 @@ const id = {
         restart: 'Are you sure to restart Tailscale?',
         stop: 'Are you sure to stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable its automatic startup on boot.',
+        stopWarning:
+          'Jika Anda terhubung lewat Tailscale, koneksi itu akan terputus. Koneksi tidak akan kembali sendiri — pastikan Anda punya jalur akses lain.',
         loading: 'Memuat...',
         notInstall: 'Tailscale tidak ditemukan! Silahkan pasang.',
         install: 'Memasang',
@@ -513,6 +515,8 @@ const id = {
         logoutDesc: 'Apakah Anda yakin ingin logout?',
         uninstall: 'Copot pemasangan Tailscale',
         uninstallDesc: 'Apakah Anda yakin ingin menghapus instalan Tailscale?',
+        uninstallWarning:
+          'Jika Anda terhubung lewat Tailscale, koneksi itu akan terputus. Koneksi tidak akan kembali sendiri — pastikan Anda punya jalur akses lain.',
         okBtn: 'Yes',
         cancelBtn: 'No'
       },
@@ -526,6 +530,8 @@ const id = {
         stop: 'Are you sure to stop NetBird?',
         stopDesc:
           'Menghentikan layanan NetBird. Layanan akan berjalan lagi saat boot berikutnya jika mulai otomatis aktif.',
+        stopWarning:
+          'Jika Anda terhubung lewat NetBird, koneksi itu akan terputus. Koneksi kembali pada boot berikutnya selama mulai otomatis NetBird aktif.',
         loading: 'Memuat...',
         notInstall: 'NetBird tidak ditemukan! Silahkan pasang.',
         install: 'Memasang',
@@ -542,6 +548,8 @@ const id = {
         deviceIP: 'IP Perangkat',
         uninstall: 'Copot pemasangan NetBird',
         uninstallDesc: 'Apakah Anda yakin ingin menghapus instalan NetBird?',
+        uninstallWarning:
+          'Jika Anda terhubung lewat NetBird, koneksi itu akan terputus. Mulai otomatis kembali ke Tailscale, yang harus sudah terpasang dan berfungsi.',
         version: 'Versi',
         disconnect: 'Putuskan',
         disconnectConfirm: 'Yakin ingin memutuskan koneksi?',

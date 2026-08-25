@@ -485,6 +485,8 @@ const da = {
         restart: 'Are you sure to restart Tailscale?',
         stop: 'Are you sure to stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable its automatic startup on boot.',
+        stopWarning:
+          'Hvis du er forbundet via Tailscale, afbrydes den forbindelse. Den kommer ikke igen af sig selv — sørg for at have en anden vej ind.',
         loading: 'Indlæser...',
         notInstall: 'Tailscale ikke fundet! Installer det for at fuldføre opsætningen.',
         install: 'Installer',
@@ -512,6 +514,8 @@ const da = {
         logoutDesc: 'Er du sikker på, at du vil logge ud?',
         uninstall: 'Afinstaller Tailscale',
         uninstallDesc: 'Er du sikker på, at du vil afinstallere Tailscale?',
+        uninstallWarning:
+          'Hvis du er forbundet via Tailscale, afbrydes den forbindelse. Den kommer ikke igen af sig selv — sørg for at have en anden vej ind.',
         okBtn: 'Yes',
         cancelBtn: 'No'
       },
@@ -525,6 +529,8 @@ const da = {
         stop: 'Are you sure to stop NetBird?',
         stopDesc:
           'Stopper NetBird-tjenesten. Den starter igen ved næste opstart, hvis automatisk start er slået til.',
+        stopWarning:
+          'Hvis du er forbundet via NetBird, afbrydes den forbindelse. Den kommer igen ved næste opstart, så længe automatisk start for NetBird er slået til.',
         loading: 'Indlæser...',
         notInstall: 'NetBird ikke fundet! Installer det for at fuldføre opsætningen.',
         install: 'Installer',
@@ -541,6 +547,8 @@ const da = {
         deviceIP: 'Enhedens IP',
         uninstall: 'Afinstaller NetBird',
         uninstallDesc: 'Er du sikker på, at du vil afinstallere NetBird?',
+        uninstallWarning:
+          'Hvis du er forbundet via NetBird, afbrydes den forbindelse. Automatisk start går tilbage til Tailscale, som skal være installeret og virke.',
         version: 'Version',
         disconnect: 'Afbryd',
         disconnectConfirm: 'Er du sikker på, at du vil afbryde?',

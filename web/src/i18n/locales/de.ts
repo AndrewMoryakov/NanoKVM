@@ -492,6 +492,8 @@ const de = {
         restart: 'Tailscale neu starten?',
         stop: 'Tailscale stoppen?',
         stopDesc: 'Von Tailscale abmelden und automatischen Start beim Booten deaktivieren.',
+        stopWarning:
+          'Wenn Sie über Tailscale verbunden sind, wird diese Verbindung beendet. Sie kommt nicht von selbst zurück — stellen Sie einen anderen Zugang sicher.',
         loading: 'Lädt...',
         notInstall: 'Tailscale nicht gefunden! Bitte installieren.',
         install: 'Installieren',
@@ -519,6 +521,8 @@ const de = {
         logoutDesc: 'Möchten Sie sich wirklich abmelden?',
         uninstall: 'Tailscale deinstallieren',
         uninstallDesc: 'Sind Sie sicher, dass Sie Tailscale deinstallieren möchten?',
+        uninstallWarning:
+          'Wenn Sie über Tailscale verbunden sind, wird diese Verbindung beendet. Sie kommt nicht von selbst zurück — stellen Sie einen anderen Zugang sicher.',
         okBtn: 'Ja',
         cancelBtn: 'Nein'
       },
@@ -532,6 +536,8 @@ const de = {
         stop: 'NetBird stoppen?',
         stopDesc:
           'Stoppt den NetBird-Dienst. Bei aktiviertem Autostart startet er beim nächsten Systemstart erneut.',
+        stopWarning:
+          'Wenn Sie über NetBird verbunden sind, wird diese Verbindung beendet. Sie kommt beim nächsten Start zurück, solange der Autostart von NetBird aktiv ist.',
         loading: 'Lädt...',
         notInstall: 'NetBird nicht gefunden! Bitte installieren.',
         install: 'Installieren',
@@ -548,6 +554,8 @@ const de = {
         deviceIP: 'Geräte IP',
         uninstall: 'NetBird deinstallieren',
         uninstallDesc: 'Sind Sie sicher, dass Sie NetBird deinstallieren möchten?',
+        uninstallWarning:
+          'Wenn Sie über NetBird verbunden sind, wird diese Verbindung beendet. Der Autostart geht an Tailscale zurück, das bereits installiert und funktionsfähig sein muss.',
         version: 'Version',
         disconnect: 'Trennen',
         disconnectConfirm: 'Möchten Sie die Verbindung wirklich trennen?',

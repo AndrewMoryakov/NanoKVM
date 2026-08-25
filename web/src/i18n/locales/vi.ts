@@ -484,6 +484,8 @@ const vi = {
         restart: 'Are you sure to restart Tailscale?',
         stop: 'Are you sure to stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable its automatic startup on boot.',
+        stopWarning:
+          'Nếu bạn đang kết nối qua Tailscale, thao tác này sẽ ngắt kết nối đó. Nó sẽ không tự trở lại — hãy chắc chắn bạn có đường truy cập khác.',
         loading: 'Đang tải...',
         notInstall: 'Không tìm thấy Tailscale! Vui lòng cài đặt.',
         install: 'Cài đặt',
@@ -511,6 +513,8 @@ const vi = {
         logoutDesc: 'Bạn có chắc chắn muốn đăng xuất không?',
         uninstall: 'Gỡ cài đặt Tailscale',
         uninstallDesc: 'Bạn có chắc chắn muốn gỡ cài đặt Tailscale không?',
+        uninstallWarning:
+          'Nếu bạn đang kết nối qua Tailscale, thao tác này sẽ ngắt kết nối đó. Nó sẽ không tự trở lại — hãy chắc chắn bạn có đường truy cập khác.',
         okBtn: 'Yes',
         cancelBtn: 'No'
       },
@@ -524,6 +528,8 @@ const vi = {
         stop: 'Are you sure to stop NetBird?',
         stopDesc:
           'Dừng dịch vụ NetBird. Nếu tự khởi động đang bật, dịch vụ sẽ chạy lại ở lần khởi động sau.',
+        stopWarning:
+          'Nếu bạn đang kết nối qua NetBird, thao tác này sẽ ngắt kết nối đó. Kết nối trở lại ở lần khởi động sau khi tự khởi động NetBird còn bật.',
         loading: 'Đang tải...',
         notInstall: 'Không tìm thấy NetBird! Vui lòng cài đặt.',
         install: 'Cài đặt',
@@ -540,6 +546,8 @@ const vi = {
         deviceIP: 'IP Thiết bị',
         uninstall: 'Gỡ cài đặt NetBird',
         uninstallDesc: 'Bạn có chắc chắn muốn gỡ cài đặt NetBird không?',
+        uninstallWarning:
+          'Nếu bạn đang kết nối qua NetBird, thao tác này sẽ ngắt kết nối đó. Tự khởi động trở về Tailscale, vốn phải được cài đặt và hoạt động.',
         version: 'Phiên bản',
         disconnect: 'Ngắt kết nối',
         disconnectConfirm: 'Bạn có chắc muốn ngắt kết nối?',

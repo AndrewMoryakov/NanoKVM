@@ -491,6 +491,8 @@ const nl = {
         restart: 'Weet u zeker dat u Tailscale opnieuw wilt opstarten?',
         stop: 'Weet u zeker dat u Tailscale wilt stoppen?',
         stopDesc: 'Meld Tailscale af en schakel het automatisch opstarten bij het opstarten uit.',
+        stopWarning:
+          'Als u via Tailscale verbonden bent, wordt die verbinding verbroken. Ze keert niet vanzelf terug — zorg voor een andere toegangsweg.',
         loading: 'Laden...',
         notInstall: 'Tailscale niet gevonden! Installeer a.u.b.',
         install: 'Installeren',
@@ -518,6 +520,8 @@ const nl = {
         logoutDesc: 'Weet u zeker dat u wilt uitloggen?',
         uninstall: 'Verwijderen Tailscale',
         uninstallDesc: 'Weet u zeker dat u Tailscale wilt verwijderen?',
+        uninstallWarning:
+          'Als u via Tailscale verbonden bent, wordt die verbinding verbroken. Ze keert niet vanzelf terug — zorg voor een andere toegangsweg.',
         okBtn: 'Ja',
         cancelBtn: 'Nee'
       },
@@ -531,6 +535,8 @@ const nl = {
         stop: 'Weet u zeker dat u NetBird wilt stoppen?',
         stopDesc:
           'Stopt de NetBird-service. Bij ingeschakeld automatisch starten start deze bij de volgende keer opstarten opnieuw.',
+        stopWarning:
+          'Als u via NetBird verbonden bent, wordt die verbinding verbroken. Ze keert terug bij de volgende start zolang automatisch starten van NetBird aan staat.',
         loading: 'Laden...',
         notInstall: 'NetBird niet gevonden! Installeer a.u.b.',
         install: 'Installeren',
@@ -547,6 +553,8 @@ const nl = {
         deviceIP: 'Apparaat IP',
         uninstall: 'Verwijderen NetBird',
         uninstallDesc: 'Weet u zeker dat u NetBird wilt verwijderen?',
+        uninstallWarning:
+          'Als u via NetBird verbonden bent, wordt die verbinding verbroken. Automatisch starten gaat terug naar Tailscale, dat al geïnstalleerd moet zijn en werken.',
         version: 'Versie',
         disconnect: 'Verbreken',
         disconnectConfirm: 'Weet u zeker dat u de verbinding wilt verbreken?',

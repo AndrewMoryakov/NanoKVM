@@ -476,6 +476,8 @@ const zh = {
         restart: '取定要重启 Tailscale 吗？',
         stop: '确定要停止 Tailscale 吗？',
         stopDesc: '退出 Tailscale 并禁用开机自动启动。',
+        stopWarning:
+          '如果您正通过 Tailscale 连接，此操作会中断该连接。 它不会自行恢复，请确认您还有其他连接方式。',
         loading: '加载中...',
         notInstall: '未检测到 Tailscale，请先安装',
         install: '安装',
@@ -502,6 +504,8 @@ const zh = {
         logoutDesc: '确定要退出吗？',
         uninstall: '卸载 Tailscale',
         uninstallDesc: '确定要卸载 Tailscale 吗？',
+        uninstallWarning:
+          '如果您正通过 Tailscale 连接，此操作会中断该连接。 它不会自行恢复，请确认您还有其他连接方式。',
         okBtn: '确认',
         cancelBtn: '取消'
       },
@@ -514,6 +518,8 @@ const zh = {
         restart: '确定要重启 NetBird 吗？',
         stop: '确定要停止 NetBird 吗？',
         stopDesc: '停止 NetBird 服务。若开机自启仍启用，重启后会再次启动。',
+        stopWarning:
+          '如果您正通过 NetBird 连接，此操作会中断该连接。 只要 NetBird 的开机自启仍启用，重启后会恢复。',
         loading: '加载中...',
         notInstall: '未检测到 NetBird，请先安装',
         install: '安装',
@@ -529,6 +535,8 @@ const zh = {
         deviceIP: '设备地址',
         uninstall: '卸载 NetBird',
         uninstallDesc: '确定要卸载 NetBird 吗？',
+        uninstallWarning:
+          '如果您正通过 NetBird 连接，此操作会中断该连接。 开机自启将回到 Tailscale，它必须已安装并可用。',
         version: '版本',
         disconnect: '断开连接',
         disconnectConfirm: '确定要断开连接吗？',
