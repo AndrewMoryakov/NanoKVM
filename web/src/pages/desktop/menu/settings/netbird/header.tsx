@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Popconfirm, Popover, Switch } from 'antd';
 import { CircleStopIcon, EllipsisIcon, LoaderIcon, RotateCwIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -25,55 +25,91 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
   const [isAutostart, setIsAutostart] = useState(false);
   const [autostartLoading, setAutostartLoading] = useState(false);
   const [errMsg, setErrMsg] = useState('');
+  const isMounted = useRef(true);
+  const preferenceRequestId = useRef(0);
+  const autostartOperationId = useRef(0);
   const hasKnownInstalledState = !!state && state !== 'notInstall';
   // A failed status request must not hide recovery actions. Stop/Restart are
   // deliberately useful precisely when the daemon cannot be observed.
   const showRecoveryActions = state !== 'notInstall';
 
-  useEffect(() => {
-    vpnApi
-      .getPreference()
-      .then((rsp: any) => {
-        if (rsp.code !== 0) {
-          setErrMsg(rsp.msg);
-          return;
-        }
+  const refreshPreference = useCallback(async (reportError = true): Promise<string | undefined> => {
+    const currentRequestId = ++preferenceRequestId.current;
+    try {
+      const rsp: any = await vpnApi.getPreference();
+      if (!isMounted.current || currentRequestId !== preferenceRequestId.current) return undefined;
 
-        if (rsp.data?.vpn) {
-          setIsAutostart(rsp.data.vpn === 'netbird');
-        }
-      })
-      .catch((err) => {
-        setErrMsg(err.message || 'Failed to read VPN preference');
-      });
+      if (rsp.code !== 0) {
+        if (reportError) setErrMsg(rsp.msg);
+        return undefined;
+      }
+
+      const vpn = rsp.data?.vpn;
+      setIsAutostart(vpn === 'netbird');
+      setErrMsg('');
+      return vpn;
+    } catch (err: any) {
+      if (!isMounted.current || currentRequestId !== preferenceRequestId.current) return undefined;
+      if (reportError) setErrMsg(err?.message || 'Failed to read VPN preference');
+      return undefined;
+    }
   }, []);
 
-  function handleAutostartChange(checked: boolean) {
-    if (!checked || autostartLoading) return;
-    setAutostartLoading(true);
+  useEffect(() => {
+    // Invalidating both request counters prevents a late response from a
+    // previous Settings mount from changing the newly mounted panel.
+    isMounted.current = true;
+    void refreshPreference();
 
+    return () => {
+      isMounted.current = false;
+      preferenceRequestId.current += 1;
+      autostartOperationId.current += 1;
+    };
+  }, [refreshPreference]);
+
+  async function handleAutostartChange(checked: boolean) {
+    if (!checked || autostartLoading) return;
+    const currentOperationId = ++autostartOperationId.current;
+    // A request that began before the mutation cannot authoritatively update
+    // the switch after it completes.
+    preferenceRequestId.current += 1;
+    setAutostartLoading(true);
     setErrMsg('');
 
-    vpnApi
-      .setPreference('netbird')
-      // Every failure code arrives with HTTP 200, so flipping the
-      // switch on `then` alone reports success while the device may have no
-      // VPN running at all.
-      .then((rsp: any) => {
-        if (rsp.code !== 0) {
-          setErrMsg(rsp.msg);
-          return;
-        }
+    try {
+      const rsp: any = await vpnApi.setPreference('netbird');
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
 
-        setIsAutostart(true);
+      // Every failure code arrives with HTTP 200, so flipping the switch on a
+      // resolved request alone would report success while the device may have
+      // no VPN running at all.
+      if (rsp.code !== 0) {
+        setErrMsg(rsp.msg);
+        return;
+      }
+
+      setIsAutostart(true);
+      onSuccess();
+    } catch {
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
+
+      // A transport timeout does not cancel the server handler. Do not retry a
+      // state-changing request: re-read its authoritative result instead.
+      setErrMsg(t('settings.netbird.preferenceUnknown'));
+      const vpn = await refreshPreference(false);
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
+
+      if (vpn === 'netbird') {
         onSuccess();
-      })
-      .catch((err) => {
-        setErrMsg(err.message || 'Failed to switch autostart');
-      })
-      .finally(() => {
+      } else if (vpn) {
+        setErrMsg(t('settings.netbird.preferenceNotChanged'));
+      }
+    } finally {
+      if (isMounted.current && currentOperationId === autostartOperationId.current) {
         setAutostartLoading(false);
-      });
+      }
+    }
   }
 
   function restart() {
@@ -138,14 +174,14 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
               okText={t('settings.netbird.okBtn')}
               cancelText={t('settings.netbird.cancelBtn')}
               placement="bottom"
-              disabled={isAutostart}
+              disabled={isAutostart || autostartLoading}
             >
               <Switch
                 checked={isAutostart}
                 loading={autostartLoading}
                 size="small"
                 title={t('settings.netbird.autostart')}
-                disabled={!statusIsFresh}
+                disabled={!statusIsFresh || isAutostart || autostartLoading}
               />
             </Popconfirm>
           )}
@@ -161,7 +197,7 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
                 okText={t('settings.netbird.okBtn')}
                 cancelText={t('settings.netbird.cancelBtn')}
                 placement="bottom"
-              disabled={loading !== ''}
+                disabled={loading !== ''}
               >
                 <div className="flex cursor-pointer rounded p-1 text-green-500 hover:bg-neutral-600 hover:text-green-500/80">
                   {loading === 'restarting' ? (

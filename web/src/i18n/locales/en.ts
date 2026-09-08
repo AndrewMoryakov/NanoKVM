@@ -504,6 +504,8 @@ const en = {
         autostartConfirm: 'Switch autostart to Tailscale? NetBird will be stopped.',
         autostartWarning:
           'Check that you can reach this device over Tailscale first. Stopping NetBird ends the connection you are using now.',
+        preferenceUnknown: 'Autostart result is unknown. Checking the device state…',
+        preferenceNotChanged: 'Autostart was not changed.',
         memory: {
           title: 'Memory optimization',
           tip: 'When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. A Tailscale restart is required for the change to take effect.'
@@ -555,6 +557,8 @@ const en = {
         autostartConfirm: 'Switch autostart to NetBird? Tailscale will be stopped.',
         autostartWarning:
           'Check that you can reach this device over NetBird first. Stopping Tailscale ends the connection you are using now.',
+        preferenceUnknown: 'Autostart result is unknown. Checking the device state…',
+        preferenceNotChanged: 'Autostart was not changed.',
         restart: 'Restart NetBird?',
         stop: 'Stop NetBird?',
         stopDesc:

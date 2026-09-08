@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { message, Popconfirm, Popover, Switch } from 'antd';
 import { CircleStopIcon, EllipsisIcon, LoaderIcon, RotateCwIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -24,44 +24,84 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
   const [loading, setLoading] = useState<Loading>('');
   const [isAutostart, setIsAutostart] = useState(false);
   const [autostartLoading, setAutostartLoading] = useState(false);
+  const isMounted = useRef(true);
+  const preferenceRequestId = useRef(0);
+  const autostartOperationId = useRef(0);
 
-  useEffect(() => {
-    vpnApi
-      .getPreference()
-      .then((rsp: any) => {
-        if (rsp.data?.vpn) {
-          setIsAutostart(rsp.data.vpn === 'tailscale');
-        }
-      })
-      .catch(() => {
-        // Leaving the switch off is the safe default; the state is re-read on
-        // every visit to this tab.
-      });
+  const refreshPreference = useCallback(async (reportError = true): Promise<string | undefined> => {
+    const currentRequestId = ++preferenceRequestId.current;
+    try {
+      const rsp: any = await vpnApi.getPreference();
+      if (!isMounted.current || currentRequestId !== preferenceRequestId.current) return undefined;
+
+      if (rsp.code !== 0) {
+        if (reportError) message.error(rsp.msg);
+        return undefined;
+      }
+
+      const vpn = rsp.data?.vpn;
+      setIsAutostart(vpn === 'tailscale');
+      return vpn;
+    } catch {
+      if (!isMounted.current || currentRequestId !== preferenceRequestId.current) return undefined;
+      // Leave the switch off as the safe default. A failed mutation has already
+      // shown its unknown-result warning before this reconciliation read.
+      return undefined;
+    }
   }, []);
 
-  function handleAutostartChange(checked: boolean) {
+  useEffect(() => {
+    isMounted.current = true;
+    void refreshPreference();
+
+    return () => {
+      isMounted.current = false;
+      preferenceRequestId.current += 1;
+      autostartOperationId.current += 1;
+    };
+  }, [refreshPreference]);
+
+  async function handleAutostartChange(checked: boolean) {
     if (!checked || autostartLoading) return;
+    const currentOperationId = ++autostartOperationId.current;
+    // A request that began before the mutation cannot authoritatively update
+    // the switch after it completes.
+    preferenceRequestId.current += 1;
     setAutostartLoading(true);
 
-    vpnApi
-      .setPreference('tailscale')
-      // Failure codes arrive with HTTP 200, so switching on `then` alone would
-      // show autostart as enabled while the device may have no VPN running.
-      .then((rsp: any) => {
-        if (rsp.code !== 0) {
-          message.error(rsp.msg);
-          return;
-        }
+    try {
+      const rsp: any = await vpnApi.setPreference('tailscale');
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
 
-        setIsAutostart(true);
+      // Failure codes arrive with HTTP 200, so switching on a resolved request
+      // alone would show autostart as enabled while the device may have no VPN
+      // running.
+      if (rsp.code !== 0) {
+        message.error(rsp.msg);
+        return;
+      }
+
+      setIsAutostart(true);
+      onSuccess();
+    } catch {
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
+
+      // The server may still be completing the requested switch. Re-read
+      // instead of issuing an automatic second state-changing request.
+      message.warning(t('settings.tailscale.preferenceUnknown'));
+      const vpn = await refreshPreference(false);
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
+
+      if (vpn === 'tailscale') {
         onSuccess();
-      })
-      .catch((err) => {
-        message.error(err.message || 'Failed to switch autostart');
-      })
-      .finally(() => {
+      } else if (vpn) {
+        message.error(t('settings.tailscale.preferenceNotChanged'));
+      }
+    } finally {
+      if (isMounted.current && currentOperationId === autostartOperationId.current) {
         setAutostartLoading(false);
-      });
+      }
+    }
   }
 
   function restart() {
@@ -101,13 +141,14 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
             okText={t('settings.tailscale.okBtn')}
             cancelText={t('settings.tailscale.cancelBtn')}
             placement="bottom"
-            disabled={isAutostart}
+            disabled={isAutostart || autostartLoading}
           >
             <Switch
               checked={isAutostart}
               loading={autostartLoading}
               size="small"
               title={t('settings.tailscale.autostart')}
+              disabled={isAutostart || autostartLoading}
             />
           </Popconfirm>
         )}
