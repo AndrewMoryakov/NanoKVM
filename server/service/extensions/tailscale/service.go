@@ -341,8 +341,15 @@ func (s *Service) GetStatus(c *gin.Context) {
 	var rsp proto.Response
 
 	if !isInstalled() {
+		state := proto.TailscaleNotInstall
+		// Do not label a crash between the two no-replace links as a clean
+		// "not installed" state: Install correctly refuses to overwrite that
+		// artifact, while NotRunning keeps the Uninstall recovery action visible.
+		if hasInstalledArtifacts() {
+			state = proto.TailscaleNotRunning
+		}
 		rsp.OkRspWithData(c, &proto.GetTailscaleStatusRsp{
-			State: proto.TailscaleNotInstall,
+			State: state,
 		})
 		return
 	}

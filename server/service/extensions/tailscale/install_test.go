@@ -231,3 +231,22 @@ func TestCorruptGzipTrailerIsRejected(t *testing.T) {
 		t.Fatalf("corrupt archive accepted: %v", err)
 	}
 }
+
+func TestInstallArtifactsKeepPartialAndNonExecutableRecoveryVisible(t *testing.T) {
+	targets := testTargets(t)
+	if installArtifactsExist(targets) || installedPair(targets) {
+		t.Fatal("empty targets look installed")
+	}
+	if err := os.WriteFile(targets[0], []byte("partial"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if !installArtifactsExist(targets) || installedPair(targets) {
+		t.Fatal("partial install was not distinguished from a complete pair")
+	}
+	if err := os.WriteFile(targets[1], []byte("manual recovery"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if !installedPair(targets) {
+		t.Fatal("a complete non-executable pair should remain recoverable by Cli.Start")
+	}
+}

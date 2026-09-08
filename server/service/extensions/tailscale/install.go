@@ -31,13 +31,35 @@ type stagedInstall struct {
 }
 
 func isInstalled() bool {
-	for _, name := range []string{TailscalePath, TailscaledPath} {
+	return installedPair([2]string{TailscalePath, TailscaledPath})
+}
+
+// installedPair deliberately checks for a complete pair, not executable bits:
+// Cli.Start restores execute permissions for a manually recovered install.
+func installedPair(targets [2]string) bool {
+	for _, name := range targets {
 		info, err := os.Stat(name)
-		if err != nil || !info.Mode().IsRegular() || info.Mode()&0o111 == 0 {
+		if err != nil || !info.Mode().IsRegular() {
 			return false
 		}
 	}
 	return true
+}
+
+// hasInstalledArtifacts distinguishes an incomplete/crashed installation from
+// a device with no client at all. Such a state must expose Uninstall in the UI:
+// retrying publication intentionally refuses to overwrite either path.
+func hasInstalledArtifacts() bool {
+	return installArtifactsExist([2]string{TailscalePath, TailscaledPath})
+}
+
+func installArtifactsExist(targets [2]string) bool {
+	for _, name := range targets {
+		if _, err := os.Lstat(name); !os.IsNotExist(err) {
+			return true
+		}
+	}
+	return false
 }
 
 // Each staged file lives beside its destination so exclusive publication also
