@@ -1,6 +1,7 @@
 #!/bin/sh
 # nanokvm Rev3.1
 
+
 wait_for_exit() {
     process="$1"
     timeout="$2"
@@ -73,6 +74,46 @@ start_services() {
     fi
 }
 
+# Only one VPN may run at a time: the device has too little RAM for both.
+#
+# This runs at S95, before rc reaches S98tailscaled and S99netbird, so the
+# selected client is started by rc as usual and only the other one has to go.
+#
+# The two directions are not symmetric, for a reason outside this script:
+# kvm_system's new_app_init() runs `rm -f /etc/init.d/S99*` after an application
+# update. The glob does not reach S98tailscaled, which that same function instead
+# refreshes from /kvmapp when it is already present. So S99 usually goes missing
+# because that rm ran, and restoring it is what keeps NetBird alive across an
+# update, while S98 goes missing only when something removed it deliberately —
+# Cli.Stop() does exactly that, and for Tailscale the UI says stopping disables
+# autostart. For NetBird the UI says the opposite: stopping is "stop now", and
+# the preference file stays the authority on what runs at boot.
+select_vpn() {
+    vpn_pref="tailscale"
+    if [ -f /etc/kvm/vpn ]; then
+        vpn_pref=$(cat /etc/kvm/vpn 2>/dev/null | tr -d '[:space:]')
+    fi
+
+    case "$vpn_pref" in
+      netbird)
+        if [ -x /usr/bin/netbird ] && [ -f /kvmapp/system/init.d/S99netbird ]; then
+            rm -f /etc/init.d/S98tailscaled
+            cp -f /kvmapp/system/init.d/S99netbird /etc/init.d/S99netbird
+            chmod 755 /etc/init.d/S99netbird
+        else
+            # Preference is deliberately not rewritten by Uninstall. If its
+            # selected client is absent, do not also disable a working
+            # Tailscale boot script: LAN-only management remains valid and a
+            # surviving Tailscale installation is a safe boot fallback.
+            rm -f /etc/init.d/S99netbird
+        fi
+        ;;
+      *)
+        rm -f /etc/init.d/S99netbird
+        ;;
+    esac
+}
+
 case "$1" in
   start)
     echo -n kvm > /boot/hostname.prefix
@@ -119,6 +160,7 @@ case "$1" in
 
     # Start services
     start_services
+    select_vpn
    ;;
 
   stop)

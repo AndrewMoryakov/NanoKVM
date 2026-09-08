@@ -2,7 +2,11 @@ package tailscale
 
 import (
 	"NanoKVM-Server/proto"
+	"NanoKVM-Server/service/extensions/netbird"
+	"NanoKVM-Server/service/extensions/vpnpref"
 	"NanoKVM-Server/utils"
+	"errors"
+	"fmt"
 	"net"
 	"os"
 
@@ -33,8 +37,38 @@ func NewService() *Service {
 	return &Service{}
 }
 
+// lockVPN serializes operations that start or stop a client.
+//
+// It deliberately does NOT check the autostart preference. That preference says
+// what runs at boot, not who may run now: gating these handlers on it made the
+// first NetBird login unreachable (login needs the preference, the preference
+// needs a connected client) and, worse, let a switch cut the tunnel the caller
+// was connected through. Mutual exclusion is enforced where it belongs — in
+// SetPreference, which stops the other client only once this one is connected.
+//
+// Both daemons may therefore be up briefly while a user sets the new one up. That
+// overlap is deliberate: the alternative — refusing — is what locked devices out.
+func lockVPN(c *gin.Context, rsp *proto.Response) bool {
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
+		return false
+	}
+
+	// A Tailscale lifecycle action is newer than any pending NetBird install.
+	// The shared lifecycle lock gives this invalidation a total order with the
+	// final promote-and-start step, while keeping the slow download unlocked.
+	netbird.InvalidateStagedInstall()
+
+	return true
+}
+
 func (s *Service) Install(c *gin.Context) {
 	var rsp proto.Response
+
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	if !isInstalled() {
 		if err := install(); err != nil {
@@ -52,11 +86,37 @@ func (s *Service) Install(c *gin.Context) {
 func (s *Service) Uninstall(c *gin.Context) {
 	var rsp proto.Response
 
-	_ = NewCli().Stop()
-	_ = utils.DelGoMemLimit()
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
-	_ = os.Remove(TailscalePath)
-	_ = os.Remove(TailscaledPath)
+	// Never unlink a client that may still be running. In particular, an
+	// executable can remain mapped after unlink and would no longer have a
+	// reliable init-script path for recovery.
+	if err := NewCli().Stop(); err != nil {
+		rsp.ErrRsp(c, -1, fmt.Sprintf("stop failed, nothing was removed: %v", err))
+		log.Errorf("failed to stop tailscale before uninstall: %s", err)
+		return
+	}
+	if err := utils.DelGoMemLimit(); err != nil && !os.IsNotExist(err) {
+		log.Warnf("failed to remove tailscale memory limit: %s", err)
+	}
+
+	var removeErrs []error
+	for _, path := range []string{TailscalePath, TailscaledPath} {
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+			removeErrs = append(removeErrs, fmt.Errorf("remove %s: %w", path, err))
+		}
+	}
+	if err := errors.Join(removeErrs...); err != nil {
+		rsp.ErrRsp(c, -2, fmt.Sprintf("uninstall incomplete: %v", err))
+		log.Errorf("failed to uninstall tailscale: %s", err)
+		return
+	}
+
+	// Uninstalling a VPN is valid on a LAN-managed device. Do not start another
+	// client or rewrite the boot preference behind the user's back.
 
 	rsp.OkRsp(c)
 	log.Debugf("uninstall tailscale successfully")
@@ -64,6 +124,11 @@ func (s *Service) Uninstall(c *gin.Context) {
 
 func (s *Service) Start(c *gin.Context) {
 	var rsp proto.Response
+
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Start()
 	if err != nil {
@@ -83,6 +148,11 @@ func (s *Service) Start(c *gin.Context) {
 func (s *Service) Restart(c *gin.Context) {
 	var rsp proto.Response
 
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
+
 	err := NewCli().Restart()
 	if err != nil {
 		rsp.ErrRsp(c, -1, "restart failed")
@@ -96,6 +166,11 @@ func (s *Service) Restart(c *gin.Context) {
 
 func (s *Service) Stop(c *gin.Context) {
 	var rsp proto.Response
+
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Stop()
 	if err != nil {
@@ -113,6 +188,12 @@ func (s *Service) Stop(c *gin.Context) {
 func (s *Service) Up(c *gin.Context) {
 	var rsp proto.Response
 
+	// `tailscale up` brings the tunnel up — same guard as Start.
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
+
 	err := NewCli().Up()
 	if err != nil {
 		rsp.ErrRsp(c, -1, "tailscale up failed")
@@ -126,6 +207,11 @@ func (s *Service) Up(c *gin.Context) {
 
 func (s *Service) Down(c *gin.Context) {
 	var rsp proto.Response
+
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Down()
 	if err != nil {
@@ -141,11 +227,22 @@ func (s *Service) Down(c *gin.Context) {
 func (s *Service) Login(c *gin.Context) {
 	var rsp proto.Response
 
+	// Serialize setup and URL issuance with Stop/Down/SetPreference. The lock is
+	// released immediately after Cli.Login returns its URL; the long interactive
+	// browser phase is owned by Cli's cancellable login process, not this mutex.
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
+
 	// check tailscale status
 	cli := NewCli()
 	status, err := cli.Status()
 	if err != nil {
+		// No preference check: refusing here is what used to make signing in
+		// impossible on a device set to the other client.
 		_ = cli.Start()
+
 		status, err = cli.Status()
 	}
 
@@ -181,6 +278,11 @@ func (s *Service) Login(c *gin.Context) {
 
 func (s *Service) Logout(c *gin.Context) {
 	var rsp proto.Response
+
+	if !lockVPN(c, &rsp) {
+		return
+	}
+	defer vpnpref.Unlock()
 
 	err := NewCli().Logout()
 	if err != nil {
