@@ -92,6 +92,68 @@ valid_netbird_version() {
     printf '%s\n' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
 }
 
+# Keep the old boot scripts intact until the replacement is completely ready.
+# /etc/init.d and the temporary files are on the same filesystem, so each mv
+# below is atomic. A failed publish restores the hidden S98 before returning;
+# rc never sees a partially copied script.
+install_netbird_boot_script() {
+    netbird_script=/etc/init.d/S99netbird
+    netbird_script_tmp="/etc/init.d/.S99netbird.new.$$"
+    tailscale_script=/etc/init.d/S98tailscaled
+    tailscale_script_backup="/etc/init.d/.S98tailscaled.old.$$"
+    tailscale_was_installed=0
+
+    if ! rm -f "$netbird_script_tmp" "$tailscale_script_backup"; then
+        echo "Failed to prepare VPN boot-script transaction" >&2
+        return 1
+    fi
+    if ! cp -f /kvmapp/system/init.d/S99netbird "$netbird_script_tmp" || \
+       ! chmod 755 "$netbird_script_tmp"; then
+        rm -f "$netbird_script_tmp"
+        return 1
+    fi
+
+    # mv SOURCE DEST moves SOURCE *into* DEST when DEST is a directory. Do not
+    # let a damaged S99 path turn a successful switch into a hidden file below
+    # that directory after S98 has been staged.
+    if [ -e "$netbird_script" ] || [ -L "$netbird_script" ]; then
+        if [ -L "$netbird_script" ] || [ ! -f "$netbird_script" ]; then
+            echo "NetBird boot-script destination is not a regular file" >&2
+            rm -f "$netbird_script_tmp"
+            return 1
+        fi
+    fi
+    # Hide S98 before publishing S99. If publishing fails, put it back before
+    # returning, so an I/O error cannot turn a selected Tailscale boot into no
+    # VPN boot script at all.
+    if [ -e "$tailscale_script" ] || [ -L "$tailscale_script" ]; then
+        if ! mv -f "$tailscale_script" "$tailscale_script_backup"; then
+            echo "Failed to stage Tailscale boot script; preserving existing VPN boot scripts" >&2
+            rm -f "$netbird_script_tmp"
+            return 1
+        fi
+        tailscale_was_installed=1
+    fi
+
+    if ! mv -f "$netbird_script_tmp" "$netbird_script"; then
+        echo "Failed to publish NetBird boot script; restoring Tailscale boot script" >&2
+        if [ "$tailscale_was_installed" -eq 1 ] && \
+           ! mv -f "$tailscale_script_backup" "$tailscale_script"; then
+            echo "Failed to restore Tailscale boot script after NetBird publish failure" >&2
+        fi
+        rm -f "$netbird_script_tmp"
+        return 1
+    fi
+
+    # A failed cleanup leaves only a hidden, non-rc backup; the new selection
+    # is already safely published, so do not report it as a failed switch.
+    if [ "$tailscale_was_installed" -eq 1 ]; then
+        rm -f "$tailscale_script_backup" || \
+            echo "Failed to remove obsolete Tailscale boot-script backup" >&2
+    fi
+    return 0
+}
+
 select_vpn() {
     vpn_pref="tailscale"
     if [ -f /etc/kvm/vpn ]; then
@@ -109,9 +171,13 @@ select_vpn() {
         if [ -x /usr/bin/netbird ] && valid_netbird_version "$pinned_version" && \
            [ "$pinned_version" = "$installed_version" ] && \
            [ -f /kvmapp/system/init.d/S99netbird ]; then
-            rm -f /etc/init.d/S98tailscaled
-            cp -f /kvmapp/system/init.d/S99netbird /etc/init.d/S99netbird
-            chmod 755 /etc/init.d/S99netbird
+            # The helper stages S98 before atomically publishing S99, and
+            # restores S98 if publishing fails. This preserves a bootable VPN
+            # selection across storage errors.
+            if ! install_netbird_boot_script; then
+                echo "Failed to install NetBird boot script; preserving existing VPN boot scripts" >&2
+                return 1
+            fi
         else
             # Preference is deliberately not rewritten by Uninstall. If its
             # selected client is absent, do not also disable a working
