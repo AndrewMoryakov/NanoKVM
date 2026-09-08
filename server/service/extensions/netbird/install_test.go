@@ -51,6 +51,35 @@ func TestValidateAndExtractArchive(t *testing.T) {
 	}{
 		{name: "valid release asset", entries: validEntries},
 		{
+			// GNU tar writes the root directory with this spelling in the real
+			// release asset built by scripts/build-netbird.sh.
+			name: "valid release asset with GNU root directory spelling",
+			entries: []archiveEntry{
+				{name: root + "/", typeflag: tar.TypeDir},
+				{name: root + "/VERSION", typeflag: tar.TypeReg, data: []byte(version + "\n")},
+				{name: root + "/netbird", typeflag: tar.TypeReg, data: riscvELFHeader()},
+			},
+		},
+		{
+			name: "both root directory spellings are duplicate",
+			entries: []archiveEntry{
+				{name: root, typeflag: tar.TypeDir},
+				{name: root + "/", typeflag: tar.TypeDir},
+				{name: root + "/VERSION", typeflag: tar.TypeReg, data: []byte(version + "\n")},
+				{name: root + "/netbird", typeflag: tar.TypeReg, data: riscvELFHeader()},
+			},
+			wantErr: true,
+		},
+		{
+			name: "root double slash is rejected",
+			entries: []archiveEntry{
+				{name: root + "//", typeflag: tar.TypeDir},
+				{name: root + "/VERSION", typeflag: tar.TypeReg, data: []byte(version + "\n")},
+				{name: root + "/netbird", typeflag: tar.TypeReg, data: riscvELFHeader()},
+			},
+			wantErr: true,
+		},
+		{
 			name: "path traversal",
 			entries: []archiveEntry{
 				{name: root, typeflag: tar.TypeDir},
@@ -211,11 +240,15 @@ func TestStagedInstallPromoteAndCleanup(t *testing.T) {
 func TestStagedInstallPromoteRefusesReplacement(t *testing.T) {
 	staged := makeStagedInstall(t, "0.77.1")
 	binaryPath := filepath.Join(t.TempDir(), "netbird")
+	versionPath := filepath.Join(t.TempDir(), "netbird.version")
 	if err := os.WriteFile(binaryPath, []byte("existing"), 0o755); err != nil {
 		t.Fatalf("WriteFile existing binary: %v", err)
 	}
+	if err := os.WriteFile(versionPath, []byte("0.0.1\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile existing marker: %v", err)
+	}
 
-	err := staged.promote(binaryPath, filepath.Join(t.TempDir(), "netbird.version"))
+	err := staged.promote(binaryPath, versionPath)
 	if !errors.Is(err, ErrNetbirdAlreadyInstalled) {
 		t.Fatalf("promote() error = %v, want ErrNetbirdAlreadyInstalled", err)
 	}
@@ -225,6 +258,13 @@ func TestStagedInstallPromoteRefusesReplacement(t *testing.T) {
 	}
 	if string(content) != "existing" {
 		t.Fatalf("promote replaced existing binary with %q", content)
+	}
+	marker, err := os.ReadFile(versionPath)
+	if err != nil {
+		t.Fatalf("ReadFile existing marker: %v", err)
+	}
+	if string(marker) != "0.0.1\n" {
+		t.Fatalf("promote replaced marker before collision check: %q", marker)
 	}
 }
 

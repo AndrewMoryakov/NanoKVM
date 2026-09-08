@@ -134,11 +134,6 @@ func promoteIfNeeded(stage *StagedInstall) error {
 	}
 	defer func() { _ = stage.Cleanup() }()
 	if err := stage.Promote(); err != nil {
-		// A manual install may have won while the asset downloaded. It is safe to
-		// use that existing binary; never replace it from this request.
-		if err == ErrNetbirdAlreadyInstalled && isInstalled() {
-			return nil
-		}
 		return err
 	}
 	return nil

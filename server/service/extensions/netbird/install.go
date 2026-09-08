@@ -210,23 +210,15 @@ func (staged *StagedInstall) promote(binaryPath, versionPath string) error {
 	if err := os.MkdirAll(filepath.Dir(binaryPath), 0o755); err != nil {
 		return fmt.Errorf("create netbird binary directory: %w", err)
 	}
-	if _, err := os.Lstat(binaryPath); err == nil {
-		return ErrNetbirdAlreadyInstalled
-	} else if !errors.Is(err, fs.ErrNotExist) {
-		return fmt.Errorf("stat installed netbird binary: %w", err)
-	}
-
 	binary := filepath.Join(staged.dir, "netbird")
 	if err := os.Chmod(binary, 0o755); err != nil {
 		return fmt.Errorf("chmod staged netbird: %w", err)
 	}
-
-	// Publish metadata before the executable. A sudden power loss can then
-	// leave an uninstalled client with a harmless desired-version marker, but
-	// never an executable which future Start calls mistake for a complete,
-	// versioned install. writeVersion itself uses temp+fsync+rename.
-	if err := writeVersion(versionPath, staged.version); err != nil {
-		return err
+	// A hard link preserves the staged inode's data and mode. Sync that inode
+	// first: a durable version marker must never certify a binary whose content
+	// has not been flushed yet.
+	if err := syncFile(binary); err != nil {
+		return fmt.Errorf("sync staged netbird binary: %w", err)
 	}
 	if err := os.Link(binary, binaryPath); err != nil {
 		if errors.Is(err, fs.ErrExist) {
@@ -235,7 +227,22 @@ func (staged *StagedInstall) promote(binaryPath, versionPath string) error {
 		return fmt.Errorf("atomically promote staged netbird: %w", err)
 	}
 	if err := syncDirectory(filepath.Dir(binaryPath)); err != nil {
-		return fmt.Errorf("sync netbird binary directory: %w", err)
+		return fmt.Errorf("sync netbird binary directory: %w", rollbackPromotedBinary(binary, binaryPath, err))
+	}
+
+	// Publish the marker only after the binary link is visible and durable. The
+	// marker is the certificate that Start uses to trust an installed binary, so
+	// a collision or failed Link must never overwrite it. If publishing fails
+	// before rename, remove only the link made by this transaction. A failure
+	// after rename is intentionally not rolled back: the marker may already be
+	// live, and the binary was made durable first; return an error and do not
+	// start the daemon in this request.
+	published, err := publishVersion(versionPath, staged.version)
+	if err != nil {
+		if !published {
+			return fmt.Errorf("publish netbird version: %w", rollbackPromotedBinary(binary, binaryPath, err))
+		}
+		return fmt.Errorf("publish netbird version after binary promotion: %w", err)
 	}
 	staged.promoted = true
 	if err := os.Remove(binary); err != nil {
@@ -370,21 +377,29 @@ func validateAndExtractArchive(archivePath, workspace, expectedVersion string) (
 			return "", "", fmt.Errorf("unsafe netbird archive path %q", header.Name)
 		}
 
-		expectedType, ok := expected[header.Name]
+		name := header.Name
+		// GNU tar emits the archive root as "root/". Canonicalize precisely
+		// that directory spelling and nothing else: files, root//, root/. and
+		// every other unexpected path remain invalid input.
+		if header.Typeflag == tar.TypeDir && name == root+"/" {
+			name = root
+		}
+
+		expectedType, ok := expected[name]
 		if !ok {
 			return "", "", fmt.Errorf("unexpected netbird archive entry %q", header.Name)
 		}
-		if seen[header.Name] {
+		if seen[name] {
 			return "", "", fmt.Errorf("duplicate netbird archive entry %q", header.Name)
 		}
 		if !validArchiveType(header.Typeflag, expectedType) {
 			return "", "", fmt.Errorf("netbird archive entry %q has unsafe type %q", header.Name, header.Typeflag)
 		}
-		if !validNetbirdEntrySize(header.Name, root, header.Size) || total+header.Size > maxNetbirdUncompressedSize {
+		if !validNetbirdEntrySize(name, root, header.Size) || total+header.Size > maxNetbirdUncompressedSize {
 			return "", "", fmt.Errorf("netbird archive entry %q exceeds size limit", header.Name)
 		}
 		total += header.Size
-		seen[header.Name] = true
+		seen[name] = true
 
 		if header.Typeflag == tar.TypeDir {
 			if header.Size != 0 {
@@ -612,40 +627,81 @@ func writeInstalledVersion(version string) error {
 }
 
 func writeVersion(versionPath, version string) error {
+	_, err := publishVersion(versionPath, version)
+	return err
+}
+
+// publishVersion atomically replaces a version marker. Its boolean result is
+// true once rename has succeeded, even if syncing the directory then fails.
+// Callers that publish a binary immediately before the marker need that
+// distinction: after rename the marker may be visible and rolling the binary
+// back would create the inverse, unsafe mismatch.
+func publishVersion(versionPath, version string) (published bool, err error) {
 	if !netbirdVersionRE.MatchString(version) {
-		return fmt.Errorf("invalid installed netbird version %q", version)
+		return false, fmt.Errorf("invalid installed netbird version %q", version)
 	}
 
 	directory := filepath.Dir(versionPath)
 	if err := os.MkdirAll(directory, 0o755); err != nil {
-		return fmt.Errorf("create version dir failed: %w", err)
+		return false, fmt.Errorf("create version dir failed: %w", err)
 	}
 
 	file, err := os.CreateTemp(directory, ".netbird.version-")
 	if err != nil {
-		return fmt.Errorf("create version file: %w", err)
+		return false, fmt.Errorf("create version file: %w", err)
 	}
 	temporaryPath := file.Name()
 	defer func() { _ = os.Remove(temporaryPath) }()
 	if err := file.Chmod(0o644); err != nil {
 		_ = file.Close()
-		return fmt.Errorf("chmod version file: %w", err)
+		return false, fmt.Errorf("chmod version file: %w", err)
 	}
 	if _, err := io.WriteString(file, version+"\n"); err != nil {
 		_ = file.Close()
-		return fmt.Errorf("write version file: %w", err)
+		return false, fmt.Errorf("write version file: %w", err)
 	}
 	if err := file.Sync(); err != nil {
 		_ = file.Close()
-		return fmt.Errorf("sync version file: %w", err)
+		return false, fmt.Errorf("sync version file: %w", err)
 	}
 	if err := file.Close(); err != nil {
-		return fmt.Errorf("close version file: %w", err)
+		return false, fmt.Errorf("close version file: %w", err)
 	}
 	if err := os.Rename(temporaryPath, versionPath); err != nil {
-		return fmt.Errorf("publish version file: %w", err)
+		return false, fmt.Errorf("publish version file: %w", err)
 	}
-	return syncDirectory(directory)
+	if err := syncDirectory(directory); err != nil {
+		return true, fmt.Errorf("sync version directory: %w", err)
+	}
+	return true, nil
+}
+
+func syncFile(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = file.Close() }()
+	return file.Sync()
+}
+
+// rollbackPromotedBinary removes a link only if it is still the staged inode
+// this operation published. It preserves a concurrent replacement and joins
+// any rollback/sync failures with the original failure for callers.
+func rollbackPromotedBinary(source, destination string, cause error) error {
+	sourceInfo, sourceErr := os.Lstat(source)
+	destinationInfo, destinationErr := os.Lstat(destination)
+	if sourceErr != nil || destinationErr != nil || !os.SameFile(sourceInfo, destinationInfo) {
+		return cause
+	}
+
+	if err := os.Remove(destination); err != nil {
+		return errors.Join(cause, fmt.Errorf("rollback netbird binary: %w", err))
+	}
+	if err := syncDirectory(filepath.Dir(destination)); err != nil {
+		return errors.Join(cause, fmt.Errorf("sync netbird binary rollback: %w", err))
+	}
+	return cause
 }
 
 func syncDirectory(path string) error {
