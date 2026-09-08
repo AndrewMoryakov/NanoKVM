@@ -84,9 +84,11 @@ func (c *Cli) Restart() error {
 	return runProgram(CommandTimeout, ScriptPath, "restart")
 }
 
-// Resume starts from the existing init script only. It is used to roll back a
-// failed preference write and intentionally does not copy a script first.
-func (c *Cli) Resume() error {
+// CanResume checks the static prerequisites for resuming the daemon after a
+// failed preference update. SetPreference calls it before stopping the old
+// tunnel: a rollback that is already known to violate the current firmware pin
+// is not a safe rollback at all.
+func (c *Cli) CanResume() error {
 	// Resume is a start path used only for preference-write rollback. It must
 	// obey the same firmware pin as explicit Start/Restart rather than reviving
 	// a binary the current firmware no longer attests.
@@ -95,6 +97,15 @@ func (c *Cli) Resume() error {
 	}
 	if !isExecutable(ScriptPath) {
 		return fmt.Errorf("no usable init script at %s", ScriptPath)
+	}
+	return nil
+}
+
+// Resume starts from the existing init script only. It is used to roll back a
+// failed preference write and intentionally does not copy a script first.
+func (c *Cli) Resume() error {
+	if err := c.CanResume(); err != nil {
+		return err
 	}
 	return runProgram(CommandTimeout, ScriptPath, "start")
 }

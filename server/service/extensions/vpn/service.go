@@ -26,6 +26,18 @@ var tailscaleServiceRunning = func() (bool, error) {
 // marker format and installation paths.
 var netbirdCanStartAtBoot = netbird.CanStartAtBoot
 
+// These package seams keep the preference transition testable without real
+// VPN daemons or the device's /etc state. Production uses the functions below.
+var (
+	vpnPreferenceRead  = vpnpref.Read
+	vpnPreferenceWrite = vpnpref.Write
+	vpnClientFor       = cliFor
+	vpnBootable        = bootable
+	vpnRunning         = running
+	vpnConnected       = connected
+	vpnCanResume       = canResume
+)
+
 func NewService() *Service {
 	return &Service{}
 }
@@ -79,7 +91,7 @@ func (s *Service) SetPreference(c *gin.Context) {
 	// The comparison belongs under the same lock as the state transition. A
 	// request that read the old value before another request completed a switch
 	// must not subsequently perform an unnecessary second transition.
-	if vpn == vpnpref.Read() {
+	if vpn == vpnPreferenceRead() {
 		rsp.OkRspWithData(c, &proto.GetVPNPreferenceRsp{VPN: vpn})
 		return
 	}
@@ -88,24 +100,36 @@ func (s *Service) SetPreference(c *gin.Context) {
 
 	// select_vpn removes the other client's init script at the next boot, so the
 	// incoming one has to be something it can actually start.
-	if !bootable(vpn) {
+	if !vpnBootable(vpn) {
 		rsp.ErrRsp(c, -7, fmt.Sprintf("%s cannot start at boot: install it, and for Tailscale start it once", vpn))
 		return
 	}
 
 	stoppedOther := false
-	if running(other) {
-		if !connected(vpn) {
+	if vpnRunning(other) {
+		if !vpnConnected(vpn) {
 			rsp.ErrRsp(c, -6, fmt.Sprintf(
 				"%s is not connected yet — start it and finish signing in before making it the autostart VPN, "+
 					"otherwise stopping %s now would cut the connection you are using", vpn, other))
 			return
 		}
 
+		// The preference write happens after the old tunnel is stopped. Do not
+		// make that destructive transition when its rollback is already known
+		// to be impossible — notably, an old NetBird binary that the current
+		// firmware pin no longer permits us to start.
+		if err := vpnCanResume(other); err != nil {
+			rsp.ErrRsp(c, -3, fmt.Sprintf(
+				"%s is connected, but %s cannot be safely resumed if saving the preference fails: %v",
+				vpn, other, err))
+			return
+		}
+
+		oldClient := vpnClientFor(other)
 		// This is an internal runtime transition, not the user's explicit
 		// "disable Tailscale at boot" action. In particular, it must leave S98
 		// in place so the write-failure rollback below can really resume it.
-		if err := cliFor(other).StopRuntime(); err != nil {
+		if err := oldClient.StopRuntime(); err != nil {
 			log.Errorf("failed to stop %s: %s", other, err)
 			rsp.ErrRsp(c, -3, fmt.Sprintf("%s is connected, but stopping %s did not complete: %v", vpn, other, err))
 			return
@@ -117,7 +141,7 @@ func (s *Service) SetPreference(c *gin.Context) {
 	// cannot be written, the client that was carrying the session has just been
 	// stopped while the file still names it — put it back rather than leave the
 	// device relying on whatever the next boot happens to do.
-	if err := vpnpref.Write(vpn); err != nil {
+	if err := vpnPreferenceWrite(vpn); err != nil {
 		log.Errorf("failed to write VPN preference: %s", err)
 
 		if !stoppedOther {
@@ -125,7 +149,7 @@ func (s *Service) SetPreference(c *gin.Context) {
 			return
 		}
 
-		if rbErr := cliFor(other).Resume(); rbErr != nil {
+		if rbErr := vpnClientFor(other).Resume(); rbErr != nil {
 			rsp.ErrRsp(c, -4, fmt.Sprintf("write preference failed: %v; %s could not be restarted: %v", err, other, rbErr))
 			return
 		}
@@ -157,6 +181,21 @@ func cliFor(vpn string) vpnClient {
 	}
 
 	return tailscale.NewCli()
+}
+
+// canResume checks whether the stopped client has the static prerequisites for
+// the preference-write rollback. NetBird is special: its resume path must also
+// satisfy the firmware version pin. Tailscale needs the init script that its
+// Resume call will execute.
+func canResume(vpn string) error {
+	if vpn == vpnpref.Netbird {
+		return netbird.NewCli().CanResume()
+	}
+	info, err := os.Stat(tailscale.ScriptPath)
+	if err != nil || !info.Mode().IsRegular() || info.Mode()&0o111 == 0 {
+		return fmt.Errorf("no usable init script at %s", tailscale.ScriptPath)
+	}
+	return nil
 }
 
 // running reports whether the client's daemon is up. A client that is not

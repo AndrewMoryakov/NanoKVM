@@ -2,9 +2,30 @@ package vpn
 
 import (
 	"NanoKVM-Server/service/extensions/vpnpref"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
+
+type recordingVPNClient struct {
+	stopCalls   int
+	resumeCalls int
+}
+
+func (c *recordingVPNClient) StopRuntime() error {
+	c.stopCalls++
+	return nil
+}
+
+func (c *recordingVPNClient) Resume() error {
+	c.resumeCalls++
+	return nil
+}
 
 func TestRunningTailscaleUsesDaemonProbeAndFailsClosed(t *testing.T) {
 	original := tailscaleServiceRunning
@@ -38,5 +59,78 @@ func TestBootableNetbirdUsesPinAwareEligibility(t *testing.T) {
 	netbirdCanStartAtBoot = func() bool { return true }
 	if !bootable(vpnpref.Netbird) {
 		t.Fatal("bootable(netbird) ignored a NetBird client accepted by its eligibility check")
+	}
+}
+
+func TestSetPreferenceDoesNotStopOldVPNWhenRollbackCannotResume(t *testing.T) {
+	oldPreferenceRead := vpnPreferenceRead
+	oldPreferenceWrite := vpnPreferenceWrite
+	oldClientFor := vpnClientFor
+	oldBootable := vpnBootable
+	oldRunning := vpnRunning
+	oldConnected := vpnConnected
+	oldCanResume := vpnCanResume
+	t.Cleanup(func() {
+		vpnPreferenceRead = oldPreferenceRead
+		vpnPreferenceWrite = oldPreferenceWrite
+		vpnClientFor = oldClientFor
+		vpnBootable = oldBootable
+		vpnRunning = oldRunning
+		vpnConnected = oldConnected
+		vpnCanResume = oldCanResume
+	})
+
+	// A firmware update can leave a connected old NetBird daemon whose binary
+	// no longer matches the pin. Resume must refuse it; SetPreference must make
+	// that fact a preflight error instead of stopping the tunnel and discovering
+	// it only after the preference write fails.
+	oldClient := &recordingVPNClient{}
+	writes := 0
+	vpnPreferenceRead = func() string { return vpnpref.Netbird }
+	vpnPreferenceWrite = func(string) error {
+		writes++
+		return nil
+	}
+	vpnClientFor = func(vpn string) vpnClient {
+		if vpn != vpnpref.Netbird {
+			t.Fatalf("rollback client requested for %q, want netbird", vpn)
+		}
+		return oldClient
+	}
+	vpnBootable = func(vpn string) bool { return vpn == vpnpref.Tailscale }
+	vpnRunning = func(vpn string) bool { return vpn == vpnpref.Netbird }
+	vpnConnected = func(vpn string) bool { return vpn == vpnpref.Tailscale }
+	vpnCanResume = func(vpn string) error {
+		if vpn != vpnpref.Netbird {
+			t.Fatalf("rollback preflight requested for %q, want netbird", vpn)
+		}
+		return errors.New("installed netbird version does not match firmware pin")
+	}
+
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+	context.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader("vpn=tailscale"))
+	context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	NewService().SetPreference(context)
+
+	var response struct {
+		Code int `json:"code"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatalf("decode response: %v; body = %s", err, recorder.Body.String())
+	}
+	if response.Code != -3 {
+		t.Fatalf("response code = %d, want -3; body = %s", response.Code, recorder.Body.String())
+	}
+	if oldClient.stopCalls != 0 {
+		t.Fatalf("StopRuntime called %d times despite impossible rollback", oldClient.stopCalls)
+	}
+	if oldClient.resumeCalls != 0 {
+		t.Fatalf("Resume called %d times before any stop", oldClient.resumeCalls)
+	}
+	if writes != 0 {
+		t.Fatalf("preference Write called %d times despite impossible rollback", writes)
 	}
 }
