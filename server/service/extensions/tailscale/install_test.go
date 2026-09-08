@@ -6,7 +6,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -17,22 +19,72 @@ import (
 	"time"
 )
 
+const testTailscaleVersion = "1.90.0"
+
+func requiredTailscaleArchiveEntries() []string {
+	return []string{
+		"tailscale",
+		"tailscaled",
+		"systemd",
+		"systemd/tailscaled.service",
+		"systemd/tailscaled.defaults",
+		"systemd/tailscale-online.target",
+		"systemd/tailscale-wait-online.service",
+	}
+}
+
 func testArchive(t *testing.T, entries []string) []byte {
+	t.Helper()
+	return testArchiveWithOverrides(t, entries, nil, nil)
+}
+
+func testArchiveWithOverrides(t *testing.T, entries []string, dataOverrides map[string][]byte, typeOverrides map[string]byte) []byte {
 	t.Helper()
 	var output bytes.Buffer
 	gz := gzip.NewWriter(&output)
 	tarball := tar.NewWriter(gz)
-	root := "tailscale_1.90.0_riscv64/"
-	if err := tarball.WriteHeader(&tar.Header{Name: root, Mode: 0o755, Typeflag: tar.TypeDir}); err != nil {
+	root := "tailscale_" + testTailscaleVersion + "_riscv64"
+	if err := tarball.WriteHeader(&tar.Header{Name: root + "/", Mode: 0o755, Typeflag: tar.TypeDir}); err != nil {
 		t.Fatal(err)
 	}
 	for _, name := range entries {
-		data := []byte("executable-" + name)
-		if err := tarball.WriteHeader(&tar.Header{Name: root + name, Mode: 0o755, Typeflag: tar.TypeReg, Size: int64(len(data))}); err != nil {
+		typeflag := byte(tar.TypeReg)
+		if name == "systemd" {
+			typeflag = byte(tar.TypeDir)
+		}
+		if override, ok := typeOverrides[name]; ok {
+			typeflag = override
+		}
+		data := []byte("unit-file-" + name)
+		if name == "tailscale" || name == "tailscaled" {
+			data = riscvELFHeader()
+		}
+		if override, ok := dataOverrides[name]; ok {
+			data = override
+		}
+		entryName := root + "/" + name
+		// The official archive uses GNU tar's trailing-slash spelling for both
+		// directories, so keep the fixture faithful to the pinned artifact.
+		if typeflag == tar.TypeDir {
+			entryName += "/"
+		}
+		header := &tar.Header{Name: entryName, Mode: 0o755, Typeflag: typeflag}
+		if typeflag == tar.TypeDir {
+			header.Size = 0
+		} else {
+			header.Size = int64(len(data))
+		}
+		if typeflag == tar.TypeSymlink {
+			header.Linkname = "/bin/sh"
+			header.Size = 0
+		}
+		if err := tarball.WriteHeader(header); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := tarball.Write(data); err != nil {
-			t.Fatal(err)
+		if typeflag != tar.TypeDir && typeflag != tar.TypeSymlink {
+			if _, err := tarball.Write(data); err != nil {
+				t.Fatal(err)
+			}
 		}
 	}
 	if err := tarball.Close(); err != nil {
@@ -42,6 +94,19 @@ func testArchive(t *testing.T, entries []string) []byte {
 		t.Fatal(err)
 	}
 	return output.Bytes()
+}
+
+func riscvELFHeader() []byte {
+	header := make([]byte, 64)
+	copy(header, "\x7fELF")
+	header[4] = 2  // ELFCLASS64
+	header[5] = 1  // ELFDATA2LSB
+	header[6] = 1  // EV_CURRENT
+	header[16] = 2 // ET_EXEC
+	header[18] = 243
+	header[20] = 1  // e_version = EV_CURRENT
+	header[52] = 64 // e_ehsize
+	return header
 }
 
 func testTargets(t *testing.T) [2]string {
@@ -56,10 +121,17 @@ func serveArchive(t *testing.T, data []byte) *httptest.Server {
 	return server
 }
 
+func stageTestArchive(t *testing.T, ctx context.Context, client *http.Client, url string, data []byte, targets [2]string) (*stagedInstall, error) {
+	t.Helper()
+	digest := sha256.Sum256(data)
+	return stageInstall(ctx, client, url, testTailscaleVersion, fmt.Sprintf("%x", digest[:]), targets)
+}
+
 func TestStageInstallAndPublishPair(t *testing.T) {
-	server := serveArchive(t, testArchive(t, []string{"tailscale", "tailscaled", "systemd/tailscaled.service"}))
+	data := testArchive(t, requiredTailscaleArchiveEntries())
+	server := serveArchive(t, data)
 	targets := testTargets(t)
-	stage, err := stageInstall(context.Background(), server.Client(), server.URL, targets)
+	stage, err := stageTestArchive(t, context.Background(), server.Client(), server.URL, data, targets)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,18 +146,34 @@ func TestStageInstallAndPublishPair(t *testing.T) {
 	}
 	for _, target := range targets {
 		info, err := os.Stat(target)
-		if err != nil || info.Mode()&0o111 == 0 {
+		if err != nil || !info.Mode().IsRegular() || info.Mode()&0o111 == 0 {
 			t.Fatalf("published executable %s: %v", target, err)
 		}
 	}
 }
 
 func TestStageRejectsBrokenArchivesAndCleansUp(t *testing.T) {
-	for _, entries := range [][]string{{"tailscale"}, {"tailscale", "tailscaled", "tailscale"}, {"../escape", "tailscale", "tailscaled"}} {
-		t.Run(entries[0], func(t *testing.T) {
-			server := serveArchive(t, testArchive(t, entries))
+	valid := requiredTailscaleArchiveEntries()
+	cases := []struct {
+		name          string
+		entries       []string
+		dataOverrides map[string][]byte
+		typeOverrides map[string]byte
+	}{
+		{name: "missing required files", entries: []string{"tailscale"}},
+		{name: "duplicate binary", entries: append(append([]string{}, valid...), "tailscale")},
+		{name: "path traversal", entries: append(append([]string{}, valid...), "../escape")},
+		{name: "unexpected payload", entries: append(append([]string{}, valid...), "README")},
+		{name: "symlink binary", entries: valid, typeOverrides: map[string]byte{"tailscale": tar.TypeSymlink}},
+		{name: "shared object instead of executable", entries: valid, dataOverrides: map[string][]byte{"tailscale": func() []byte { h := riscvELFHeader(); h[16] = 3; return h }()}},
+		{name: "wrong ELF architecture", entries: valid, dataOverrides: map[string][]byte{"tailscaled": func() []byte { h := riscvELFHeader(); h[18] = 62; return h }()}},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			data := testArchiveWithOverrides(t, test.entries, test.dataOverrides, test.typeOverrides)
+			server := serveArchive(t, data)
 			targets := testTargets(t)
-			if _, err := stageInstall(context.Background(), server.Client(), server.URL, targets); err == nil {
+			if _, err := stageTestArchive(t, context.Background(), server.Client(), server.URL, data, targets); err == nil {
 				t.Fatal("invalid archive accepted")
 			}
 			for _, target := range targets {
@@ -98,12 +186,83 @@ func TestStageRejectsBrokenArchivesAndCleansUp(t *testing.T) {
 	}
 }
 
+func TestStageRejectsDigestMismatchBeforePromotion(t *testing.T) {
+	data := testArchive(t, requiredTailscaleArchiveEntries())
+	server := serveArchive(t, data)
+	targets := testTargets(t)
+	if _, err := stageInstall(context.Background(), server.Client(), server.URL, testTailscaleVersion, strings.Repeat("0", 64), targets); err == nil || !strings.Contains(err.Error(), "SHA-256") {
+		t.Fatalf("digest mismatch = %v, want SHA-256 error", err)
+	}
+	for _, target := range targets {
+		entries, err := os.ReadDir(filepath.Dir(target))
+		if err != nil || len(entries) != 0 {
+			t.Fatalf("digest mismatch left files: %v, %v", entries, err)
+		}
+	}
+}
+
+func TestPinnedInstallMetadataValidation(t *testing.T) {
+	const digest = "06989538da8f4cb773a43a039e3477caf5c028ba66ff7eaa9809eef37e06654d"
+	if version, gotDigest, err := validatePinnedInstallMetadata("1.102.3", digest); err != nil || version != "1.102.3" || gotDigest != digest {
+		t.Fatalf("valid metadata = (%q, %q, %v)", version, gotDigest, err)
+	}
+	for _, test := range []struct {
+		version string
+		digest  string
+	}{
+		{version: "latest", digest: digest},
+		{version: "1.102.3", digest: strings.ToUpper(digest)},
+		{version: "1.102.3", digest: "not-a-digest"},
+	} {
+		if _, _, err := validatePinnedInstallMetadata(test.version, test.digest); err == nil {
+			t.Fatalf("invalid metadata accepted: version=%q digest=%q", test.version, test.digest)
+		}
+	}
+}
+
+func TestPinnedInstallMetadataReadsFirmwareFiles(t *testing.T) {
+	const version = "1.102.3"
+	const digest = "06989538da8f4cb773a43a039e3477caf5c028ba66ff7eaa9809eef37e06654d"
+	directory := t.TempDir()
+	versionPath := filepath.Join(directory, "VERSION")
+	digestPath := filepath.Join(directory, "SHA256")
+	if err := os.WriteFile(versionPath, []byte(version+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(digestPath, []byte(digest+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	gotVersion, gotDigest, err := pinnedInstallMetadata(versionPath, digestPath)
+	if err != nil || gotVersion != version || gotDigest != digest {
+		t.Fatalf("pinnedInstallMetadata = (%q, %q, %v)", gotVersion, gotDigest, err)
+	}
+	if gotURL := fmt.Sprintf(ReleaseDownloadURL, gotVersion); gotURL != "https://pkgs.tailscale.com/stable/tailscale_1.102.3_riscv64.tgz" {
+		t.Fatalf("pinned URL = %q", gotURL)
+	}
+}
+
+func TestVerifyArchiveDigest(t *testing.T) {
+	archive := filepath.Join(t.TempDir(), "asset.tgz")
+	contents := []byte("trusted Tailscale release asset")
+	if err := os.WriteFile(archive, contents, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(contents)
+	if err := verifyArchiveDigest(archive, fmt.Sprintf("%x", digest[:])); err != nil {
+		t.Fatalf("verifyArchiveDigest: %v", err)
+	}
+	if err := verifyArchiveDigest(archive, strings.Repeat("0", 64)); err == nil {
+		t.Fatal("verifyArchiveDigest accepted a mismatched digest")
+	}
+}
+
 func TestPublishCollisionRollsBackOnlyOwnFiles(t *testing.T) {
+	data := testArchive(t, requiredTailscaleArchiveEntries())
+	server := serveArchive(t, data)
 	for _, collision := range []int{0, 1} {
 		t.Run(string(rune('0'+collision)), func(t *testing.T) {
-			server := serveArchive(t, testArchive(t, []string{"tailscale", "tailscaled"}))
 			targets := testTargets(t)
-			stage, err := stageInstall(context.Background(), server.Client(), server.URL, targets)
+			stage, err := stageTestArchive(t, context.Background(), server.Client(), server.URL, data, targets)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -151,7 +310,10 @@ func TestPendingDownloadLeavesLifecycleAvailableAndCancels(t *testing.T) {
 			defer finish()
 			targets := testTargets(t)
 			result := make(chan error, 1)
-			go func() { _, err := stageInstall(ctx, server.Client(), server.URL, targets); result <- err }()
+			go func() {
+				_, err := stageInstall(ctx, server.Client(), server.URL, testTailscaleVersion, strings.Repeat("0", 64), targets)
+				result <- err
+			}()
 			select {
 			case <-entered:
 			case <-time.After(time.Second):
@@ -185,9 +347,10 @@ func TestPendingDownloadLeavesLifecycleAvailableAndCancels(t *testing.T) {
 }
 
 func TestRollbackDoesNotRemoveAReplacedDestination(t *testing.T) {
-	server := serveArchive(t, testArchive(t, []string{"tailscale", "tailscaled"}))
+	data := testArchive(t, requiredTailscaleArchiveEntries())
+	server := serveArchive(t, data)
 	targets := testTargets(t)
-	stage, err := stageInstall(context.Background(), server.Client(), server.URL, targets)
+	stage, err := stageTestArchive(t, context.Background(), server.Client(), server.URL, data, targets)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,7 +371,7 @@ func TestRollbackDoesNotRemoveAReplacedDestination(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "cannot safely roll back") {
 		t.Fatalf("rollback uncertainty not reported: %v", err)
 	}
-	data, err := os.ReadFile(targets[0])
+	data, err = os.ReadFile(targets[0])
 	if err != nil || string(data) != "replacement" {
 		t.Fatalf("replacement was removed: %s, %v", data, err)
 	}
@@ -218,16 +381,16 @@ func TestDownloadHasFiniteClientTimeout(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { <-r.Context().Done() }))
 	defer server.Close()
 	client := &http.Client{Timeout: 25 * time.Millisecond}
-	if _, err := stageInstall(context.Background(), client, server.URL, testTargets(t)); err == nil {
+	if _, err := stageInstall(context.Background(), client, server.URL, testTailscaleVersion, strings.Repeat("0", 64), testTargets(t)); err == nil {
 		t.Fatal("stalled request succeeded")
 	}
 }
 
 func TestCorruptGzipTrailerIsRejected(t *testing.T) {
-	data := testArchive(t, []string{"tailscale", "tailscaled"})
+	data := testArchive(t, requiredTailscaleArchiveEntries())
 	data[len(data)-8] ^= 0xff
 	server := serveArchive(t, data)
-	if _, err := stageInstall(context.Background(), server.Client(), server.URL, testTargets(t)); err == nil || err == io.EOF {
+	if _, err := stageTestArchive(t, context.Background(), server.Client(), server.URL, data, testTargets(t)); err == nil || err == io.EOF {
 		t.Fatalf("corrupt archive accepted: %v", err)
 	}
 }
