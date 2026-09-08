@@ -86,10 +86,29 @@ func promoteIfNeeded(stage *StagedInstall) error {
 		return nil
 	}
 	defer func() { _ = stage.Cleanup() }()
-	if err := stage.Promote(); err != nil {
-		return err
+
+	// A daemon can survive after its executable was removed (its /proc/exe
+	// target then has the " (deleted)" suffix). Linking a newly staged binary in
+	// that state would make the version marker attest to the new inode while the
+	// old daemon continues to serve requests. Do the observation immediately
+	// before publication, while the caller holds vpnpref's lifecycle lock. An
+	// observation failure is equally unsafe: it is not evidence that no daemon
+	// exists.
+	return promoteAfterDaemonCheck(NewCli().ServiceRunning, stage.Promote)
+}
+
+// promoteAfterDaemonCheck keeps the safety decision independently testable.
+// Callers must hold the VPN lifecycle lock for the whole check-and-promote
+// sequence, so API lifecycle operations cannot start a daemon between them.
+func promoteAfterDaemonCheck(serviceRunning func() (bool, error), promote func() error) error {
+	running, err := serviceRunning()
+	if err != nil {
+		return fmt.Errorf("inspect netbird daemon before install: %w", err)
 	}
-	return nil
+	if running {
+		return fmt.Errorf("netbird daemon is running; refusing to publish a replacement binary")
+	}
+	return promote()
 }
 
 func (s *Service) Install(c *gin.Context) {
