@@ -3,6 +3,7 @@ package tailscale
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"syscall"
 	"testing"
 )
@@ -60,5 +61,32 @@ func TestProcessInspectionGoneOnlyAcceptsVanishedProcess(t *testing.T) {
 				t.Fatalf("processInspectionGone(%v) = %t, want %t", test.err, got, test.want)
 			}
 		})
+	}
+}
+
+func TestCanResumeRequiresAllExecutableBinaries(t *testing.T) {
+	dir := t.TempDir()
+	tailscalePath := filepath.Join(dir, "tailscale")
+	tailscaledPath := filepath.Join(dir, "tailscaled")
+	scriptPath := filepath.Join(dir, "S98tailscaled")
+	for _, path := range []string{tailscalePath, tailscaledPath, scriptPath} {
+		if err := os.WriteFile(path, []byte("test"), 0o755); err != nil {
+			t.Fatalf("write %s: %v", path, err)
+		}
+	}
+
+	if err := canResume(tailscalePath, tailscaledPath, scriptPath); err != nil {
+		t.Fatalf("canResume() with usable artifacts: %v", err)
+	}
+	for _, path := range []string{tailscalePath, tailscaledPath, scriptPath} {
+		if err := os.Chmod(path, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := canResume(tailscalePath, tailscaledPath, scriptPath); err == nil {
+			t.Fatalf("canResume() accepted non-executable prerequisite %s", path)
+		}
+		if err := os.Chmod(path, 0o755); err != nil {
+			t.Fatal(err)
+		}
 	}
 }

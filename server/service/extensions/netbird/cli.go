@@ -75,6 +75,12 @@ func (c *Cli) Start() error {
 }
 
 func (c *Cli) Restart() error {
+	// A restart script stops the live daemon before it starts a replacement.
+	// Check every static start prerequisite first, so a damaged installation
+	// cannot turn a recoverable connection into an outage.
+	if err := c.CanRestart(); err != nil {
+		return err
+	}
 	if err := cancelLogin(); err != nil {
 		return fmt.Errorf("cancel active netbird login: %w", err)
 	}
@@ -92,11 +98,38 @@ func (c *Cli) CanResume() error {
 	// Resume is a start path used only for preference-write rollback. It must
 	// obey the same firmware pin as explicit Start/Restart rather than reviving
 	// a binary the current firmware no longer attests.
-	if !isUpToDate() {
+	return canResume(NetbirdPath, ScriptPath, getPinnedVersion(), getInstalledVersion())
+}
+
+// CanRestart verifies the pieces Restart needs before its init script can
+// stop a live daemon. The backup script is copied atomically by Restart, so it
+// need only be a regular file; the binary itself must already be executable.
+func (c *Cli) CanRestart() error {
+	return canRestart(NetbirdPath, ScriptBackupPath, getPinnedVersion(), getInstalledVersion())
+}
+
+func canResume(binaryPath, scriptPath, pinnedVersion, installedVersion string) error {
+	if !isExecutable(binaryPath) {
+		return fmt.Errorf("no usable netbird binary at %s", binaryPath)
+	}
+	if !versionsMatch(pinnedVersion, installedVersion) {
 		return fmt.Errorf("installed netbird version does not match firmware pin")
 	}
-	if !isExecutable(ScriptPath) {
-		return fmt.Errorf("no usable init script at %s", ScriptPath)
+	if !isExecutable(scriptPath) {
+		return fmt.Errorf("no usable init script at %s", scriptPath)
+	}
+	return nil
+}
+
+func canRestart(binaryPath, backupScriptPath, pinnedVersion, installedVersion string) error {
+	if !isExecutable(binaryPath) {
+		return fmt.Errorf("no usable netbird binary at %s", binaryPath)
+	}
+	if !versionsMatch(pinnedVersion, installedVersion) {
+		return fmt.Errorf("installed netbird version does not match firmware pin")
+	}
+	if !isRegularFile(backupScriptPath) {
+		return fmt.Errorf("no usable recovery init script at %s", backupScriptPath)
 	}
 	return nil
 }

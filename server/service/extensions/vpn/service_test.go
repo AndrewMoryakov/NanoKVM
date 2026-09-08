@@ -6,6 +6,8 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -59,6 +61,30 @@ func TestBootableNetbirdUsesPinAwareEligibility(t *testing.T) {
 	netbirdCanStartAtBoot = func() bool { return true }
 	if !bootable(vpnpref.Netbird) {
 		t.Fatal("bootable(netbird) ignored a NetBird client accepted by its eligibility check")
+	}
+}
+
+func TestTailscaleBootableRequiresRegularExecutables(t *testing.T) {
+	dir := t.TempDir()
+	tailscaledPath := filepath.Join(dir, "tailscaled")
+	tailscalePath := filepath.Join(dir, "tailscale")
+	scriptPath := filepath.Join(dir, "S98tailscaled")
+	for _, path := range []string{tailscaledPath, tailscalePath, scriptPath} {
+		if err := os.WriteFile(path, []byte("test"), 0o755); err != nil {
+			t.Fatalf("write %s: %v", path, err)
+		}
+	}
+	if !tailscaleBootable(tailscaledPath, tailscalePath, scriptPath) {
+		t.Fatal("tailscaleBootable() rejected regular executable artifacts")
+	}
+	if err := os.Remove(tailscalePath); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(tailscalePath, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if tailscaleBootable(tailscaledPath, tailscalePath, scriptPath) {
+		t.Fatal("tailscaleBootable() accepted an executable directory")
 	}
 }
 

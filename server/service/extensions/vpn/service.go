@@ -191,11 +191,7 @@ func canResume(vpn string) error {
 	if vpn == vpnpref.Netbird {
 		return netbird.NewCli().CanResume()
 	}
-	info, err := os.Stat(tailscale.ScriptPath)
-	if err != nil || !info.Mode().IsRegular() || info.Mode()&0o111 == 0 {
-		return fmt.Errorf("no usable init script at %s", tailscale.ScriptPath)
-	}
-	return nil
+	return tailscale.NewCli().CanResume()
 }
 
 // running reports whether the client's daemon is up. A client that is not
@@ -233,18 +229,21 @@ func bootable(vpn string) bool {
 	if vpn == vpnpref.Netbird {
 		return netbirdCanStartAtBoot()
 	}
+	return tailscaleBootable(tailscale.TailscaledPath, tailscale.TailscalePath, tailscale.ScriptPath)
+}
 
-	info, err := os.Stat(tailscale.TailscaledPath)
-	if err != nil || info.Mode()&0o111 == 0 {
+func tailscaleBootable(tailscaledPath, tailscalePath, scriptPath string) bool {
+	info, err := os.Stat(tailscaledPath)
+	if err != nil || !info.Mode().IsRegular() || info.Mode()&0o111 == 0 {
 		return false
 	}
-	info, err = os.Stat(tailscale.TailscalePath)
-	if err != nil || info.Mode()&0o111 == 0 {
+	info, err = os.Stat(tailscalePath)
+	if err != nil || !info.Mode().IsRegular() || info.Mode()&0o111 == 0 {
 		return false
 	}
 
-	info, err = os.Stat(tailscale.ScriptPath)
-	return err == nil && info.Mode()&0o111 != 0
+	info, err = os.Stat(scriptPath)
+	return err == nil && info.Mode().IsRegular() && info.Mode()&0o111 != 0
 }
 
 // connected reports whether the client actually carries a tunnel right now —

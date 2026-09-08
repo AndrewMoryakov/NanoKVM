@@ -70,10 +70,8 @@ func NewCli() *Cli {
 }
 
 func (c *Cli) Start() error {
-	for _, filePath := range []string{TailscalePath, TailscaledPath} {
-		if err := utils.EnsurePermission(filePath, 0o100); err != nil {
-			return err
-		}
+	if err := c.prepareStart(); err != nil {
+		return err
 	}
 
 	if err := installInitScript(); err != nil {
@@ -83,6 +81,12 @@ func (c *Cli) Start() error {
 }
 
 func (c *Cli) Restart() error {
+	// The init script's restart action stops tailscaled before launching it
+	// again. Establish that its binaries and recovery script are usable before
+	// invoking that destructive action.
+	if err := c.prepareStart(); err != nil {
+		return err
+	}
 	if err := cancelLogin(); err != nil {
 		return fmt.Errorf("cancel active tailscale login: %w", err)
 	}
@@ -90,6 +94,45 @@ func (c *Cli) Restart() error {
 		return err
 	}
 	return runProgram(ScriptTimeout, ScriptPath, "restart")
+}
+
+// CanResume checks the immutable prerequisites of the rollback start path.
+// Unlike Start/Restart, Resume intentionally does not chmod or replace files:
+// a failed preference write must not silently alter boot configuration.
+func (c *Cli) CanResume() error {
+	return canResume(TailscalePath, TailscaledPath, ScriptPath)
+}
+
+func canResume(tailscalePath, tailscaledPath, scriptPath string) error {
+	for _, path := range []string{tailscalePath, tailscaledPath, scriptPath} {
+		if !isExecutable(path) {
+			return fmt.Errorf("no usable executable at %s", path)
+		}
+	}
+	return nil
+}
+
+// prepareStart verifies regular executable artifacts before a restart can stop
+// the live daemon. Start retains its historical recovery behavior of restoring
+// the owner execute bit, but never applies that bit to a directory or another
+// non-regular filesystem object.
+func (c *Cli) prepareStart() error {
+	for _, filePath := range []string{TailscalePath, TailscaledPath} {
+		info, err := os.Stat(filePath)
+		if err != nil {
+			return fmt.Errorf("inspect tailscale executable %s: %w", filePath, err)
+		}
+		if !info.Mode().IsRegular() {
+			return fmt.Errorf("tailscale executable %s is not a regular file", filePath)
+		}
+		if err := utils.EnsurePermission(filePath, 0o100); err != nil {
+			return fmt.Errorf("make tailscale executable %s: %w", filePath, err)
+		}
+	}
+	if !isRegularFile(ScriptBackupPath) {
+		return fmt.Errorf("no usable recovery init script at %s", ScriptBackupPath)
+	}
+	return nil
 }
 
 // Resume starts the client from the init script already on disk. It is used by
@@ -285,6 +328,11 @@ func stopScript(processName, executable string) (string, error) {
 func isExecutable(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && info.Mode().IsRegular() && info.Mode()&0o111 != 0
+}
+
+func isRegularFile(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.Mode().IsRegular()
 }
 
 // daemonPresentForService is a narrow seam for the daemon-identity probe.  It

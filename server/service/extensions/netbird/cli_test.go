@@ -2,9 +2,17 @@ package netbird
 
 import (
 	"os"
+	"path/filepath"
 	"syscall"
 	"testing"
 )
+
+func writeExecutable(t *testing.T, path string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte("test"), 0o755); err != nil {
+		t.Fatalf("write %s: %v", path, err)
+	}
+}
 
 func TestParseStatusAcceptsOnlyJSONObservation(t *testing.T) {
 	status, err := parseStatus("warning\n{\"fqdn\":\"nano\",\"management\":{\"connected\":true},\"signal\":{\"connected\":true}}")
@@ -56,5 +64,41 @@ func TestProcessInspectionGoneOnlyAcceptsVanishedProcess(t *testing.T) {
 				t.Fatalf("processInspectionGone(%v) = %t, want %t", test.err, got, test.want)
 			}
 		})
+	}
+}
+
+func TestCanResumeRequiresExecutableBinary(t *testing.T) {
+	dir := t.TempDir()
+	binaryPath := filepath.Join(dir, "netbird")
+	scriptPath := filepath.Join(dir, "S99netbird")
+	writeExecutable(t, binaryPath)
+	writeExecutable(t, scriptPath)
+
+	if err := canResume(binaryPath, scriptPath, "1.2.3", "1.2.3"); err != nil {
+		t.Fatalf("canResume() with usable artifacts: %v", err)
+	}
+	if err := os.Chmod(binaryPath, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := canResume(binaryPath, scriptPath, "1.2.3", "1.2.3"); err == nil {
+		t.Fatal("canResume() accepted a non-executable NetBird binary")
+	}
+}
+
+func TestCanRestartRejectsMissingPrerequisiteBeforeRestart(t *testing.T) {
+	dir := t.TempDir()
+	binaryPath := filepath.Join(dir, "netbird")
+	backupPath := filepath.Join(dir, "S99netbird")
+	writeExecutable(t, binaryPath)
+	writeExecutable(t, backupPath)
+
+	if err := canRestart(binaryPath, backupPath, "1.2.3", "1.2.3"); err != nil {
+		t.Fatalf("canRestart() with usable artifacts: %v", err)
+	}
+	if err := os.Remove(binaryPath); err != nil {
+		t.Fatal(err)
+	}
+	if err := canRestart(binaryPath, backupPath, "1.2.3", "1.2.3"); err == nil {
+		t.Fatal("canRestart() accepted a missing binary")
 	}
 }
