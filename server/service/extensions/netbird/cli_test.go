@@ -3,6 +3,7 @@ package netbird
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
 )
@@ -119,5 +120,53 @@ func TestCanResumeAndRestartAcceptSymlinkToExecutableBinary(t *testing.T) {
 	}
 	if err := canRestart(binaryPath, scriptPath, "1.2.3", "1.2.3"); err != nil {
 		t.Fatalf("canRestart() rejected a symlink to an executable NetBird binary: %v", err)
+	}
+}
+
+func TestCanonicalDaemonPathRetainsSymlinkTargetAfterDeletion(t *testing.T) {
+	dir := t.TempDir()
+	physicalDir := filepath.Join(dir, "physical")
+	if err := os.Mkdir(physicalDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	real := filepath.Join(physicalDir, "netbird.real")
+	writeExecutable(t, real)
+	linkDir := filepath.Join(dir, "bin")
+	if err := os.Symlink(physicalDir, linkDir); err != nil {
+		t.Fatal(err)
+	}
+	alias := filepath.Join(dir, "netbird")
+	if err := os.Symlink("bin/netbird.real", alias); err != nil {
+		t.Fatal(err)
+	}
+	chainedAlias := filepath.Join(dir, "netbird-chain")
+	if err := os.Symlink("netbird", chainedAlias); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, path := range []string{real, alias, chainedAlias} {
+		got, err := canonicalDaemonPath(path)
+		if err != nil || got != real {
+			t.Fatalf("canonicalDaemonPath(%q) = (%q, %v), want (%q, nil)", path, got, err, real)
+		}
+	}
+	if err := os.Remove(real); err != nil {
+		t.Fatal(err)
+	}
+	got, err := canonicalDaemonPath(chainedAlias)
+	if err != nil || got != real {
+		t.Fatalf("canonicalDaemonPath(deleted symlink target) = (%q, %v), want (%q, nil)", got, err, real)
+	}
+	if !daemonTargetMatches(real+" (deleted)", got) || daemonTargetMatches(filepath.Join(dir, "other"), got) {
+		t.Fatal("daemon target matching did not distinguish the canonical deleted executable")
+	}
+}
+
+func TestDaemonProcessNamesIncludesAliasAndCanonicalTarget(t *testing.T) {
+	if got := strings.Join(daemonProcessNames("/usr/bin/netbird", "/usr/bin/netbird.real"), " "); got != "netbird netbird.real" {
+		t.Fatalf("daemonProcessNames() = %q, want both launch names", got)
+	}
+	if got := strings.Join(daemonProcessNames("/usr/bin/netbird", "/usr/bin/netbird"), " "); got != "netbird" {
+		t.Fatalf("daemonProcessNames() = %q, want one deduplicated name", got)
 	}
 }

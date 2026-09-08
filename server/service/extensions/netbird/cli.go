@@ -23,6 +23,7 @@ const (
 	PidFile          = "/var/run/netbird.pid"
 
 	CommandTimeout   = 45 * time.Second
+	CommandWaitDelay = 5 * time.Second
 	LoginURLTimeout  = 60 * time.Second
 	LoginStopTimeout = 5 * time.Second
 )
@@ -345,7 +346,11 @@ func isExecutable(path string) bool {
 // unrelated processes named netbird. The deleted-executable spelling is still
 // a live daemon and must block unsafe uninstall/switch operations.
 func daemonPresent() (bool, error) {
-	output, err := exec.Command("pidof", "netbird").Output()
+	executable, err := canonicalDaemonPath(NetbirdPath)
+	if err != nil {
+		return false, fmt.Errorf("resolve netbird executable: %w", err)
+	}
+	output, err := exec.Command("pidof", daemonProcessNames(NetbirdPath, executable)...).Output()
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
@@ -361,7 +366,7 @@ func daemonPresent() (bool, error) {
 			}
 			return false, fmt.Errorf("inspect netbird process %s executable: %w", pid, err)
 		}
-		if target == NetbirdPath || target == NetbirdPath+" (deleted)" {
+		if daemonTargetMatches(target, executable) {
 			running, err := isNetbirdDaemonPID(pid)
 			if err != nil {
 				return false, err
@@ -406,18 +411,98 @@ func runProgram(timeout time.Duration, name string, args ...string) error {
 	return err
 }
 
-// Commands are invoked directly, never through `sh -c`. CommandContext then
-// owns the actual CLI process; on deadline it cannot leave a shell child
-// holding output pipes open and extend the request far beyond its timeout.
+// Commands are invoked directly, never through `sh -c`, in their own process
+// group. An init script can fork a daemon which inherits stdout/stderr. Killing
+// only the script makes Cmd.Wait wait indefinitely for that descendant to close
+// the inherited pipes, while the caller still holds the VPN lifecycle lock.
+// The Linux cancellation hook kills the complete group; WaitDelay also bounds
+// pipe cleanup if a descendant deliberately escapes that group.
 func runProgramOutput(timeout time.Duration, name string, args ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	output, err := exec.CommandContext(ctx, name, args...).CombinedOutput()
+	cmd := exec.CommandContext(ctx, name, args...)
+	configureProgramCommand(cmd)
+	cmd.WaitDelay = CommandWaitDelay
+	output, err := cmd.CombinedOutput()
 	text := strings.TrimSpace(string(output))
 	if ctx.Err() == context.DeadlineExceeded {
 		return text, fmt.Errorf("%s timed out after %s: %w", name, timeout, context.DeadlineExceeded)
 	}
+	return commandResult(string(output), err)
+}
+
+const maxDaemonSymlinkHops = 40
+
+// canonicalDaemonPath resolves a configured executable alias into the pathname
+// the kernel reports through /proc/<pid>/exe. It intentionally permits a
+// missing final leaf: a daemon may still be running from an unlinked inode and
+// /proc then appends " (deleted)". filepath.EvalSymlinks alone cannot express
+// that safe stop/uninstall case for a symlink whose target was removed.
+func canonicalDaemonPath(executable string) (string, error) {
+	path, err := filepath.Abs(executable)
+	if err != nil {
+		return "", err
+	}
+	path = filepath.Clean(path)
+	for hop := 0; ; hop++ {
+		info, err := os.Lstat(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return canonicalDaemonParent(path)
+			}
+			return "", err
+		}
+		if info.Mode()&os.ModeSymlink == 0 {
+			if resolved, err := filepath.EvalSymlinks(path); err == nil {
+				return resolved, nil
+			}
+			return canonicalDaemonParent(path)
+		}
+		if hop >= maxDaemonSymlinkHops {
+			return "", fmt.Errorf("too many symbolic links resolving %s", executable)
+		}
+		target, err := os.Readlink(path)
+		if err != nil {
+			return "", err
+		}
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(path), target)
+		}
+		path = filepath.Clean(target)
+	}
+}
+
+// canonicalDaemonParent resolves all existing directory components while
+// retaining the final component verbatim when it has been unlinked.
+func canonicalDaemonParent(path string) (string, error) {
+	parent, err := filepath.EvalSymlinks(filepath.Dir(path))
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(parent, filepath.Base(path)), nil
+}
+
+func daemonTargetMatches(target, executable string) bool {
+	return target == executable || target == executable+" (deleted)"
+}
+
+// daemonProcessNames covers both ways a daemon can have been started. Linux
+// preserves the invoked alias in the process name used by pidof, while
+// /proc/<pid>/exe resolves that alias to the canonical target. Including the
+// target basename also finds a daemon launched directly from that target. The
+// latter check remains mandatory before treating either candidate as NetBird.
+func daemonProcessNames(alias, executable string) []string {
+	aliasName := filepath.Base(alias)
+	targetName := filepath.Base(executable)
+	if aliasName == targetName {
+		return []string{aliasName}
+	}
+	return []string{aliasName, targetName}
+}
+
+func commandResult(output string, err error) (string, error) {
+	text := strings.TrimSpace(output)
 	if err != nil {
 		if text == "" {
 			return text, err

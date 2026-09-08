@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
 )
@@ -108,5 +109,55 @@ func TestCanResumeAcceptsSymlinkToExecutablePrerequisite(t *testing.T) {
 
 	if err := canResume(tailscalePath, tailscaledPath, scriptPath); err != nil {
 		t.Fatalf("canResume() rejected a symlink to an executable Tailscale binary: %v", err)
+	}
+}
+
+func TestCanonicalDaemonPathRetainsSymlinkTargetAfterDeletion(t *testing.T) {
+	dir := t.TempDir()
+	physicalDir := filepath.Join(dir, "physical")
+	if err := os.Mkdir(physicalDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	real := filepath.Join(physicalDir, "tailscaled.real")
+	if err := os.WriteFile(real, []byte("test"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	linkDir := filepath.Join(dir, "sbin")
+	if err := os.Symlink(physicalDir, linkDir); err != nil {
+		t.Fatal(err)
+	}
+	alias := filepath.Join(dir, "tailscaled")
+	if err := os.Symlink("sbin/tailscaled.real", alias); err != nil {
+		t.Fatal(err)
+	}
+	chainedAlias := filepath.Join(dir, "tailscaled-chain")
+	if err := os.Symlink("tailscaled", chainedAlias); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, path := range []string{real, alias, chainedAlias} {
+		got, err := canonicalDaemonPath(path)
+		if err != nil || got != real {
+			t.Fatalf("canonicalDaemonPath(%q) = (%q, %v), want (%q, nil)", path, got, err, real)
+		}
+	}
+	if err := os.Remove(real); err != nil {
+		t.Fatal(err)
+	}
+	got, err := canonicalDaemonPath(chainedAlias)
+	if err != nil || got != real {
+		t.Fatalf("canonicalDaemonPath(deleted symlink target) = (%q, %v), want (%q, nil)", got, err, real)
+	}
+	if !daemonTargetMatches(real+" (deleted)", got) || daemonTargetMatches(filepath.Join(dir, "other"), got) {
+		t.Fatal("daemon target matching did not distinguish the canonical deleted executable")
+	}
+}
+
+func TestDaemonProcessNamesIncludesAliasAndCanonicalTarget(t *testing.T) {
+	if got := strings.Join(daemonProcessNames("/usr/sbin/tailscaled", "/usr/sbin/tailscaled.real"), " "); got != "tailscaled tailscaled.real" {
+		t.Fatalf("daemonProcessNames() = %q, want both launch names", got)
+	}
+	if got := strings.Join(daemonProcessNames("/usr/sbin/tailscaled", "/usr/sbin/tailscaled"), " "); got != "tailscaled" {
+		t.Fatalf("daemonProcessNames() = %q, want one deduplicated name", got)
 	}
 }

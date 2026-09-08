@@ -30,6 +30,7 @@ const (
 	DownTimeout      = 45 * time.Second
 	StatusTimeout    = 10 * time.Second
 	ScriptTimeout    = 45 * time.Second
+	CommandWaitDelay = 5 * time.Second
 	LoginURLTimeout  = 60 * time.Second
 	LoginStopTimeout = 5 * time.Second
 )
@@ -355,7 +356,11 @@ func (c *Cli) ServiceRunning() (bool, error) {
 // pid file or a process with the same name. A removed executable remains
 // visible as "<path> (deleted)", which still has to block unsafe removal.
 func daemonPresent(name, executable string) (bool, error) {
-	output, err := exec.Command("pidof", name).Output()
+	canonicalExecutable, err := canonicalDaemonPath(executable)
+	if err != nil {
+		return false, fmt.Errorf("resolve %s executable: %w", name, err)
+	}
+	output, err := exec.Command("pidof", daemonProcessNames(executable, canonicalExecutable)...).Output()
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
@@ -371,7 +376,7 @@ func daemonPresent(name, executable string) (bool, error) {
 			}
 			return false, fmt.Errorf("inspect %s process %s executable: %w", name, pid, err)
 		}
-		if target == executable || target == executable+" (deleted)" {
+		if daemonTargetMatches(target, canonicalExecutable) {
 			return true, nil
 		}
 	}
@@ -395,11 +400,83 @@ func runProgramOutput(timeout time.Duration, name string, args ...string) (strin
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	output, err := exec.CommandContext(ctx, name, args...).CombinedOutput()
+	cmd := exec.CommandContext(ctx, name, args...)
+	configureProgramCommand(cmd)
+	cmd.WaitDelay = CommandWaitDelay
+	output, err := cmd.CombinedOutput()
 	text := strings.TrimSpace(string(output))
 	if ctx.Err() == context.DeadlineExceeded {
 		return text, fmt.Errorf("%s timed out after %s: %w", name, timeout, context.DeadlineExceeded)
 	}
+	return commandResult(string(output), err)
+}
+
+const maxDaemonSymlinkHops = 40
+
+// canonicalDaemonPath resolves a configured executable alias into the pathname
+// reported by /proc/<pid>/exe. A missing final leaf is preserved because a live
+// daemon can keep an unlinked executable mapped and /proc marks it " (deleted)".
+func canonicalDaemonPath(executable string) (string, error) {
+	path, err := filepath.Abs(executable)
+	if err != nil {
+		return "", err
+	}
+	path = filepath.Clean(path)
+	for hop := 0; ; hop++ {
+		info, err := os.Lstat(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return canonicalDaemonParent(path)
+			}
+			return "", err
+		}
+		if info.Mode()&os.ModeSymlink == 0 {
+			if resolved, err := filepath.EvalSymlinks(path); err == nil {
+				return resolved, nil
+			}
+			return canonicalDaemonParent(path)
+		}
+		if hop >= maxDaemonSymlinkHops {
+			return "", fmt.Errorf("too many symbolic links resolving %s", executable)
+		}
+		target, err := os.Readlink(path)
+		if err != nil {
+			return "", err
+		}
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(path), target)
+		}
+		path = filepath.Clean(target)
+	}
+}
+
+func canonicalDaemonParent(path string) (string, error) {
+	parent, err := filepath.EvalSymlinks(filepath.Dir(path))
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(parent, filepath.Base(path)), nil
+}
+
+func daemonTargetMatches(target, executable string) bool {
+	return target == executable || target == executable+" (deleted)"
+}
+
+// daemonProcessNames accounts for Linux retaining the invoked symlink alias
+// as the process name pidof sees, while /proc/<pid>/exe resolves it to the
+// canonical executable. Searching both names also covers a daemon launched
+// directly from its target; /proc identity validation rejects lookalikes.
+func daemonProcessNames(alias, executable string) []string {
+	aliasName := filepath.Base(alias)
+	targetName := filepath.Base(executable)
+	if aliasName == targetName {
+		return []string{aliasName}
+	}
+	return []string{aliasName, targetName}
+}
+
+func commandResult(output string, err error) (string, error) {
+	text := strings.TrimSpace(output)
 	if err != nil {
 		if text == "" {
 			return text, err
