@@ -21,6 +21,11 @@ var tailscaleServiceRunning = func() (bool, error) {
 	return tailscale.NewCli().ServiceRunning()
 }
 
+// netbirdCanStartAtBoot is a package seam for the boot-selection policy. The
+// NetBird package owns the firmware-pin check because it owns its version
+// marker format and installation paths.
+var netbirdCanStartAtBoot = netbird.CanStartAtBoot
+
 func NewService() *Service {
 	return &Service{}
 }
@@ -187,13 +192,7 @@ func running(vpn string) bool {
 // start would leave the device with nothing.
 func bootable(vpn string) bool {
 	if vpn == vpnpref.Netbird {
-		info, err := os.Stat(netbird.NetbirdPath)
-		if err != nil || info.Mode()&0o111 == 0 {
-			return false
-		}
-
-		_, err = os.Stat(netbird.ScriptBackupPath)
-		return err == nil
+		return netbirdCanStartAtBoot()
 	}
 
 	info, err := os.Stat(tailscale.TailscaledPath)

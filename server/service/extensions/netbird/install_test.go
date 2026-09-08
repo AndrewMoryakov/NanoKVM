@@ -28,6 +28,62 @@ func TestVerifyArchiveDigest(t *testing.T) {
 	}
 }
 
+func TestVersionsMatchRequiresAValidPinnedVersion(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		pinned    string
+		installed string
+		want      bool
+	}{
+		{name: "matching release", pinned: "0.77.1", installed: "0.77.1", want: true},
+		{name: "different release", pinned: "0.77.1", installed: "0.77.2"},
+		{name: "missing marker", pinned: "", installed: ""},
+		{name: "matching corrupt markers", pinned: "not-a-version", installed: "not-a-version"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := versionsMatch(test.pinned, test.installed); got != test.want {
+				t.Fatalf("versionsMatch(%q, %q) = %t, want %t", test.pinned, test.installed, got, test.want)
+			}
+		})
+	}
+}
+
+func TestCanStartAtBootRequiresUsableFilesAndMatchingPin(t *testing.T) {
+	directory := t.TempDir()
+	binaryPath := filepath.Join(directory, "netbird")
+	scriptPath := filepath.Join(directory, "S99netbird")
+
+	if err := os.WriteFile(binaryPath, []byte("binary"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// S95 copies this source file and chmods its /etc/init.d copy, so the
+	// recovery script itself need not carry an execute bit.
+	if err := os.WriteFile(scriptPath, []byte("script"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		name      string
+		binary    string
+		script    string
+		pinned    string
+		installed string
+		want      bool
+	}{
+		{name: "eligible", binary: binaryPath, script: scriptPath, pinned: "0.77.1", installed: "0.77.1", want: true},
+		{name: "stale installed version", binary: binaryPath, script: scriptPath, pinned: "0.77.2", installed: "0.77.1"},
+		{name: "invalid matching pin", binary: binaryPath, script: scriptPath, pinned: "invalid", installed: "invalid"},
+		{name: "missing binary", binary: filepath.Join(directory, "missing"), script: scriptPath, pinned: "0.77.1", installed: "0.77.1"},
+		{name: "missing script", binary: binaryPath, script: filepath.Join(directory, "missing-script"), pinned: "0.77.1", installed: "0.77.1"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := canStartAtBoot(test.binary, test.script, test.pinned, test.installed); got != test.want {
+				t.Fatalf("canStartAtBoot() = %t, want %t", got, test.want)
+			}
+		})
+	}
+}
+
 type archiveEntry struct {
 	name     string
 	typeflag byte

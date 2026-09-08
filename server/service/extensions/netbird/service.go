@@ -224,6 +224,14 @@ func (s *Service) Restart(c *gin.Context) {
 	}
 	defer vpnpref.Unlock()
 	vpnpref.InvalidateStagedInstalls()
+	// Start and Install already fail closed when a firmware pin no longer
+	// matches the installed binary. Restart is also a start path: checking it
+	// before stopping the current daemon avoids reviving an old client and
+	// avoids needlessly dropping a recoverable connection.
+	if isInstalled() && !isUpToDate() {
+		rsp.ErrRsp(c, -3, "netbird update required; uninstall and install again to replace it safely")
+		return
+	}
 
 	if err := NewCli().Restart(); err != nil {
 		rsp.ErrRsp(c, -1, fmt.Sprintf("restart failed: %v", err))
@@ -265,6 +273,12 @@ func (s *Service) Login(c *gin.Context) {
 
 	cli := NewCli()
 	vpnpref.InvalidateStagedInstalls()
+	// Login executes `netbird up` and can create a tunnel. Do not let it become
+	// an unchecked start path for a binary which no longer matches this firmware.
+	if isInstalled() && !isUpToDate() {
+		rsp.ErrRsp(c, -3, "netbird update required; uninstall and install again to replace it safely")
+		return
+	}
 
 	url, err := cli.Login()
 	if err != nil {

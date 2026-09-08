@@ -25,3 +25,18 @@ func TestRunningTailscaleUsesDaemonProbeAndFailsClosed(t *testing.T) {
 		t.Fatal("running(tailscale) = false on uncertain daemon state; must fail closed")
 	}
 }
+
+func TestBootableNetbirdUsesPinAwareEligibility(t *testing.T) {
+	original := netbirdCanStartAtBoot
+	t.Cleanup(func() { netbirdCanStartAtBoot = original })
+
+	netbirdCanStartAtBoot = func() bool { return false }
+	if bootable(vpnpref.Netbird) {
+		t.Fatal("bootable(netbird) accepted a NetBird client rejected by its pin-aware eligibility check")
+	}
+
+	netbirdCanStartAtBoot = func() bool { return true }
+	if !bootable(vpnpref.Netbird) {
+		t.Fatal("bootable(netbird) ignored a NetBird client accepted by its eligibility check")
+	}
+}

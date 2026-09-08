@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -86,6 +87,12 @@ func (c *Cli) Restart() error {
 // Resume starts from the existing init script only. It is used to roll back a
 // failed preference write and intentionally does not copy a script first.
 func (c *Cli) Resume() error {
+	// Resume is a start path used only for preference-write rollback. It must
+	// obey the same firmware pin as explicit Start/Restart rather than reviving
+	// a binary the current firmware no longer attests.
+	if !isUpToDate() {
+		return fmt.Errorf("installed netbird version does not match firmware pin")
+	}
 	if !isExecutable(ScriptPath) {
 		return fmt.Errorf("no usable init script at %s", ScriptPath)
 	}
@@ -127,6 +134,11 @@ func (c *Cli) WaitForSocket(timeout time.Duration) error {
 }
 
 func (c *Cli) Login() (string, error) {
+	// `netbird up` can bring a tunnel up. Keep the check at the CLI boundary
+	// too, so callers cannot bypass Service.Login's lifecycle policy.
+	if !isUpToDate() {
+		return "", fmt.Errorf("installed netbird version does not match firmware pin")
+	}
 	if err := c.WaitForSocket(10 * time.Second); err != nil {
 		return "", err
 	}
@@ -300,10 +312,19 @@ func daemonPresent() (bool, error) {
 	for _, pid := range strings.Fields(string(output)) {
 		target, err := os.Readlink("/proc/" + pid + "/exe")
 		if err != nil {
-			continue // process exited between pidof and inspection
+			if processInspectionGone(err) {
+				continue // process exited between pidof and inspection
+			}
+			return false, fmt.Errorf("inspect netbird process %s executable: %w", pid, err)
 		}
-		if (target == NetbirdPath || target == NetbirdPath+" (deleted)") && isNetbirdDaemonPID(pid) {
-			return true, nil
+		if target == NetbirdPath || target == NetbirdPath+" (deleted)" {
+			running, err := isNetbirdDaemonPID(pid)
+			if err != nil {
+				return false, err
+			}
+			if running {
+				return true, nil
+			}
 		}
 	}
 	return false, nil
@@ -312,12 +333,23 @@ func daemonPresent() (bool, error) {
 // NetBird uses the same executable for daemon and client commands. Checking
 // /proc/exe alone would mistake a concurrent `netbird status` or `netbird up`
 // for the daemon; only `netbird service run` owns S99's process lifecycle.
-func isNetbirdDaemonPID(pid string) bool {
+func isNetbirdDaemonPID(pid string) (bool, error) {
 	cmdline, err := os.ReadFile("/proc/" + pid + "/cmdline")
 	if err != nil {
-		return false
+		if processInspectionGone(err) {
+			return false, nil // process exited after /proc/<pid>/exe was read
+		}
+		return false, fmt.Errorf("inspect netbird process %s command line: %w", pid, err)
 	}
-	return isNetbirdDaemonCommand(cmdline)
+	return isNetbirdDaemonCommand(cmdline), nil
+}
+
+// processInspectionGone is deliberately narrow: pidof can race a process exit,
+// but an unreadable /proc entry is not evidence that the daemon is absent.
+// Callers use this probe to decide whether it is safe to replace or stop VPN
+// state, so permission and I/O failures must be handled conservatively.
+func processInspectionGone(err error) bool {
+	return errors.Is(err, os.ErrNotExist) || errors.Is(err, syscall.ESRCH)
 }
 
 func isNetbirdDaemonCommand(cmdline []byte) bool {

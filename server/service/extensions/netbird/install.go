@@ -99,6 +99,28 @@ func isInstalled() bool {
 	return err == nil
 }
 
+// CanStartAtBoot reports whether the NetBird client is eligible for S95's
+// restore-and-start path. The executable and recovery init script must both be
+// usable, and the installed binary must match a valid version pin from the
+// current firmware. In particular, an old binary left behind by a firmware
+// update must not be selected as the boot VPN.
+func CanStartAtBoot() bool {
+	return canStartAtBoot(NetbirdPath, ScriptBackupPath, getPinnedVersion(), getInstalledVersion())
+}
+
+func canStartAtBoot(binaryPath, scriptPath, pinnedVersion, installedVersion string) bool {
+	return isExecutable(binaryPath) &&
+		isRegularFile(scriptPath) &&
+		versionsMatch(pinnedVersion, installedVersion)
+}
+
+// S95 copies the immutable recovery script to /etc/init.d and chmods that
+// copy, so the source script itself need only be a regular file.
+func isRegularFile(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.Mode().IsRegular()
+}
+
 // install is the compatibility path for an initial install. It never replaces
 // an existing executable; callers that need an update must StageInstall before
 // acquiring the VPN lifecycle lock, then stop/remove the old client and call
@@ -618,8 +640,13 @@ func downloadContext(ctx context.Context, target string) error {
 }
 
 func isUpToDate() bool {
-	pinned := getPinnedVersion()
-	return pinned != "" && pinned == getInstalledVersion()
+	return versionsMatch(getPinnedVersion(), getInstalledVersion())
+}
+
+// versionsMatch is deliberately stricter than a non-empty string comparison:
+// a corrupt marker must never certify a binary as eligible to start.
+func versionsMatch(pinned, installed string) bool {
+	return netbirdVersionRE.MatchString(pinned) && pinned == installed
 }
 
 func writeInstalledVersion(version string) error {

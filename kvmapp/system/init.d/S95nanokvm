@@ -88,6 +88,10 @@ start_services() {
 # Cli.Stop() does exactly that, and for Tailscale the UI says stopping disables
 # autostart. For NetBird the UI says the opposite: stopping is "stop now", and
 # the preference file stays the authority on what runs at boot.
+valid_netbird_version() {
+    printf '%s\n' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
+}
+
 select_vpn() {
     vpn_pref="tailscale"
     if [ -f /etc/kvm/vpn ]; then
@@ -96,7 +100,15 @@ select_vpn() {
 
     case "$vpn_pref" in
       netbird)
-        if [ -x /usr/bin/netbird ] && [ -f /kvmapp/system/init.d/S99netbird ]; then
+        # The version marker is written only after the validated binary is
+        # published. Do not restore S99 for a stale or uncommitted executable:
+        # a user can explicitly repair it through the UI, but boot must never
+        # silently revive it after a firmware update or interrupted install.
+        pinned_version=$(tr -d '[:space:]' < /kvmapp/system/netbird/VERSION 2>/dev/null)
+        installed_version=$(tr -d '[:space:]' < /etc/kvm/netbird.version 2>/dev/null)
+        if [ -x /usr/bin/netbird ] && valid_netbird_version "$pinned_version" && \
+           [ "$pinned_version" = "$installed_version" ] && \
+           [ -f /kvmapp/system/init.d/S99netbird ]; then
             rm -f /etc/init.d/S98tailscaled
             cp -f /kvmapp/system/init.d/S99netbird /etc/init.d/S99netbird
             chmod 755 /etc/init.d/S99netbird

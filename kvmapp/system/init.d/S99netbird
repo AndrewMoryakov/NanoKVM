@@ -5,7 +5,22 @@ DAEMON_PATH="/usr/bin/netbird"
 PIDFILE="/var/run/$DAEMON.pid"
 LOGDIR="/var/log/netbird"
 LOGFILE="$LOGDIR/netbird.log"
+PINNED_VERSION_FILE="/kvmapp/system/netbird/VERSION"
+INSTALLED_VERSION_FILE="/etc/kvm/netbird.version"
 
+# NetBird's marker is committed only after its validated binary is published.
+# Keep this guard in the init script as well as the Go handlers: direct rc
+# invocation must not bypass the firmware pin after an update or failed install.
+valid_version() {
+    printf '%s\n' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
+}
+
+version_current() {
+    [ -r "$PINNED_VERSION_FILE" ] && [ -r "$INSTALLED_VERSION_FILE" ] || return 1
+    pinned=$(tr -d '[:space:]' < "$PINNED_VERSION_FILE")
+    installed=$(tr -d '[:space:]' < "$INSTALLED_VERSION_FILE")
+    valid_version "$pinned" && [ "$pinned" = "$installed" ]
+}
 ensure_tun() {
     [ -d /dev/net ] || mkdir -p /dev/net
     if [ ! -c /dev/net/tun ]; then
@@ -24,9 +39,17 @@ is_daemon_pid() {
     case "$pid" in
         ''|*[!0-9]*) return 1 ;;
     esac
-    target=$(readlink "/proc/$pid/exe" 2>/dev/null) || return 1
+    target=$(readlink "/proc/$pid/exe" 2>/dev/null) || {
+        # A gone PID is safe to ignore, but a live /proc directory with an
+        # unreadable exe must fail closed rather than be reported as stopped.
+        [ -e "/proc/$pid" ] && return 2
+        return 1
+    }
     [ "$target" = "$DAEMON_PATH" ] || [ "$target" = "$DAEMON_PATH (deleted)" ] || return 1
-    cmdline=$(tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null) || return 1
+    cmdline=$(tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null) || {
+        [ -e "/proc/$pid" ] && return 2
+        return 1
+    }
     case " $cmdline " in
         *" service run "*) return 0 ;;
         *) return 1 ;;
@@ -35,46 +58,71 @@ is_daemon_pid() {
 
 daemon_pids() {
     for pid in $(pidof "$DAEMON" 2>/dev/null); do
-        is_daemon_pid "$pid" && printf '%s\n' "$pid"
+        is_daemon_pid "$pid"
+        case $? in
+            0) printf '%s\n' "$pid" ;;
+            1) ;;
+            *) return 2 ;;
+        esac
     done
+    return 0
 }
 
 daemon_running() {
-    [ -n "$(daemon_pids)" ]
+    pids=$(daemon_pids) || return 2
+    [ -n "$pids" ]
 }
 
 wait_for_start() {
     timeout="$1"
     elapsed=0
-    while ! daemon_running; do
+    while :; do
+        daemon_running
+        case $? in
+            0) return 0 ;;
+            2) return 2 ;;
+        esac
         [ "$elapsed" -ge "$timeout" ] && return 1
         sleep 1
         elapsed=$((elapsed + 1))
     done
-    return 0
 }
 
 wait_for_exit() {
     timeout="$1"
     elapsed=0
-    while daemon_running; do
+    while :; do
+        daemon_running
+        case $? in
+            1) return 0 ;;
+            2) return 2 ;;
+        esac
         [ "$elapsed" -ge "$timeout" ] && return 1
         sleep 1
         elapsed=$((elapsed + 1))
     done
-    return 0
 }
 
 signal_daemons() {
     signal="$1"
-    pids=$(daemon_pids)
+    pids=$(daemon_pids) || return 2
     [ -n "$pids" ] || return 0
 
     for pid in $pids; do
         # Re-check immediately before kill to reduce the PID-reuse race.
-        is_daemon_pid "$pid" || continue
+        is_daemon_pid "$pid"
+        case $? in
+            0) ;;
+            1) continue ;;
+            *) return 2 ;;
+        esac
         kill -"$signal" "$pid" 2>/dev/null || {
-            is_daemon_pid "$pid" && return 1
+            is_daemon_pid "$pid"
+            case $? in
+                0) return 1 ;;
+                1) ;;
+                *) return 2 ;;
+            esac
         }
     done
     return 0
@@ -82,20 +130,55 @@ signal_daemons() {
 
 stop_daemon() {
     printf "Stopping %s: " "$DAEMON"
-    if ! daemon_running; then
-        rm -f "$PIDFILE"
-        echo "not running"
-        return 0
-    fi
-
-    if ! signal_daemons TERM || ! wait_for_exit 10; then
-        signal_daemons KILL || true
-        if ! wait_for_exit 5; then
-            echo "FAIL"
+    daemon_running
+    case $? in
+        1)
+            rm -f "$PIDFILE"
+            echo "not running"
+            return 0
+            ;;
+        2)
+            echo "FAIL (cannot inspect daemon safely)"
             return 1
-        fi
+            ;;
+    esac
+
+    signal_daemons TERM
+    result=$?
+    [ "$result" -eq 2 ] && {
+        echo "FAIL (cannot inspect daemon safely)"
+        return 1
+    }
+    if [ "$result" -eq 0 ]; then
+        wait_for_exit 10
+        result=$?
+        [ "$result" -eq 0 ] && {
+            rm -f "$PIDFILE"
+            echo "OK"
+            return 0
+        }
+        [ "$result" -eq 2 ] && {
+            echo "FAIL (cannot inspect daemon safely)"
+            return 1
+        }
     fi
 
+    signal_daemons KILL
+    result=$?
+    [ "$result" -eq 2 ] && {
+        echo "FAIL (cannot inspect daemon safely)"
+        return 1
+    }
+    wait_for_exit 5
+    result=$?
+    [ "$result" -eq 2 ] && {
+        echo "FAIL (cannot inspect daemon safely)"
+        return 1
+    }
+    [ "$result" -eq 0 ] || {
+        echo "FAIL"
+        return 1
+    }
     rm -f "$PIDFILE"
     echo "OK"
     return 0
@@ -107,10 +190,21 @@ case "$1" in
             echo "$DAEMON_PATH not found"
             exit 1
         }
-        if daemon_running; then
-            echo "$DAEMON already running"
-            exit 0
-        fi
+        version_current || {
+            echo "$DAEMON_PATH does not match the firmware NetBird version"
+            exit 1
+        }
+        daemon_running
+        case $? in
+            0)
+                echo "$DAEMON already running"
+                exit 0
+                ;;
+            2)
+                echo "Cannot inspect $DAEMON safely"
+                exit 1
+                ;;
+        esac
         rm -f "$PIDFILE"
 
         mkdir -p /var/run "$LOGDIR"
@@ -130,17 +224,32 @@ case "$1" in
         exit $?
         ;;
     restart)
+        # Check before stop so a stale daemon is not needlessly interrupted by
+        # a restart which this firmware must refuse to bring back.
+        version_current || {
+            echo "$DAEMON_PATH does not match the firmware NetBird version"
+            exit 1
+        }
         "$0" stop || exit $?
         "$0" start
         exit $?
         ;;
     status)
-        if daemon_running; then
-            echo "$DAEMON is running"
-            exit 0
-        fi
-        echo "$DAEMON is not running"
-        exit 1
+        daemon_running
+        case $? in
+            0)
+                echo "$DAEMON is running"
+                exit 0
+                ;;
+            1)
+                echo "$DAEMON is not running"
+                exit 1
+                ;;
+            *)
+                echo "Cannot inspect $DAEMON safely"
+                exit 1
+                ;;
+        esac
         ;;
     *)
         echo "Usage: $0 {start|stop|restart|status}"
