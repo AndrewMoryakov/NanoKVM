@@ -86,7 +86,7 @@ func (s *Service) Install(c *gin.Context) {
 	vpnpref.Unlock()
 	defer finish()
 
-	stage, err := stageInstall(ctx, installHTTPClient, OriginalURL, [2]string{TailscalePath, TailscaledPath})
+	stage, err := stagePinnedInstall(ctx, installHTTPClient, [2]string{TailscalePath, TailscaledPath})
 	if err != nil {
 		rsp.ErrRsp(c, -1, fmt.Sprintf("install failed: %v", err))
 		return
@@ -315,7 +315,9 @@ func (s *Service) Login(c *gin.Context) {
 		Url: url,
 	})
 
-	log.Debugf("tailscale login url: %s", url)
+	// The login URL authorizes a device session. It belongs only in the API
+	// response sent to the requesting browser, never in a server log.
+	log.Debug("tailscale login URL issued")
 }
 
 func (s *Service) Logout(c *gin.Context) {
