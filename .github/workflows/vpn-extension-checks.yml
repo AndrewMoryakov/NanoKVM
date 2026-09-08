@@ -8,6 +8,12 @@ on:
       - .github/workflows/vpn-extension-checks.yml
       # Any server change can affect these packages through shared code.
       - server/**
+      - kvmapp/system/init.d/S95nanokvm
+      - kvmapp/system/init.d/S98tailscaled
+      - kvmapp/system/init.d/S99netbird
+      - kvmapp/system/init.d/tests/test_vpn_init_scripts.sh
+      - kvmapp/system/tailscale/**
+      - kvmapp/system/netbird/**
   workflow_dispatch:
 
 permissions:
@@ -26,6 +32,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Check VPN init script syntax
+        working-directory: .
+        run: |
+          for shell in bash dash; do
+            "$shell" -n kvmapp/system/init.d/S95nanokvm
+            "$shell" -n kvmapp/system/init.d/S98tailscaled
+            "$shell" -n kvmapp/system/init.d/S99netbird
+          done
+
+      - name: Run VPN init script regression tests
+        working-directory: .
+        run: dash kvmapp/system/init.d/tests/test_vpn_init_scripts.sh
 
       - name: Set up Go
         uses: actions/setup-go@v5
