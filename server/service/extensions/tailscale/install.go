@@ -1,118 +1,227 @@
 package tailscale
 
 import (
-	"NanoKVM-Server/utils"
+	"archive/tar"
+	"compress/gzip"
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-
-	log "github.com/sirupsen/logrus"
+	"path"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 const (
-	OriginalURL = "https://pkgs.tailscale.com/stable/tailscale_latest_riscv64.tgz"
-	Workspace   = "/root/.tailscale"
+	OriginalURL            = "https://pkgs.tailscale.com/stable/tailscale_latest_riscv64.tgz"
+	installTimeout         = 4 * time.Minute
+	maxArchiveSize   int64 = 128 << 20
+	maxExtractedSize int64 = 256 << 20
 )
 
+var installHTTPClient = &http.Client{Timeout: installTimeout}
+
+type stagedInstall struct {
+	files   [2]string
+	targets [2]string
+	link    func(string, string) error
+}
+
 func isInstalled() bool {
-	_, err1 := os.Stat(TailscalePath)
-	_, err2 := os.Stat(TailscaledPath)
-
-	return err1 == nil && err2 == nil
+	for _, name := range []string{TailscalePath, TailscaledPath} {
+		info, err := os.Stat(name)
+		if err != nil || !info.Mode().IsRegular() || info.Mode()&0o111 == 0 {
+			return false
+		}
+	}
+	return true
 }
 
-func install() error {
-	_ = os.MkdirAll(Workspace, 0o755)
+// Each staged file lives beside its destination so exclusive publication also
+// works when /usr/bin and /usr/sbin are on different filesystems.
+func stageInstall(ctx context.Context, client *http.Client, url string, targets [2]string) (stage *stagedInstall, err error) {
+	ctx, cancel := context.WithTimeout(ctx, installTimeout)
+	defer cancel()
+	stage = &stagedInstall{targets: targets, link: os.Link}
 	defer func() {
-		_ = os.RemoveAll(Workspace)
+		if err != nil {
+			stage.cleanup()
+		}
 	}()
-
-	tarFile := fmt.Sprintf("%s/tailscale_riscv64.tgz", Workspace)
-
-	// download
-	if err := download(tarFile); err != nil {
-		log.Errorf("failed to download tailscale: %s", err)
-		return err
+	for i, target := range targets {
+		if _, statErr := os.Lstat(target); !os.IsNotExist(statErr) {
+			return stage, fmt.Errorf("destination already exists or cannot be inspected: %s", target)
+		}
+		file, createErr := os.CreateTemp(filepath.Dir(target), ".tailscale-install-")
+		if createErr != nil {
+			return stage, createErr
+		}
+		stage.files[i] = file.Name()
+		if closeErr := file.Close(); closeErr != nil {
+			return stage, closeErr
+		}
 	}
-
-	// decompress
-	dir, err := utils.UnTarGz(tarFile, Workspace)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		log.Errorf("failed to decompress tailscale: %s", err)
-		return err
+		return stage, err
 	}
-
-	// move
-	tailscalePath := fmt.Sprintf("%s/tailscale", dir)
-	err = utils.MoveFile(tailscalePath, TailscalePath)
+	resp, err := client.Do(req)
 	if err != nil {
-		log.Errorf("failed to move tailscale: %s", err)
-		return err
+		return stage, err
 	}
-
-	tailscaledPath := fmt.Sprintf("%s/tailscaled", dir)
-	err = utils.MoveFile(tailscaledPath, TailscaledPath)
-	if err != nil {
-		log.Errorf("failed to move tailscaled: %s", err)
-		return err
-	}
-
-	log.Debugf("install tailscale successfully")
-	return nil
-}
-
-func download(target string) error {
-	url, err := getDownloadURL()
-	if err != nil {
-		log.Errorf("failed to get Tailscale download url: %s", err)
-		return err
-	}
-
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Errorf("failed to download Tailscale: %s", err)
-		return err
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return stage, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-
-	out, err := os.Create(target)
+	compressed := &io.LimitedReader{R: resp.Body, N: maxArchiveSize + 1}
+	gz, err := gzip.NewReader(compressed)
 	if err != nil {
-		log.Errorf("failed to create file: %s", err)
+		return stage, err
+	}
+	defer gz.Close()
+	expanded := &io.LimitedReader{R: gz, N: maxExtractedSize + 1}
+	archive := tar.NewReader(expanded)
+	seen := [2]bool{}
+	root := ""
+	for {
+		if err := ctx.Err(); err != nil {
+			return stage, err
+		}
+		header, readErr := archive.Next()
+		if readErr == io.EOF {
+			break
+		}
+		if readErr != nil {
+			return stage, readErr
+		}
+		name := strings.TrimSuffix(header.Name, "/")
+		if path.IsAbs(name) || path.Clean(name) != name || strings.Contains(name, "\\") || name == ".." || strings.HasPrefix(name, "../") {
+			return stage, fmt.Errorf("unsafe tailscale archive entry %q", header.Name)
+		}
+		parts := strings.Split(name, "/")
+		if root == "" {
+			root = parts[0]
+		}
+		if parts[0] != root || !strings.HasPrefix(root, "tailscale_") || !strings.HasSuffix(root, "_riscv64") {
+			return stage, fmt.Errorf("unexpected tailscale archive root %q", parts[0])
+		}
+		if header.Typeflag == tar.TypeDir {
+			continue
+		}
+		if header.Typeflag != tar.TypeReg {
+			return stage, fmt.Errorf("unsupported tailscale archive entry %q", header.Name)
+		}
+		index := -1
+		if name == root+"/tailscale" {
+			index = 0
+		}
+		if name == root+"/tailscaled" {
+			index = 1
+		}
+		if index < 0 {
+			continue
+		}
+		if seen[index] || header.Size <= 0 || header.Size > maxArchiveSize {
+			return stage, fmt.Errorf("invalid tailscale executable %q", name)
+		}
+		seen[index] = true
+		if err := writeStagedExecutable(stage.files[index], archive); err != nil {
+			return stage, err
+		}
+	}
+	// Consume trailers to verify gzip checksum and enforce both byte budgets.
+	if _, err := io.Copy(io.Discard, expanded); err != nil {
+		return stage, err
+	}
+	if expanded.N <= 0 || compressed.N <= 0 {
+		return stage, fmt.Errorf("tailscale archive exceeds size limit")
+	}
+	if !seen[0] || !seen[1] {
+		return stage, fmt.Errorf("tailscale archive is missing an executable")
+	}
+	if err := ctx.Err(); err != nil {
+		return stage, err
+	}
+	return stage, nil
+}
+
+func writeStagedExecutable(name string, source io.Reader) error {
+	file, err := os.OpenFile(name, os.O_WRONLY|os.O_TRUNC, 0o600)
+	if err != nil {
 		return err
 	}
+	defer file.Close()
+	if _, err := io.Copy(file, source); err != nil {
+		return err
+	}
+	if err := file.Chmod(0o755); err != nil {
+		return err
+	}
+	if err := file.Sync(); err != nil {
+		return err
+	}
+	return file.Close()
+}
+
+func (stage *stagedInstall) cleanup() {
+	for _, name := range stage.files {
+		if name != "" {
+			_ = os.Remove(name)
+		}
+	}
+}
+
+// promote runs under the VPN lifecycle lock, after checking intent and daemon
+// liveness. Exclusive links never overwrite an existing or racing executable.
+// A failed pair publication rolls back only links belonging to this stage.
+// A power loss between links can leave a partial install, which is rejected on
+// retry and must be uninstalled explicitly; it is never silently overwritten.
+func (stage *stagedInstall) promote() (err error) {
+	published := 0
 	defer func() {
-		_ = out.Close()
+		if err == nil {
+			return
+		}
+		for i := published - 1; i >= 0; i-- {
+			stagedInfo, statErr := os.Stat(stage.files[i])
+			targetInfo, targetErr := os.Lstat(stage.targets[i])
+			if os.IsNotExist(targetErr) {
+				continue
+			}
+			if statErr != nil || targetErr != nil || !os.SameFile(stagedInfo, targetInfo) {
+				err = errors.Join(err, fmt.Errorf("cannot safely roll back %s", stage.targets[i]))
+				continue
+			}
+			if removeErr := os.Remove(stage.targets[i]); removeErr != nil {
+				err = errors.Join(err, removeErr)
+			}
+			if syncErr := syncInstallDirectory(filepath.Dir(stage.targets[i])); syncErr != nil {
+				err = errors.Join(err, syncErr)
+			}
+		}
 	}()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		log.Errorf("failed to copy response body to file: %s", err)
-		return err
+	for i, target := range stage.targets {
+		if err = stage.link(stage.files[i], target); err != nil {
+			return fmt.Errorf("publish %s: %w", target, err)
+		}
+		published++
 	}
-
-	log.Debugf("download Tailscale successfully")
+	for _, target := range stage.targets {
+		if err = syncInstallDirectory(filepath.Dir(target)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func getDownloadURL() (string, error) {
-	resp, err := (&http.Client{}).Get(OriginalURL)
+func syncInstallDirectory(name string) error {
+	dir, err := os.Open(name)
 	if err != nil {
-		return "", err
+		return err
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusFound {
-		return "", fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	return resp.Request.URL.String(), nil
+	defer dir.Close()
+	return dir.Sync()
 }

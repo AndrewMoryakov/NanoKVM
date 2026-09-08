@@ -2,19 +2,21 @@ package tailscale
 
 import (
 	"NanoKVM-Server/proto"
-	"NanoKVM-Server/service/extensions/netbird"
 	"NanoKVM-Server/service/extensions/vpnpref"
 	"NanoKVM-Server/utils"
 	"errors"
 	"fmt"
 	"net"
 	"os"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
 type Service struct{}
+
+var installMu sync.Mutex
 
 const (
 	TailscalePath  = "/usr/bin/tailscale"
@@ -54,10 +56,10 @@ func lockVPN(c *gin.Context, rsp *proto.Response) bool {
 		return false
 	}
 
-	// A Tailscale lifecycle action is newer than any pending NetBird install.
+	// A Tailscale lifecycle action is newer than any pending VPN install.
 	// The shared lifecycle lock gives this invalidation a total order with the
 	// final promote-and-start step, while keeping the slow download unlocked.
-	netbird.InvalidateStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
 
 	return true
 }
@@ -65,18 +67,58 @@ func lockVPN(c *gin.Context, rsp *proto.Response) bool {
 func (s *Service) Install(c *gin.Context) {
 	var rsp proto.Response
 
-	if !lockVPN(c, &rsp) {
+	if !installMu.TryLock() {
+		rsp.ErrRsp(c, -5, "a tailscale installation is already in progress")
+		return
+	}
+	defer installMu.Unlock()
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
+		return
+	}
+	if isInstalled() {
+		vpnpref.InvalidateStagedInstalls()
+		vpnpref.Unlock()
+		rsp.OkRsp(c)
+		return
+	}
+	ctx, token, finish := vpnpref.BeginStagedInstall(c.Request.Context())
+	vpnpref.Unlock()
+	defer finish()
+
+	stage, err := stageInstall(ctx, installHTTPClient, OriginalURL, [2]string{TailscalePath, TailscaledPath})
+	if err != nil {
+		rsp.ErrRsp(c, -1, fmt.Sprintf("install failed: %v", err))
+		return
+	}
+	defer stage.cleanup()
+	if !vpnpref.TryLock() {
+		rsp.ErrRsp(c, -5, "another VPN operation is in progress, please retry")
 		return
 	}
 	defer vpnpref.Unlock()
-
-	if !isInstalled() {
-		if err := install(); err != nil {
-			rsp.ErrRsp(c, -1, "install failed")
-			return
-		}
-
-		_ = NewCli().Start()
+	if !vpnpref.StagedInstallCurrent(token) || ctx.Err() != nil {
+		rsp.ErrRsp(c, -2, "install was canceled by a newer VPN operation")
+		return
+	}
+	vpnpref.InvalidateOtherStagedInstalls(token)
+	cli := NewCli()
+	running, err := cli.ServiceRunning()
+	if err != nil || running {
+		rsp.ErrRsp(c, -1, "tailscaled may be running; stop it before installing")
+		return
+	}
+	if ctx.Err() != nil || !vpnpref.StagedInstallCurrent(token) {
+		rsp.ErrRsp(c, -2, "install was canceled")
+		return
+	}
+	if err := stage.promote(); err != nil {
+		rsp.ErrRsp(c, -1, fmt.Sprintf("install failed: %v", err))
+		return
+	}
+	if err := cli.Start(); err != nil {
+		rsp.ErrRsp(c, -2, fmt.Sprintf("installed, but start failed: %v", err))
+		return
 	}
 
 	rsp.OkRsp(c)

@@ -67,9 +67,9 @@ func (s *Service) SetPreference(c *gin.Context) {
 	}
 	defer vpnpref.Unlock()
 	// This request owns the shared lifecycle lock. Invalidate a pending
-	// NetBird download before inspecting or changing VPN state, so it cannot
+	// VPN download before inspecting or changing VPN state, so it cannot
 	// later promote and start after this newer operation has completed.
-	netbird.InvalidateStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
 
 	// The comparison belongs under the same lock as the state transition. A
 	// request that read the old value before another request completed a switch

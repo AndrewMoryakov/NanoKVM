@@ -21,12 +21,6 @@ type Service struct{}
 // to publish different binaries.
 var installMu sync.Mutex
 
-var stagedInstallState struct {
-	sync.Mutex
-	generation uint64
-	cancel     context.CancelFunc
-}
-
 func NewService() *Service {
 	return &Service{}
 }
@@ -56,7 +50,7 @@ func lockVPN(c *gin.Context, rsp *proto.Response) bool {
 // stageIfNeeded obtains a validated binary outside the VPN lifecycle lock.
 // The caller must invoke release after it has either promoted or discarded the
 // result. A nil stage means a usable binary was already installed.
-func stageIfNeeded() (stage *StagedInstall, generation uint64, release func(), err error) {
+func stageIfNeeded(parent context.Context) (stage *StagedInstall, generation uint64, release func(), err error) {
 	if isInstalled() {
 		return nil, 0, func() {}, nil
 	}
@@ -69,7 +63,12 @@ func stageIfNeeded() (stage *StagedInstall, generation uint64, release func(), e
 		return nil, 0, installMu.Unlock, nil
 	}
 
-	installContext, generation, finish := beginStagedInstall()
+	if !vpnpref.TryLock() {
+		installMu.Unlock()
+		return nil, 0, nil, fmt.Errorf("another VPN operation is in progress, please retry")
+	}
+	installContext, generation, finish := vpnpref.BeginStagedInstall(parent)
+	vpnpref.Unlock()
 	release = func() {
 		finish()
 		installMu.Unlock()
@@ -80,52 +79,6 @@ func stageIfNeeded() (stage *StagedInstall, generation uint64, release func(), e
 		return nil, 0, nil, err
 	}
 	return stage, generation, release, nil
-}
-
-// beginStagedInstall creates a cancellable intent before any slow I/O starts.
-// A later NetBird, Tailscale, or preference lifecycle action invalidates that
-// intent while holding the VPN lock. Promotion verifies the generation again
-// under the same lock, so an old request can never resurrect NetBird after a
-// newer lifecycle action.
-func beginStagedInstall() (context.Context, uint64, func()) {
-	stagedInstallState.Lock()
-	installContext, cancel := context.WithCancel(context.Background())
-	generation := stagedInstallState.generation
-	stagedInstallState.cancel = cancel
-	stagedInstallState.Unlock()
-
-	return installContext, generation, func() {
-		cancel()
-		stagedInstallState.Lock()
-		if stagedInstallState.generation == generation {
-			stagedInstallState.cancel = nil
-		}
-		stagedInstallState.Unlock()
-	}
-}
-
-func stagedInstallCurrent(generation uint64) bool {
-	stagedInstallState.Lock()
-	defer stagedInstallState.Unlock()
-	return stagedInstallState.generation == generation && stagedInstallState.cancel != nil
-}
-
-// InvalidateStagedInstall cancels a pending NetBird download and prevents it
-// from being promoted. It must run after vpnpref.TryLock succeeds. That makes
-// its ordering match real daemon transitions: an operation rejected as busy
-// does not cancel a request that already owns the lifecycle lock.
-//
-// Tailscale and the VPN-preference service call this after they acquire the
-// same lifecycle lock. Without that shared ordering, a slow NetBird download
-// could finish after a newer Tailscale operation and start NetBird again.
-func InvalidateStagedInstall() {
-	stagedInstallState.Lock()
-	stagedInstallState.generation++
-	if stagedInstallState.cancel != nil {
-		stagedInstallState.cancel()
-		stagedInstallState.cancel = nil
-	}
-	stagedInstallState.Unlock()
 }
 
 func promoteIfNeeded(stage *StagedInstall) error {
@@ -142,7 +95,7 @@ func promoteIfNeeded(stage *StagedInstall) error {
 func (s *Service) Install(c *gin.Context) {
 	var rsp proto.Response
 
-	stage, generation, release, err := stageIfNeeded()
+	stage, generation, release, err := stageIfNeeded(c.Request.Context())
 	if err != nil {
 		rsp.ErrRsp(c, -1, fmt.Sprintf("install failed: %v", err))
 		return
@@ -157,10 +110,11 @@ func (s *Service) Install(c *gin.Context) {
 	}
 	defer vpnpref.Unlock()
 
-	if stage != nil && !stagedInstallCurrent(generation) {
+	if stage != nil && (!vpnpref.StagedInstallCurrent(generation) || c.Request.Context().Err() != nil) {
 		rsp.ErrRsp(c, -2, "install was canceled by a newer VPN operation")
 		return
 	}
+	vpnpref.InvalidateOtherStagedInstalls(generation)
 	if stage == nil && isInstalled() && !isUpToDate() {
 		rsp.ErrRsp(c, -3, "netbird update required; uninstall and install again to replace it safely")
 		return
@@ -197,7 +151,7 @@ func (s *Service) Uninstall(c *gin.Context) {
 		return
 	}
 	defer vpnpref.Unlock()
-	InvalidateStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
 
 	// Order matters. Stop first and check the result: removing the init script
 	// from under a live daemon would leave a process nothing on the device can
@@ -223,7 +177,7 @@ func (s *Service) Uninstall(c *gin.Context) {
 func (s *Service) Start(c *gin.Context) {
 	var rsp proto.Response
 
-	stage, generation, release, err := stageIfNeeded()
+	stage, generation, release, err := stageIfNeeded(c.Request.Context())
 	if err != nil {
 		rsp.ErrRsp(c, -1, fmt.Sprintf("start failed: %v", err))
 		return
@@ -238,10 +192,11 @@ func (s *Service) Start(c *gin.Context) {
 	}
 	defer vpnpref.Unlock()
 
-	if stage != nil && !stagedInstallCurrent(generation) {
+	if stage != nil && (!vpnpref.StagedInstallCurrent(generation) || c.Request.Context().Err() != nil) {
 		rsp.ErrRsp(c, -2, "start was canceled by a newer VPN operation")
 		return
 	}
+	vpnpref.InvalidateOtherStagedInstalls(generation)
 	if stage == nil && isInstalled() && !isUpToDate() {
 		rsp.ErrRsp(c, -3, "netbird update required; uninstall and install again to replace it safely")
 		return
@@ -268,7 +223,7 @@ func (s *Service) Restart(c *gin.Context) {
 		return
 	}
 	defer vpnpref.Unlock()
-	InvalidateStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
 
 	if err := NewCli().Restart(); err != nil {
 		rsp.ErrRsp(c, -1, fmt.Sprintf("restart failed: %v", err))
@@ -287,7 +242,7 @@ func (s *Service) Stop(c *gin.Context) {
 		return
 	}
 	defer vpnpref.Unlock()
-	InvalidateStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
 
 	if err := NewCli().Stop(); err != nil {
 		rsp.ErrRsp(c, -1, fmt.Sprintf("stop failed: %v", err))
@@ -309,6 +264,7 @@ func (s *Service) Login(c *gin.Context) {
 	defer vpnpref.Unlock()
 
 	cli := NewCli()
+	vpnpref.InvalidateStagedInstalls()
 
 	url, err := cli.Login()
 	if err != nil {
@@ -335,7 +291,7 @@ func (s *Service) Down(c *gin.Context) {
 		return
 	}
 	defer vpnpref.Unlock()
-	InvalidateStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
 
 	if err := NewCli().Down(); err != nil {
 		rsp.ErrRsp(c, -1, fmt.Sprintf("netbird down failed: %v", err))

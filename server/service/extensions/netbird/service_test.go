@@ -2,6 +2,7 @@ package netbird
 
 import (
 	"NanoKVM-Server/service/extensions/vpnpref"
+	"context"
 	"testing"
 	"time"
 )
@@ -9,21 +10,21 @@ import (
 func TestInvalidateStagedInstallCancelsOlderIntent(t *testing.T) {
 	// Ensure this package-global coordinator starts from an inactive state even
 	// if a previous test was interrupted before its cleanup.
-	InvalidateStagedInstall()
-	ctx, generation, finish := beginStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
+	ctx, generation, finish := vpnpref.BeginStagedInstall(context.Background())
 	defer finish()
 
-	if !stagedInstallCurrent(generation) {
+	if !vpnpref.StagedInstallCurrent(generation) {
 		t.Fatal("new staged install is not current")
 	}
-	InvalidateStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
 
 	select {
 	case <-ctx.Done():
 	case <-time.After(time.Second):
 		t.Fatal("newer lifecycle action did not cancel staged install")
 	}
-	if stagedInstallCurrent(generation) {
+	if vpnpref.StagedInstallCurrent(generation) {
 		t.Fatal("invalidated staged install remained current")
 	}
 }
@@ -33,14 +34,14 @@ func TestCrossVPNLifecycleActionCancelsStagedInstall(t *testing.T) {
 	// Tailscale or SetPreference operation that obtains that lock while the
 	// download is pending; its shared coordinator invalidation must make the
 	// older stage ineligible for promotion.
-	InvalidateStagedInstall()
-	ctx, generation, finish := beginStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
+	ctx, generation, finish := vpnpref.BeginStagedInstall(context.Background())
 	defer finish()
 
 	if !vpnpref.TryLock() {
 		t.Fatal("failed to acquire VPN lifecycle lock")
 	}
-	InvalidateStagedInstall()
+	vpnpref.InvalidateStagedInstalls()
 	vpnpref.Unlock()
 
 	select {
@@ -48,7 +49,7 @@ func TestCrossVPNLifecycleActionCancelsStagedInstall(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("cross-VPN lifecycle action did not cancel staged install")
 	}
-	if stagedInstallCurrent(generation) {
+	if vpnpref.StagedInstallCurrent(generation) {
 		t.Fatal("cross-VPN lifecycle action left staged install current")
 	}
 }
