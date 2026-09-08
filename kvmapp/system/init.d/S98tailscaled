@@ -10,11 +10,33 @@ FLAGS=""
 # A pid file is advisory only: it can survive a crash and its PID can later be
 # reused. Verify /proc/<pid>/exe before signalling anything. The "(deleted)"
 # form is still a live daemon and must be stopped before an uninstall/switch.
+canonical_daemon_path() {
+    daemon_path="$1"
+    daemon_hops=0
+    while [ -L "$daemon_path" ]; do
+        daemon_hops=$((daemon_hops + 1))
+        [ "$daemon_hops" -le 40 ] || return 1
+        daemon_target=$(readlink "$daemon_path" 2>/dev/null) || return 1
+        case "$daemon_target" in
+            /*) daemon_path="$daemon_target" ;;
+            *) daemon_path="$(dirname "$daemon_path")/$daemon_target" ;;
+        esac
+    done
+
+    daemon_dir=$(dirname "$daemon_path")
+    daemon_base=$(basename "$daemon_path")
+    if [ -d "$daemon_dir" ]; then
+        daemon_dir=$(cd -P "$daemon_dir" 2>/dev/null && pwd) || return 1
+    fi
+    printf '%s/%s\n' "$daemon_dir" "$daemon_base"
+}
+
 is_daemon_pid() {
     pid="$1"
     case "$pid" in
         ''|*[!0-9]*) return 1 ;;
     esac
+    expected=$(canonical_daemon_path "$DAEMON_PATH") || return 2
     target=$(readlink "/proc/$pid/exe" 2>/dev/null) || {
         # A PID which has exited is safe to ignore.  If its /proc directory
         # still exists, however, do not mistake an unreadable identity for an
@@ -22,11 +44,20 @@ is_daemon_pid() {
         [ -e "/proc/$pid" ] && return 2
         return 1
     }
-    [ "$target" = "$DAEMON_PATH" ] || [ "$target" = "$DAEMON_PATH (deleted)" ]
+    [ "$target" = "$expected" ] || [ "$target" = "$expected (deleted)" ]
 }
 
 daemon_pids() {
-    pids=$(pidof "$DAEMON" 2>/dev/null)
+    expected=$(canonical_daemon_path "$DAEMON_PATH") || return 2
+    alias=$(basename "$DAEMON_PATH")
+    target=$(basename "$expected")
+    # pidof sees the invoked symlink alias, whereas procfs resolves that
+    # alias to its target. Search both launch forms, then verify procfs.
+    if [ "$alias" = "$target" ]; then
+        pids=$(pidof "$alias" 2>/dev/null)
+    else
+        pids=$(pidof "$alias" "$target" 2>/dev/null)
+    fi
     case $? in
         0) ;;
         # pidof uses 1 to report that no process matched.  Any other failure

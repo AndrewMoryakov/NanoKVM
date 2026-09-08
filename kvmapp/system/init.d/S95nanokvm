@@ -343,6 +343,18 @@ case "$1" in
     stop_services
     start_services
 
+    # An application migration removes S99* while start_services() waits for
+    # kvm_system. Restore the persisted VPN selection before returning: the
+    # next boot expands /etc/init.d/S??* before it reaches S95, so waiting
+    # until that boot would make the restored hook miss the rc run.
+    if ! select_vpn; then
+        # Do not report a completed OTA restart if the selected hook could
+        # not be restored. The next boot would otherwise silently omit it.
+        sync
+        echo "FAIL"
+        exit 1
+    fi
+
     sync
     echo "OK"
    ;;

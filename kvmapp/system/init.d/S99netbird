@@ -37,6 +37,32 @@ ensure_tun() {
     fi
 }
 
+# A firmware installation may intentionally use a symlink for the executable.
+# /proc/<pid>/exe reports its final target, not the launch alias. Resolve a
+# bounded chain ourselves, retaining a missing final leaf so a live process
+# from an unlinked target remains identifiable as " (deleted)". BusyBox
+# readlink -f does not preserve all dangling relative-link cases.
+canonical_daemon_path() {
+    daemon_path="$1"
+    daemon_hops=0
+    while [ -L "$daemon_path" ]; do
+        daemon_hops=$((daemon_hops + 1))
+        [ "$daemon_hops" -le 40 ] || return 1
+        daemon_target=$(readlink "$daemon_path" 2>/dev/null) || return 1
+        case "$daemon_target" in
+            /*) daemon_path="$daemon_target" ;;
+            *) daemon_path="$(dirname "$daemon_path")/$daemon_target" ;;
+        esac
+    done
+
+    daemon_dir=$(dirname "$daemon_path")
+    daemon_base=$(basename "$daemon_path")
+    if [ -d "$daemon_dir" ]; then
+        daemon_dir=$(cd -P "$daemon_dir" 2>/dev/null && pwd) || return 1
+    fi
+    printf '%s/%s\n' "$daemon_dir" "$daemon_base"
+}
+
 # Do not trust PIDFILE or process name alone. A stale PID can point at an
 # unrelated process, while a deleted executable can still be a live NetBird
 # daemon. /proc/exe gives both identity and the latter case.
@@ -45,13 +71,14 @@ is_daemon_pid() {
     case "$pid" in
         ''|*[!0-9]*) return 1 ;;
     esac
+    expected=$(canonical_daemon_path "$DAEMON_PATH") || return 2
     target=$(readlink "/proc/$pid/exe" 2>/dev/null) || {
         # A gone PID is safe to ignore, but a live /proc directory with an
         # unreadable exe must fail closed rather than be reported as stopped.
         [ -e "/proc/$pid" ] && return 2
         return 1
     }
-    [ "$target" = "$DAEMON_PATH" ] || [ "$target" = "$DAEMON_PATH (deleted)" ] || return 1
+    [ "$target" = "$expected" ] || [ "$target" = "$expected (deleted)" ] || return 1
     cmdline=$(tr '\000' ' ' < "/proc/$pid/cmdline" 2>/dev/null) || {
         [ -e "/proc/$pid" ] && return 2
         return 1
@@ -63,7 +90,17 @@ is_daemon_pid() {
 }
 
 daemon_pids() {
-    pids=$(pidof "$DAEMON" 2>/dev/null)
+    expected=$(canonical_daemon_path "$DAEMON_PATH") || return 2
+    alias=$(basename "$DAEMON_PATH")
+    target=$(basename "$expected")
+    # Linux records the invoked symlink alias as the process name pidof sees,
+    # while procfs resolves it to the target. Search both so a daemon launched
+    # by this hook or directly from the target reaches the identity check.
+    if [ "$alias" = "$target" ]; then
+        pids=$(pidof "$alias" 2>/dev/null)
+    else
+        pids=$(pidof "$alias" "$target" 2>/dev/null)
+    fi
     case $? in
         0) ;;
         # Exit 1 is the documented no-match result.  Other pidof errors make

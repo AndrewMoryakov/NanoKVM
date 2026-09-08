@@ -30,11 +30,44 @@ new_case() {
 
     cat > "$CASE/bin/pidof" <<'EOF'
 #!/bin/sh
-: "${PIDOF_LOG:?}"
-printf '%s\n' "$*" >> "$PIDOF_LOG"
+if [ -n "${PIDOF_LOG:-}" ]; then
+    printf '%s\n' "$*" >> "$PIDOF_LOG"
+fi
+if [ -n "${PIDOF_RESULT:-}" ]; then
+    printf '%s\n' "$PIDOF_RESULT"
+    exit 0
+fi
+if [ -n "${PIDOF_STATE_DIR:-}" ] && [ -f "$PIDOF_STATE_DIR/$1" ]; then
+    exit 0
+fi
 exit 1
 EOF
     chmod 755 "$CASE/bin/pidof"
+
+    # The OTA lifecycle fixture represents the services S95 stops and starts
+    # with files in PIDOF_STATE_DIR. Other tests leave that variable unset.
+    cat > "$CASE/bin/killall" <<'EOF'
+#!/bin/sh
+if [ -n "${PIDOF_STATE_DIR:-}" ]; then
+    case "${2:-}" in
+        NanoKVM-Server|kvm_system) rm -f "$PIDOF_STATE_DIR/$2" ;;
+    esac
+fi
+exit 0
+EOF
+    chmod 755 "$CASE/bin/killall"
+
+    cat > "$CASE/bin/iptables" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+    chmod 755 "$CASE/bin/iptables"
+
+    cat > "$CASE/bin/sync" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+    chmod 755 "$CASE/bin/sync"
 
     # The symlink restart cases deliberately get as far as the start branch.
     # Never let that fixture launch a process or wait on a host daemon.
@@ -92,6 +125,47 @@ run_s95() {
     PATH="$CASE/bin:$PATH" sh -c '. "$1"; select_vpn' sh "$CASE/S95nanokvm"
 }
 
+# Unlike prepare_s95(), this creates a complete relocated S95 script. It lets
+# the OTA regression exercise the real restart case, not just select_vpn().
+prepare_s95_lifecycle() {
+    mkdir -p "$CASE/boot" "$CASE/mnt/data" "$CASE/root" \
+        "$CASE/tmp" "$CASE/kvmapp/kvm_system" "$CASE/state"
+    cp "$REPO_ROOT/kvmapp/system/init.d/S99netbird" \
+        "$CASE/kvmapp/system/init.d/S99netbird"
+    printf '%s\n' '1.2.3' > "$CASE/kvmapp/system/netbird/VERSION"
+    printf '%s\n' '1.2.3' > "$CASE/etc/kvm/netbird.version"
+    printf '%s\n' 'netbird' > "$CASE/etc/kvm/vpn"
+
+    # Emulate the migration that kvm_system performs: it removes every S99
+    # hook and clears kvm_new_app before reporting that the server is alive.
+    # On a normal subsequent boot it does not touch the restored hook.
+    cat > "$CASE/kvmapp/kvm_system/kvm_system" <<EOF
+#!/bin/sh
+if [ -f "$CASE/kvmapp/kvm_new_app" ]; then
+    rm -f "$CASE/etc/init.d/S99"*
+    rm -f "$CASE/kvmapp/kvm_new_app"
+fi
+: > "$CASE/state/NanoKVM-Server"
+EOF
+    chmod 755 "$CASE/kvmapp/kvm_system/kvm_system"
+
+    # Replace /tmp first: CASE itself lives under /tmp, so a later replacement
+    # would otherwise rewrite the paths it just inserted.
+    tr -d '\r' < "$REPO_ROOT/kvmapp/system/init.d/S95nanokvm" |
+        sed \
+            -e "s|/tmp|$CASE/tmp|g" \
+            -e "s|/etc/init.d|$CASE/etc/init.d|g" \
+            -e "s|/etc/kvm|$CASE/etc/kvm|g" \
+            -e "s|/usr/bin/netbird|$CASE/usr/bin/netbird|g" \
+            -e "s|/kvmapp|$CASE/kvmapp|g" \
+            -e "s|/boot|$CASE/boot|g" \
+            -e "s|/mnt/data|$CASE/mnt/data|g" \
+            -e "s|/device_key|$CASE/device_key|g" \
+            -e "s|/sys/class/cvi-base/base_uid|$CASE/sys/class/cvi-base/base_uid|g" \
+            -e "s|/root/.profile|$CASE/root/.profile|g" > "$CASE/etc/init.d/S95nanokvm"
+    chmod 755 "$CASE/etc/init.d/S95nanokvm"
+}
+
 prepare_s99() {
     mkdir -p "$CASE/kvmapp/system/netbird" "$CASE/etc/kvm" "$CASE/usr/bin"
     printf '%s\n' '1.2.3' > "$CASE/kvmapp/system/netbird/VERSION"
@@ -104,6 +178,7 @@ prepare_s99() {
         -e "s|/dev/net|$CASE/dev/net|g" \
         -e "s|/sbin/modprobe|$CASE/sbin/modprobe|g" \
         -e "s|/lib/modules/tun.ko|$CASE/lib/modules/tun.ko|g" \
+        -e "s|/proc|$CASE/proc|g" \
         -e "s|/kvmapp/system/netbird/VERSION|$CASE/kvmapp/system/netbird/VERSION|g" \
         -e "s|/etc/kvm/netbird.version|$CASE/etc/kvm/netbird.version|g" > "$CASE/S99netbird"
     chmod 755 "$CASE/S99netbird"
@@ -119,6 +194,7 @@ prepare_s98() {
         -e "s|/var/run|$CASE/var/run|g" \
         -e "s|/var/lib/tailscale|$CASE/var/lib/tailscale|g" \
         -e "s|/etc/sysctl.d|$CASE/etc/sysctl.d|g" \
+        -e "s|/proc|$CASE/proc|g" \
         -e "s|/var/log/netbird|$CASE/var/log/netbird|g" > "$CASE/S98tailscaled"
     chmod 755 "$CASE/S98tailscaled"
 }
@@ -289,6 +365,78 @@ test_s95_switches_boot_scripts_atomically() {
     fi
 }
 
+# The OTA updater runs S95 restart after switching /kvmapp.  kvm_system's
+# migration deletes S99* during that restart.  A later reboot expands S??*
+# before it runs S95, so the hook must already have been restored by restart.
+test_s95_restart_restores_netbird_before_next_rc_snapshot() {
+    new_case s95-ota-restart
+    prepare_s95_lifecycle
+    make_executable_file "$CASE/usr/bin/netbird"
+
+    # The fixture hook invokes the selected client synchronously. This proves
+    # the rc snapshot runs the restored selection, instead of only proving
+    # that S99 was recreated on disk.
+    cat > "$CASE/kvmapp/system/init.d/S99netbird" <<EOF
+#!/bin/sh
+[ "\$1" = start ] || exit 0
+"$CASE/usr/bin/netbird" service run
+EOF
+    chmod 755 "$CASE/kvmapp/system/init.d/S99netbird"
+    cat > "$CASE/usr/bin/netbird" <<EOF
+#!/bin/sh
+[ "\$1" = service ] && [ "\$2" = run ] || exit 1
+printf '%s\n' 'netbird service run' >> "$CASE/netbird-runs.log"
+EOF
+    chmod 755 "$CASE/usr/bin/netbird"
+
+    # This is the obsolete hook the migration removes. If S95 only creates a
+    # hook after rc has expanded its glob, the subsequent boot will not invoke
+    # the replacement and netbird-runs.log remains absent.
+    printf '%s\n' '#!/bin/sh' 'exit 1' > "$CASE/etc/init.d/S99netbird"
+    chmod 755 "$CASE/etc/init.d/S99netbird"
+    : > "$CASE/kvmapp/kvm_new_app"
+    : > "$CASE/state/NanoKVM-Server"
+
+    PIDOF_STATE_DIR="$CASE/state" PATH="$CASE/bin:$PATH" \
+        "$CASE/etc/init.d/S95nanokvm" restart || \
+        fail 'S95 restart failed during the OTA migration fixture'
+    [ ! -e "$CASE/kvmapp/kvm_new_app" ] || \
+        fail 'OTA migration fixture did not complete'
+    cmp "$CASE/etc/init.d/S99netbird" "$CASE/kvmapp/system/init.d/S99netbird" >/dev/null || \
+        fail 'S95 restart did not restore the NetBird hook removed by OTA'
+
+    # Model BusyBox rc: expand the complete S??* list once, before any init
+    # script runs. S99 is required to be in this already-expanded snapshot.
+    set -- "$CASE/etc/init.d"/S??*
+    [ "$#" -eq 2 ] || fail 'expected S95 and restored S99 in next boot rc snapshot'
+    for boot_script in "$@"; do
+        PIDOF_STATE_DIR="$CASE/state" PATH="$CASE/bin:$PATH" \
+            "$boot_script" start || fail "rc boot hook failed: $boot_script"
+    done
+    grep -Fqx 'netbird service run' "$CASE/netbird-runs.log" || \
+        fail 'next boot rc snapshot did not run the selected NetBird client'
+}
+
+test_s95_restart_fails_when_vpn_restore_fails() {
+    new_case s95-ota-restore-failure
+    prepare_s95_lifecycle
+    make_executable_file "$CASE/usr/bin/netbird"
+    printf '%s\n' '#!/bin/sh' 'exit 0' > "$CASE/etc/init.d/S99netbird"
+    chmod 755 "$CASE/etc/init.d/S99netbird"
+    : > "$CASE/kvmapp/kvm_new_app"
+    : > "$CASE/state/NanoKVM-Server"
+
+    if output=$(FAIL_NETBIRD_PUBLISH=1 PUBLISH_DEST="$CASE/etc/init.d/S99netbird" \
+        PIDOF_STATE_DIR="$CASE/state" PATH="$CASE/bin:$PATH" \
+        "$CASE/etc/init.d/S95nanokvm" restart 2>&1); then
+        fail 'S95 restart succeeded when it could not restore the selected VPN hook'
+    fi
+    printf '%s\n' "$output" | grep -Fqx 'FAIL' >/dev/null || \
+        fail 'S95 restart did not report the failed VPN-hook restoration'
+    [ ! -e "$CASE/etc/init.d/S99netbird" ] || \
+        fail 'S95 left a partially restored NetBird hook after publish failure'
+}
+
 test_s99_restart_preflights_symlink_binary() {
     new_case s99-restart-symlink
     prepare_s99
@@ -377,6 +525,81 @@ test_s98_restart_preflights_symlink_binary() {
     [ -s "$CASE/pidof.log" ] || fail 'S98 restart rejected a symlinked executable before stop'
 }
 
+test_s99_identifies_daemon_through_symlinked_binary() {
+    new_case s99-symlink-identity
+    prepare_s99
+    make_executable_file "$CASE/usr/bin/netbird.real"
+    if ! make_symlink netbird.real "$CASE/usr/bin/netbird"; then
+        printf '%s\n' 'SKIP: symlinks are unavailable on this filesystem'
+        return
+    fi
+    mkdir -p "$CASE/proc/4242"
+    if ! make_symlink "$CASE/usr/bin/netbird.real" "$CASE/proc/4242/exe"; then
+        printf '%s\n' 'SKIP: symlinks are unavailable on this filesystem'
+        return
+    fi
+    printf 'netbird\000service\000run\000' > "$CASE/proc/4242/cmdline"
+    : > "$CASE/pidof.log"
+
+    PIDOF_RESULT=4242 PIDOF_LOG="$CASE/pidof.log" PATH="$CASE/bin:$PATH" \
+        "$CASE/S99netbird" status >/dev/null || \
+        fail 'S99 did not recognize a daemon started through a symlink alias'
+    grep -Fqx 'netbird netbird.real' "$CASE/pidof.log" || \
+        fail 'S99 did not look up both NetBird launch names'
+
+    # An unlinked executable keeps running and is exposed by procfs with this
+    # suffix. Preserve its canonical missing leaf instead of treating it as
+    # an unrelated or absent daemon.
+    rm -f "$CASE/usr/bin/netbird.real" "$CASE/proc/4242/exe"
+    make_symlink "$CASE/usr/bin/netbird.real (deleted)" "$CASE/proc/4242/exe" || \
+        fail 'could not create deleted NetBird procfs identity fixture'
+    : > "$CASE/pidof.log"
+    PIDOF_RESULT=4242 PIDOF_LOG="$CASE/pidof.log" PATH="$CASE/bin:$PATH" \
+        "$CASE/S99netbird" status >/dev/null || \
+        fail 'S99 did not recognize a daemon with a deleted symlink target'
+    grep -Fqx 'netbird netbird.real' "$CASE/pidof.log" || \
+        fail 'S99 changed the NetBird launch-name lookup for a deleted target'
+
+    rm -f "$CASE/proc/4242/exe"
+    make_symlink "$CASE/usr/bin/unrelated" "$CASE/proc/4242/exe" || \
+        fail 'could not create unrelated NetBird procfs identity fixture'
+    if PIDOF_RESULT=4242 PATH="$CASE/bin:$PATH" "$CASE/S99netbird" status >/dev/null; then
+        fail 'S99 accepted an unrelated process with the canonical process name'
+    fi
+}
+
+test_s98_identifies_daemon_through_symlinked_binary() {
+    new_case s98-symlink-identity
+    prepare_s98
+    make_executable_file "$CASE/usr/sbin/tailscaled.real"
+    if ! make_symlink tailscaled.real "$CASE/usr/sbin/tailscaled"; then
+        printf '%s\n' 'SKIP: symlinks are unavailable on this filesystem'
+        return
+    fi
+    mkdir -p "$CASE/proc/4242"
+    if ! make_symlink "$CASE/usr/sbin/tailscaled.real" "$CASE/proc/4242/exe"; then
+        printf '%s\n' 'SKIP: symlinks are unavailable on this filesystem'
+        return
+    fi
+    : > "$CASE/pidof.log"
+
+    PIDOF_RESULT=4242 PIDOF_LOG="$CASE/pidof.log" PATH="$CASE/bin:$PATH" \
+        "$CASE/S98tailscaled" status >/dev/null || \
+        fail 'S98 did not recognize a daemon started through a symlink alias'
+    grep -Fqx 'tailscaled tailscaled.real' "$CASE/pidof.log" || \
+        fail 'S98 did not look up both Tailscale launch names'
+
+    rm -f "$CASE/usr/sbin/tailscaled.real" "$CASE/proc/4242/exe"
+    make_symlink "$CASE/usr/sbin/tailscaled.real (deleted)" "$CASE/proc/4242/exe" || \
+        fail 'could not create deleted Tailscale procfs identity fixture'
+    : > "$CASE/pidof.log"
+    PIDOF_RESULT=4242 PIDOF_LOG="$CASE/pidof.log" PATH="$CASE/bin:$PATH" \
+        "$CASE/S98tailscaled" status >/dev/null || \
+        fail 'S98 did not recognize a daemon with a deleted symlink target'
+    grep -Fqx 'tailscaled tailscaled.real' "$CASE/pidof.log" || \
+        fail 'S98 changed the Tailscale launch-name lookup for a deleted target'
+}
+
 test_stop_does_not_require_present_binary() {
     new_case stop-without-binary
     prepare_s99
@@ -402,11 +625,15 @@ test_s95_reports_failed_s98_rollback
 test_s95_recovers_interrupted_switch_when_netbird_is_unavailable
 test_s95_cleans_stale_successful_backup_for_valid_netbird
 test_s95_switches_boot_scripts_atomically
+test_s95_restart_restores_netbird_before_next_rc_snapshot
+test_s95_restart_fails_when_vpn_restore_fails
 test_s99_restart_preflights_symlink_binary
 test_s99_restart_preflights_regular_binary
 test_s99_restart_preflights_version_pin
 test_s98_restart_preflights_regular_binaries
 test_s98_restart_preflights_client_regular_file
 test_s98_restart_preflights_symlink_binary
+test_s99_identifies_daemon_through_symlinked_binary
+test_s98_identifies_daemon_through_symlinked_binary
 test_stop_does_not_require_present_binary
 printf '%s\n' 'VPN init-script regression tests: PASS'
