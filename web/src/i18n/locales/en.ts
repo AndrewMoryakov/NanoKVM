@@ -580,7 +580,7 @@ const en = {
         uninstall: 'Uninstall NetBird',
         uninstallDesc: 'Are you sure you want to uninstall NetBird?',
         uninstallWarning:
-          'If you are connected through NetBird, this ends that connection. NetBird is removed; configure a boot VPN explicitly before relying on remote access again.',
+          'If you are connected through NetBird, this ends that connection. No other VPN is enabled or selected automatically; before remote access, ensure another way in or explicitly configure a boot VPN.',
         version: 'Version',
         disconnect: 'Disconnect',
         disconnectConfirm: 'Are you sure you want to disconnect?',

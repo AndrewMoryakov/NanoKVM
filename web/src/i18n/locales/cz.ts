@@ -580,7 +580,7 @@ const cz = {
         uninstall: 'Odinstalovat NetBird',
         uninstallDesc: 'Opravdu chcete odinstalovat NetBird?',
         uninstallWarning:
-          'Pokud jste připojeni přes NetBird, toto spojení se ukončí. Automatické spuštění se vrátí k Tailscale, který už musí být nainstalovaný a funkční.',
+          'Pokud jste připojeni přes NetBird, toto spojení se ukončí. Jiná VPN se automaticky nezapne ani nevybere; před vzdáleným přístupem si zajistěte jiný způsob přístupu nebo výslovně nastavte VPN při spuštění.',
         version: 'Verze',
         disconnect: 'Odpojit',
         disconnectConfirm: 'Opravdu se chcete odpojit?',

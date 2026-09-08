@@ -583,7 +583,7 @@ const ja = {
         uninstall: 'NetBird をアンインストール',
         uninstallDesc: 'NetBird をアンインストールしてもよろしいですか？',
         uninstallWarning:
-          'NetBird 経由で接続している場合、この操作でその接続は切断されます。自動起動は Tailscale に戻ります。Tailscale が導入済みで動作している必要があります。',
+          'NetBird 経由で接続している場合、この操作でその接続は切断されます。他の VPN が自動的に有効化または選択されることはありません。リモートアクセスの前に、別の接続手段を確保するか、起動時の VPN を明示的に設定してください。',
         version: 'バージョン',
         disconnect: '切断',
         disconnectConfirm: '切断してもよろしいですか？',

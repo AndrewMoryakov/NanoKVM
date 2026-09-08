@@ -586,7 +586,7 @@ const nl = {
         uninstall: 'Verwijderen NetBird',
         uninstallDesc: 'Weet u zeker dat u NetBird wilt verwijderen?',
         uninstallWarning:
-          'Als u via NetBird verbonden bent, wordt die verbinding verbroken. Automatisch starten gaat terug naar Tailscale, dat al geïnstalleerd moet zijn en werken.',
+          'Als u via NetBird verbonden bent, wordt die verbinding verbroken. Er wordt niet automatisch een andere VPN ingeschakeld of geselecteerd; zorg vóór externe toegang voor een andere toegangsweg of configureer expliciet een opstart-VPN.',
         version: 'Versie',
         disconnect: 'Verbreken',
         disconnectConfirm: 'Weet u zeker dat u de verbinding wilt verbreken?',

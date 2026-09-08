@@ -579,7 +579,7 @@ const nb = {
         uninstall: 'Avinstaller NetBird',
         uninstallDesc: 'Er du sikker på at du vil avinstallere NetBird?',
         uninstallWarning:
-          'Hvis du er tilkoblet via NetBird, brytes den forbindelsen. Automatisk oppstart går tilbake til Tailscale, som må være installert og virke.',
+          'Hvis du er tilkoblet via NetBird, brytes den forbindelsen. Ingen annen VPN aktiveres eller velges automatisk; sørg for en annen tilgangsvei eller konfigurer en oppstarts-VPN uttrykkelig før fjerntilgang.',
         version: 'Versjon',
         disconnect: 'Koble fra',
         disconnectConfirm: 'Er du sikker på at du vil koble fra?',

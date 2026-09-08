@@ -577,7 +577,7 @@ const ca = {
         uninstall: 'Desinstal·la NetBird',
         uninstallDesc: 'Esteu segur que voleu desinstal·lar NetBird?',
         uninstallWarning:
-          "Si esteu connectat mitjançant NetBird, això tallarà la connexió. L'inici automàtic tornarà a Tailscale, que ha d'estar instal·lat i funcionant.",
+          'Si esteu connectat mitjançant NetBird, això tallarà la connexió. No s\'activarà ni se seleccionarà cap altra VPN automàticament; abans d\'accedir remotament, assegureu-vos de disposar d\'una altra via d\'accés o de configurar explícitament una VPN d\'arrencada.',
         version: 'Versió',
         disconnect: 'Desconnecta',
         disconnectConfirm: 'Segur que voleu desconnectar?',

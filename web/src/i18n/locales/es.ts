@@ -584,7 +584,7 @@ const es = {
         uninstall: 'Desinstalar NetBird',
         uninstallDesc: '¿Estás seguro de que deseas desinstalar NetBird?',
         uninstallWarning:
-          'Si está conectado a través de NetBird, esto cortará esa conexión. El inicio automático vuelve a Tailscale, que debe estar ya instalado y funcionando.',
+          'Si está conectado a través de NetBird, esto cortará esa conexión. No se activará ni seleccionará automáticamente otra VPN; antes del acceso remoto, asegúrese de tener otra vía de acceso o configure explícitamente una VPN de arranque.',
         version: 'Versión',
         disconnect: 'Desconectar',
         disconnectConfirm: '¿Seguro que quiere desconectar?',

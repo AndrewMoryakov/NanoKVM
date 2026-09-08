@@ -583,7 +583,7 @@ const hu = {
         uninstall: 'Eltávolítás NetBird',
         uninstallDesc: 'Biztosan eltávolítja a NetBird alkalmazást?',
         uninstallWarning:
-          'Ha NetBird útján csatlakozik, ez megszakítja a kapcsolatot. Az automatikus indítás visszakerül a Tailscale-hez, amelynek telepítve kell lennie és működnie kell.',
+          'Ha NetBirdön keresztül csatlakozik, ez megszakítja a kapcsolatot. Más VPN nem aktiválódik és nem lesz automatikusan kiválasztva; távoli hozzáférés előtt gondoskodjon másik elérési útról, vagy állítson be kifejezetten indítási VPN-t.',
         version: 'Verzió',
         disconnect: 'Bontás',
         disconnectConfirm: 'Biztosan bontja a kapcsolatot?',

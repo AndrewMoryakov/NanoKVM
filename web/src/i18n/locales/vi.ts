@@ -578,7 +578,7 @@ const vi = {
         uninstall: 'Gỡ cài đặt NetBird',
         uninstallDesc: 'Bạn có chắc chắn muốn gỡ cài đặt NetBird không?',
         uninstallWarning:
-          'Nếu bạn đang kết nối qua NetBird, thao tác này sẽ ngắt kết nối đó. Tự khởi động trở về Tailscale, vốn phải được cài đặt và hoạt động.',
+          'Nếu bạn đang kết nối qua NetBird, thao tác này sẽ ngắt kết nối đó. Không có VPN nào khác được tự động bật hoặc chọn; trước khi truy cập từ xa, hãy bảo đảm có cách truy cập khác hoặc chủ động cấu hình VPN khởi động.',
         version: 'Phiên bản',
         disconnect: 'Ngắt kết nối',
         disconnectConfirm: 'Bạn có chắc muốn ngắt kết nối?',

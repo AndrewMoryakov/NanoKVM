@@ -580,7 +580,7 @@ const tr = {
         uninstall: "NetBird'i kaldır",
         uninstallDesc: "NetBird'i kaldırmak istediğinizden emin misiniz?",
         uninstallWarning:
-          "NetBird üzerinden bağlıysanız bu bağlantı kesilir. Otomatik başlatma Tailscale'e döner; Tailscale kurulu ve çalışır durumda olmalıdır.",
+          'NetBird üzerinden bağlıysanız bu bağlantı kesilir. Başka bir VPN otomatik olarak etkinleştirilmez veya seçilmez; uzaktan erişimden önce başka bir erişim yolu sağlayın ya da bir önyükleme VPN’ini açıkça yapılandırın.',
         version: 'Sürüm',
         disconnect: 'Bağlantıyı kes',
         disconnectConfirm: 'Bağlantıyı kesmek istediğinize emin misiniz?',

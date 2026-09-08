@@ -580,7 +580,7 @@ const id = {
         uninstall: 'Copot pemasangan NetBird',
         uninstallDesc: 'Apakah Anda yakin ingin menghapus instalan NetBird?',
         uninstallWarning:
-          'Jika Anda terhubung lewat NetBird, koneksi itu akan terputus. Mulai otomatis kembali ke Tailscale, yang harus sudah terpasang dan berfungsi.',
+          'Jika Anda terhubung lewat NetBird, koneksi itu akan terputus. VPN lain tidak akan diaktifkan atau dipilih secara otomatis; sebelum akses jarak jauh, pastikan ada jalur akses lain atau konfigurasi VPN saat boot secara eksplisit.',
         version: 'Versi',
         disconnect: 'Putuskan',
         disconnectConfirm: 'Yakin ingin memutuskan koneksi?',

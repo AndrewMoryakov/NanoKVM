@@ -563,7 +563,7 @@ const zh_tw = {
         uninstall: '移除 NetBird',
         uninstallDesc: '確定要解除安裝 NetBird 嗎？',
         uninstallWarning:
-          '如果您正透過 NetBird 連線，此操作會中斷該連線。開機自動啟動將回到 Tailscale，它必須已安裝並可用。',
+          '如果您正透過 NetBird 連線，此操作會中斷該連線。不會自動啟用或選取其他 VPN；遠端存取前，請確認您有其他連線方式，或明確設定開機 VPN。',
         version: '版本',
         disconnect: '中斷連線',
         disconnectConfirm: '確認要中斷連線嗎？',
