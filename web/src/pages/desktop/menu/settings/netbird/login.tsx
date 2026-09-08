@@ -75,7 +75,7 @@ export const Login = ({ onSuccess }: LoginProps) => {
         <LoginUrl url={loginUrl} onConfirm={onSuccess} />
       )}
 
-      {errMsg && <ErrorHelp error={errMsg} onRefresh={onSuccess} />}
+      {errMsg && <ErrorHelp error={errMsg} onRefresh={onSuccess} canRestart />}
     </div>
   );
 };

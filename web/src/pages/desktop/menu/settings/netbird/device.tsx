@@ -82,7 +82,7 @@ export const Device = ({ status, onLogout }: DeviceProps) => {
     return (
       <div className="flex flex-col items-center justify-center space-y-10 pt-5">
         <LoginUrl url={loginUrl} onConfirm={onLogout} onCancel={() => setLoginUrl('')} />
-        {errMsg && <ErrorHelp error={errMsg} onRefresh={onLogout} />}
+        {errMsg && <ErrorHelp error={errMsg} onRefresh={onLogout} canRestart />}
       </div>
     );
   }
@@ -137,7 +137,7 @@ export const Device = ({ status, onLogout }: DeviceProps) => {
         </Popconfirm>
       </div>
 
-      {errMsg && <ErrorHelp error={errMsg} onRefresh={onLogout} />}
+      {errMsg && <ErrorHelp error={errMsg} onRefresh={onLogout} canRestart />}
     </div>
   );
 };

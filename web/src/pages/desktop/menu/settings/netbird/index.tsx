@@ -87,7 +87,11 @@ export const Netbird = ({ setIsLocked }: NetbirdProps) => {
                 message={t(status ? 'settings.netbird.statusStale' : 'settings.netbird.statusUnknown')}
                 description={errMsg}
               />
-              <ErrorHelp error={errMsg} onRefresh={getStatus} />
+              <ErrorHelp
+                error={errMsg}
+                onRefresh={getStatus}
+                canRestart={!!status && status.state !== 'notInstall'}
+              />
             </>
           )}
 

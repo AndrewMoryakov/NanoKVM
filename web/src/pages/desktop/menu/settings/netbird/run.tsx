@@ -52,7 +52,7 @@ export const Run = ({ onSuccess }: RunProps) => {
       />
 
       <div className="flex justify-center">
-        {errMsg && <ErrorHelp error={errMsg} onRefresh={onSuccess} />}
+        {errMsg && <ErrorHelp error={errMsg} onRefresh={onSuccess} canRestart />}
       </div>
     </Card>
   );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Button, Space } from 'antd';
+import { Alert, Button, Popconfirm, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 
 import * as api from '@/api/extensions/netbird.ts';
@@ -7,9 +7,13 @@ import * as api from '@/api/extensions/netbird.ts';
 type ErrorHelpProps = {
   error: string;
   onRefresh: () => void;
+  // A failed request alone is not evidence that NetBird is installed. Callers
+  // must opt in only after observing an installed state, otherwise a status
+  // error on a fresh Settings page could offer a destructive restart.
+  canRestart?: boolean;
 };
 
-export const ErrorHelp = ({ error, onRefresh }: ErrorHelpProps) => {
+export const ErrorHelp = ({ error, onRefresh, canRestart = false }: ErrorHelpProps) => {
   const { t } = useTranslation();
   const [isRestarting, setIsRestarting] = useState(false);
   const [actionError, setActionError] = useState('');
@@ -58,9 +62,18 @@ export const ErrorHelp = ({ error, onRefresh }: ErrorHelpProps) => {
       />
 
       <Space className="pt-3">
-        <Button loading={isRestarting} onClick={restartService}>
-          {t('settings.netbird.error.restartButton')}
-        </Button>
+        {canRestart && (
+          <Popconfirm
+            title={t('settings.netbird.restart')}
+            onConfirm={restartService}
+            okText={t('settings.netbird.okBtn')}
+            cancelText={t('settings.netbird.cancelBtn')}
+            placement="bottom"
+            disabled={isRestarting}
+          >
+            <Button loading={isRestarting}>{t('settings.netbird.error.restartButton')}</Button>
+          </Popconfirm>
+        )}
         <Button onClick={onRefresh}>{t('settings.netbird.error.refreshButton')}</Button>
       </Space>
     </div>

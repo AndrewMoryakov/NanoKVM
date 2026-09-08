@@ -296,7 +296,9 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
         </div>
       </div>
 
-      {errMsg && <ErrorHelp error={errMsg} onRefresh={onSuccess} />}
+      {errMsg && (
+        <ErrorHelp error={errMsg} onRefresh={onSuccess} canRestart={hasKnownInstalledState} />
+      )}
     </>
   );
 };
