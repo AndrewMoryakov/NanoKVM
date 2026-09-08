@@ -18,11 +18,16 @@ type HeaderProps = {
 
 type Loading = '' | 'restarting' | 'stopping';
 
-// Keep observing an ambiguous preference mutation for longer than the
-// server's bounded status/stop work. Until a terminal observation arrives the
-// switch stays unavailable, so a second POST cannot race the first one.
+// A transport timeout does not tell us whether the server applied the
+// mutation. Keep observing until an authoritative outcome is established;
+// until then the switch stays unavailable, so a second POST cannot race the
+// first one or overwrite an unknown result.
 const PREFERENCE_RECHECK_INTERVAL = 2 * 1000;
-const PREFERENCE_RECHECK_TIMEOUT = 2 * 60 * 1000;
+const PREFERENCE_MAX_RECHECK_INTERVAL = 30 * 1000;
+// A successful GET that still names the previous VPN is only conclusive after
+// the timed-out server handler has had enough time to finish. Failed or
+// malformed reads never become a negative result merely because time passed.
+const PREFERENCE_CONFIRMATION_WINDOW = 2 * 60 * 1000;
 
 export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
   const { t } = useTranslation();
@@ -68,7 +73,8 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
   );
 
   async function reconcileUncertainPreference(currentOperationId: number) {
-    const deadline = Date.now() + PREFERENCE_RECHECK_TIMEOUT;
+    const confirmationDeadline = Date.now() + PREFERENCE_CONFIRMATION_WINDOW;
+    let retryDelay = PREFERENCE_RECHECK_INTERVAL;
     while (true) {
       const vpn = await refreshPreference(false, false);
       if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
@@ -79,14 +85,20 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
         onSuccess();
         return;
       }
-      if (Date.now() >= deadline) {
+
+      // An authoritative value for the other supported VPN proves that this
+      // POST did not take effect only after its server-side confirmation
+      // window. Until then the handler may still be completing after the
+      // transport failure. Invalid values and read failures stay unknown.
+      if (vpn === 'tailscale' && Date.now() >= confirmationDeadline) {
         setPreferenceUncertain(false);
         setErrMsg(t('settings.netbird.preferenceNotChanged'));
         return;
       }
 
-      await new Promise((resolve) => window.setTimeout(resolve, PREFERENCE_RECHECK_INTERVAL));
+      await new Promise((resolve) => window.setTimeout(resolve, retryDelay));
       if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
+      retryDelay = Math.min(retryDelay * 2, PREFERENCE_MAX_RECHECK_INTERVAL);
     }
   }
 
