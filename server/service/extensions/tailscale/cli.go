@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -317,13 +318,24 @@ func daemonPresent(name, executable string) (bool, error) {
 	for _, pid := range strings.Fields(string(output)) {
 		target, err := os.Readlink("/proc/" + pid + "/exe")
 		if err != nil {
-			continue // exited between pidof and inspection
+			if processInspectionGone(err) {
+				continue // exited between pidof and inspection
+			}
+			return false, fmt.Errorf("inspect %s process %s executable: %w", name, pid, err)
 		}
 		if target == executable || target == executable+" (deleted)" {
 			return true, nil
 		}
 	}
 	return false, nil
+}
+
+// processInspectionGone is deliberately narrow: pidof can race a process exit,
+// but an unreadable /proc entry is not evidence that the daemon is absent.
+// Callers use this probe to decide whether it is safe to replace or stop VPN
+// state, so permission and I/O failures must be handled conservatively.
+func processInspectionGone(err error) bool {
+	return errors.Is(err, os.ErrNotExist) || errors.Is(err, syscall.ESRCH)
 }
 
 func runProgram(timeout time.Duration, name string, args ...string) error {

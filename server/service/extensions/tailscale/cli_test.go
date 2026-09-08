@@ -2,6 +2,8 @@ package tailscale
 
 import (
 	"errors"
+	"os"
+	"syscall"
 	"testing"
 )
 
@@ -39,5 +41,24 @@ func TestServiceRunningPropagatesProbeError(t *testing.T) {
 	running, err := NewCli().ServiceRunning()
 	if running || !errors.Is(err, want) {
 		t.Fatalf("ServiceRunning() = (%t, %v), want (false, %v)", running, err, want)
+	}
+}
+
+func TestProcessInspectionGoneOnlyAcceptsVanishedProcess(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"not exist", &os.PathError{Op: "readlink", Path: "/proc/1/exe", Err: syscall.ENOENT}, true},
+		{"no such process", syscall.ESRCH, true},
+		{"permission denied", &os.PathError{Op: "readlink", Path: "/proc/1/exe", Err: syscall.EACCES}, false},
+		{"io error", &os.PathError{Op: "read", Path: "/proc/1/cmdline", Err: syscall.EIO}, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := processInspectionGone(test.err); got != test.want {
+				t.Fatalf("processInspectionGone(%v) = %t, want %t", test.err, got, test.want)
+			}
+		})
 	}
 }
