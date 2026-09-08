@@ -160,3 +160,22 @@ func TestSetPreferenceDoesNotStopOldVPNWhenRollbackCannotResume(t *testing.T) {
 		t.Fatalf("preference Write called %d times despite impossible rollback", writes)
 	}
 }
+
+func TestTailscaleBootableAcceptsSymlinkToExecutable(t *testing.T) {
+	dir := t.TempDir()
+	tailscaledPath := filepath.Join(dir, "tailscaled")
+	tailscalePath := filepath.Join(dir, "tailscale")
+	scriptPath := filepath.Join(dir, "S98tailscaled")
+	realBinaryPath := filepath.Join(dir, "tailscale.real")
+	for _, path := range []string{tailscaledPath, scriptPath, realBinaryPath} {
+		if err := os.WriteFile(path, []byte("test"), 0o755); err != nil {
+			t.Fatalf("write %s: %v", path, err)
+		}
+	}
+	if err := os.Symlink(realBinaryPath, tailscalePath); err != nil {
+		t.Fatal(err)
+	}
+	if !tailscaleBootable(tailscaledPath, tailscalePath, scriptPath) {
+		t.Fatal("tailscaleBootable() rejected a symlink to an executable")
+	}
+}

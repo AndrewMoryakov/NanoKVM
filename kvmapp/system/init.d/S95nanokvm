@@ -92,6 +92,78 @@ valid_netbird_version() {
     printf '%s\n' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
 }
 
+regular_executable() {
+    # `-f` rejects directories and broken links while retaining the established
+    # os.Stat-compatible behavior for a link to an executable file.
+    [ -f "$1" ] && [ -x "$1" ]
+}
+
+# A power loss can occur after S98 was atomically hidden but before the staged
+# S99 was atomically published.  Restore a hidden S98 if NetBird is not ready:
+# a missing staged S99 can itself be the interrupted operation, and removing
+# S99 must not also lose the still-bootable Tailscale fallback.  A valid,
+# already-published S99 instead proves its backup is stale successful cleanup;
+# restoring it briefly could leave both clients active if a later copy fails.
+recover_interrupted_vpn_boot_script_transaction() {
+    netbird_is_ready="$1"
+    tailscale_script=/etc/init.d/S98tailscaled
+    netbird_script=/etc/init.d/S99netbird
+
+    for tailscale_script_backup in /etc/init.d/.S98tailscaled.old.*; do
+        # An unmatched glob is left literal by POSIX sh.  `-L` also catches a
+        # dangling link so it can never be mistaken for absent transaction
+        # state.
+        [ -e "$tailscale_script_backup" ] || [ -L "$tailscale_script_backup" ] || continue
+        transaction_id=${tailscale_script_backup##*.old.}
+        netbird_script_tmp="/etc/init.d/.S99netbird.new.$transaction_id"
+
+        # Never publish the staged script on a later boot.  If S98 is already
+        # present, it is the current safe fallback and this hidden copy is
+        # redundant.  If valid NetBird is already bootable through S99, this
+        # is stale successful cleanup and must stay hidden until removed.
+        if [ -e "$tailscale_script" ] || [ -L "$tailscale_script" ]; then
+            if [ -L "$tailscale_script" ] || [ ! -f "$tailscale_script" ]; then
+                echo "Current Tailscale boot script is not a regular file" >&2
+                return 1
+            fi
+            if ! rm -f "$tailscale_script_backup"; then
+                echo "Failed to clean recovered VPN boot-script transaction" >&2
+                return 1
+            fi
+        elif [ "$netbird_is_ready" = 1 ] && regular_executable "$netbird_script"; then
+            if ! rm -f "$tailscale_script_backup"; then
+                echo "Failed to clean obsolete Tailscale boot-script backup" >&2
+                return 1
+            fi
+        else
+            if [ -L "$tailscale_script_backup" ] || [ ! -f "$tailscale_script_backup" ]; then
+                echo "Interrupted Tailscale boot-script backup is not a regular file" >&2
+                return 1
+            fi
+            if ! mv -f "$tailscale_script_backup" "$tailscale_script"; then
+                echo "Failed to restore interrupted Tailscale boot-script transaction" >&2
+                return 1
+            fi
+        fi
+
+        # A cleanup failure is non-fatal: the stage is hidden, S98 is already
+        # present, and a future boot will retry this cleanup as an orphan.
+        if [ -e "$netbird_script_tmp" ] || [ -L "$netbird_script_tmp" ]; then
+            rm -f "$netbird_script_tmp" || \
+                echo "Failed to remove interrupted NetBird boot-script stage" >&2
+        fi
+    done
+
+    # A previous recovery may have restored S98 and then lost power before it
+    # removed the stage.  It is never safe to promote an orphaned stage.
+    for netbird_script_tmp in /etc/init.d/.S99netbird.new.*; do
+        [ -e "$netbird_script_tmp" ] || [ -L "$netbird_script_tmp" ] || continue
+        rm -f "$netbird_script_tmp" || \
+            echo "Failed to remove orphaned NetBird boot-script stage" >&2
+    done
+    return 0
+}
+
 # Keep the old boot scripts intact until the replacement is completely ready.
 # /etc/init.d and the temporary files are on the same filesystem, so each mv
 # below is atomic. A failed publish restores the hidden S98 before returning;
@@ -127,6 +199,11 @@ install_netbird_boot_script() {
     # returning, so an I/O error cannot turn a selected Tailscale boot into no
     # VPN boot script at all.
     if [ -e "$tailscale_script" ] || [ -L "$tailscale_script" ]; then
+        if [ -L "$tailscale_script" ] || [ ! -f "$tailscale_script" ]; then
+            echo "Tailscale boot-script source is not a regular file" >&2
+            rm -f "$netbird_script_tmp"
+            return 1
+        fi
         if ! mv -f "$tailscale_script" "$tailscale_script_backup"; then
             echo "Failed to stage Tailscale boot script; preserving existing VPN boot scripts" >&2
             rm -f "$netbird_script_tmp"
@@ -160,17 +237,30 @@ select_vpn() {
         vpn_pref=$(cat /etc/kvm/vpn 2>/dev/null | tr -d '[:space:]')
     fi
 
-    case "$vpn_pref" in
-      netbird)
+    netbird_is_ready=0
+    if [ "$vpn_pref" = netbird ]; then
         # The version marker is written only after the validated binary is
         # published. Do not restore S99 for a stale or uncommitted executable:
         # a user can explicitly repair it through the UI, but boot must never
         # silently revive it after a firmware update or interrupted install.
         pinned_version=$(tr -d '[:space:]' < /kvmapp/system/netbird/VERSION 2>/dev/null)
         installed_version=$(tr -d '[:space:]' < /etc/kvm/netbird.version 2>/dev/null)
-        if [ -x /usr/bin/netbird ] && valid_netbird_version "$pinned_version" && \
+        if regular_executable /usr/bin/netbird && \
+           valid_netbird_version "$pinned_version" && \
            [ "$pinned_version" = "$installed_version" ] && \
            [ -f /kvmapp/system/init.d/S99netbird ]; then
+            netbird_is_ready=1
+        fi
+    fi
+
+    if ! recover_interrupted_vpn_boot_script_transaction "$netbird_is_ready"; then
+        echo "Failed to recover interrupted VPN boot-script transaction" >&2
+        return 1
+    fi
+
+    case "$vpn_pref" in
+      netbird)
+        if [ "$netbird_is_ready" = 1 ]; then
             # The helper stages S98 before atomically publishing S99, and
             # restores S98 if publishing fails. This preserves a bootable VPN
             # selection across storage errors.

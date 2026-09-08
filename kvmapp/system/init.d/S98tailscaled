@@ -6,7 +6,6 @@ CLIENT_PATH="/usr/bin/tailscale"
 PIDFILE="/var/run/$DAEMON.pid"
 PORT="41641"
 FLAGS=""
-PKG_URL_LATEST="https://pkgs.tailscale.com/stable/tailscale_latest_riscv64.tgz"
 
 # A pid file is advisory only: it can survive a crash and its PID can later be
 # reused. Verify /proc/<pid>/exe before signalling anything. The "(deleted)"
@@ -107,6 +106,16 @@ signal_daemons() {
     return 0
 }
 
+regular_executable() {
+    # Match the Go preflight: accept a link to a regular executable but reject
+    # a directory, broken link, or a non-executable regular file.
+    [ -f "$1" ] && [ -x "$1" ]
+}
+
+start_prerequisites_present() {
+    regular_executable "$DAEMON_PATH" && regular_executable "$CLIENT_PATH"
+}
+
 stop_daemon() {
     printf "Stopping %s: " "$DAEMON"
     daemon_running
@@ -137,7 +146,7 @@ stop_daemon() {
 
             # Cleanup is useful but a failure after confirmed process termination must
             # not lie that Stop failed (and make callers retry an already safe stop).
-            if [ -x "$DAEMON_PATH" ]; then
+            if regular_executable "$DAEMON_PATH"; then
                 "$DAEMON_PATH" --cleanup >/dev/null 2>&1 || true
             fi
             return 0
@@ -169,7 +178,7 @@ stop_daemon() {
 
     # Cleanup is useful but a failure after confirmed process termination must
     # not lie that Stop failed (and make callers retry an already safe stop).
-    if [ -x "$DAEMON_PATH" ]; then
+    if regular_executable "$DAEMON_PATH"; then
         "$DAEMON_PATH" --cleanup >/dev/null 2>&1 || true
     fi
     return 0
@@ -177,13 +186,12 @@ stop_daemon() {
 
 case "$1" in
     start)
-        [ -x "$DAEMON_PATH" ] || {
-            echo "$DAEMON_PATH not found, please download it from $PKG_URL_LATEST"
-            echo "Then unpack it, copy $DAEMON to /usr/sbin and copy tailscale to /usr/bin"
+        regular_executable "$DAEMON_PATH" || {
+            echo "$DAEMON_PATH not found; install Tailscale from Settings to use the firmware-pinned client"
             exit 1
         }
-        [ -x "$CLIENT_PATH" ] || {
-            echo "$CLIENT_PATH not found, your installation of tailscale may be broken"
+        regular_executable "$CLIENT_PATH" || {
+            echo "$CLIENT_PATH not found; reinstall Tailscale from Settings to use the firmware-pinned client"
             exit 1
         }
 
@@ -238,6 +246,12 @@ case "$1" in
         exit $?
         ;;
     restart|reload)
+        # Check before stop: a direct init-script restart must not interrupt a
+        # live daemon when the installed files cannot start it again.
+        start_prerequisites_present || {
+            echo "Tailscale installation is missing a regular executable"
+            exit 1
+        }
         "$0" stop || exit $?
         "$0" start
         exit $?

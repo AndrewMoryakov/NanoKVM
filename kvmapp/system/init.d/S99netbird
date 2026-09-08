@@ -21,6 +21,12 @@ version_current() {
     installed=$(tr -d '[:space:]' < "$INSTALLED_VERSION_FILE")
     valid_version "$pinned" && [ "$pinned" = "$installed" ]
 }
+regular_executable() {
+    # Match the Go preflight: accept a link to a regular executable but reject
+    # a directory, broken link, or a non-executable regular file.
+    [ -f "$1" ] && [ -x "$1" ]
+}
+
 ensure_tun() {
     [ -d /dev/net ] || mkdir -p /dev/net
     if [ ! -c /dev/net/tun ]; then
@@ -195,7 +201,7 @@ stop_daemon() {
 
 case "$1" in
     start)
-        [ -x "$DAEMON_PATH" ] || {
+        regular_executable "$DAEMON_PATH" || {
             echo "$DAEMON_PATH not found"
             exit 1
         }
@@ -235,6 +241,10 @@ case "$1" in
     restart)
         # Check before stop so a stale daemon is not needlessly interrupted by
         # a restart which this firmware must refuse to bring back.
+        regular_executable "$DAEMON_PATH" || {
+            echo "$DAEMON_PATH not found"
+            exit 1
+        }
         version_current || {
             echo "$DAEMON_PATH does not match the firmware NetBird version"
             exit 1

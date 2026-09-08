@@ -90,3 +90,23 @@ func TestCanResumeRequiresAllExecutableBinaries(t *testing.T) {
 		}
 	}
 }
+
+func TestCanResumeAcceptsSymlinkToExecutablePrerequisite(t *testing.T) {
+	dir := t.TempDir()
+	tailscalePath := filepath.Join(dir, "tailscale")
+	tailscaledPath := filepath.Join(dir, "tailscaled")
+	scriptPath := filepath.Join(dir, "S98tailscaled")
+	realBinaryPath := filepath.Join(dir, "tailscale.real")
+	for _, path := range []string{tailscaledPath, scriptPath, realBinaryPath} {
+		if err := os.WriteFile(path, []byte("test"), 0o755); err != nil {
+			t.Fatalf("write %s: %v", path, err)
+		}
+	}
+	if err := os.Symlink(realBinaryPath, tailscalePath); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := canResume(tailscalePath, tailscaledPath, scriptPath); err != nil {
+		t.Fatalf("canResume() rejected a symlink to an executable Tailscale binary: %v", err)
+	}
+}

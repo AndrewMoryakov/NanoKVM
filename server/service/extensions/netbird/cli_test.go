@@ -102,3 +102,22 @@ func TestCanRestartRejectsMissingPrerequisiteBeforeRestart(t *testing.T) {
 		t.Fatal("canRestart() accepted a missing binary")
 	}
 }
+
+func TestCanResumeAndRestartAcceptSymlinkToExecutableBinary(t *testing.T) {
+	dir := t.TempDir()
+	binaryPath := filepath.Join(dir, "netbird")
+	realBinaryPath := filepath.Join(dir, "netbird.real")
+	scriptPath := filepath.Join(dir, "S99netbird")
+	writeExecutable(t, realBinaryPath)
+	writeExecutable(t, scriptPath)
+	if err := os.Symlink(realBinaryPath, binaryPath); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := canResume(binaryPath, scriptPath, "1.2.3", "1.2.3"); err != nil {
+		t.Fatalf("canResume() rejected a symlink to an executable NetBird binary: %v", err)
+	}
+	if err := canRestart(binaryPath, scriptPath, "1.2.3", "1.2.3"); err != nil {
+		t.Fatalf("canRestart() rejected a symlink to an executable NetBird binary: %v", err)
+	}
+}
