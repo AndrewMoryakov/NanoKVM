@@ -27,7 +27,16 @@ is_daemon_pid() {
 }
 
 daemon_pids() {
-    for pid in $(pidof "$DAEMON" 2>/dev/null); do
+    pids=$(pidof "$DAEMON" 2>/dev/null)
+    case $? in
+        0) ;;
+        # pidof uses 1 to report that no process matched.  Any other failure
+        # leaves process identity unknown and must not be mistaken for absence.
+        1) return 0 ;;
+        *) return 2 ;;
+    esac
+
+    for pid in $pids; do
         is_daemon_pid "$pid"
         case $? in
             0) printf '%s\n' "$pid" ;;

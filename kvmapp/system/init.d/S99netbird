@@ -57,7 +57,16 @@ is_daemon_pid() {
 }
 
 daemon_pids() {
-    for pid in $(pidof "$DAEMON" 2>/dev/null); do
+    pids=$(pidof "$DAEMON" 2>/dev/null)
+    case $? in
+        0) ;;
+        # Exit 1 is the documented no-match result.  Other pidof errors make
+        # daemon state uncertain, so callers must fail closed.
+        1) return 0 ;;
+        *) return 2 ;;
+    esac
+
+    for pid in $pids; do
         is_daemon_pid "$pid"
         case $? in
             0) printf '%s\n' "$pid" ;;
