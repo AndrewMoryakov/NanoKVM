@@ -500,6 +500,10 @@ const vi = {
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Tự khởi động',
+        autostartConfirm: 'Chuyển tự khởi động sang Tailscale? NetBird sẽ bị dừng.',
+        autostartWarning:
+          'Hãy kiểm tra trước rằng bạn có thể truy cập thiết bị này qua Tailscale. Dừng NetBird sẽ ngắt kết nối bạn đang dùng.',
         memory: {
           title: 'Tối ưu bộ nhớ',
           tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
@@ -511,6 +515,8 @@ const vi = {
         restart: 'Are you sure to restart Tailscale?',
         stop: 'Are you sure to stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable its automatic startup on boot.',
+        stopWarning:
+          'Nếu bạn đang kết nối qua Tailscale, thao tác này sẽ ngắt kết nối đó. Nó sẽ không tự trở lại — hãy chắc chắn bạn có đường truy cập khác.',
         loading: 'Đang tải...',
         notInstall: 'Không tìm thấy Tailscale! Vui lòng cài đặt.',
         install: 'Cài đặt',
@@ -538,8 +544,56 @@ const vi = {
         logoutDesc: 'Bạn có chắc chắn muốn đăng xuất không?',
         uninstall: 'Gỡ cài đặt Tailscale',
         uninstallDesc: 'Bạn có chắc chắn muốn gỡ cài đặt Tailscale không?',
+        uninstallWarning:
+          'Nếu bạn đang kết nối qua Tailscale, thao tác này sẽ ngắt kết nối đó. Nó sẽ không tự trở lại — hãy chắc chắn bạn có đường truy cập khác.',
         okBtn: 'Yes',
         cancelBtn: 'No'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Tự khởi động',
+        autostartConfirm: 'Chuyển tự khởi động sang NetBird? Tailscale sẽ bị dừng.',
+        autostartWarning:
+          'Hãy kiểm tra trước rằng bạn có thể truy cập thiết bị này qua NetBird. Dừng Tailscale sẽ ngắt kết nối bạn đang dùng.',
+        restart: 'Are you sure to restart NetBird?',
+        stop: 'Are you sure to stop NetBird?',
+        stopDesc:
+          'Dừng dịch vụ NetBird. Nếu tự khởi động đang bật, dịch vụ sẽ chạy lại ở lần khởi động sau.',
+        stopWarning:
+          'Nếu bạn đang kết nối qua NetBird, thao tác này sẽ ngắt kết nối đó. Kết nối trở lại ở lần khởi động sau, miễn là tự khởi động NetBird còn bật.',
+        loading: 'Đang tải...',
+        notInstall: 'Không tìm thấy NetBird! Vui lòng cài đặt.',
+        install: 'Cài đặt',
+        installing: 'Đang cài đặt',
+        notRunning: 'NetBird không chạy. Hãy bắt đầu nó để tiếp tục.',
+        run: 'Bắt đầu',
+        notLogin:
+          'Thiết bị chưa được liên kết. Vui lòng đăng nhập và liên kết thiết bị này với tài khoản của bạn.',
+        urlPeriod: 'URL này có hiệu lực trong 10 phút',
+        login: 'Đăng nhập',
+        loginSuccess: 'Đăng nhập thành công',
+        enable: 'Kích hoạt NetBird',
+        deviceName: 'Tên Thiết bị',
+        deviceIP: 'IP Thiết bị',
+        uninstall: 'Gỡ cài đặt NetBird',
+        uninstallDesc: 'Bạn có chắc chắn muốn gỡ cài đặt NetBird không?',
+        uninstallWarning:
+          'Nếu bạn đang kết nối qua NetBird, thao tác này sẽ ngắt kết nối đó. Tự khởi động trở về Tailscale, vốn phải được cài đặt và hoạt động.',
+        version: 'Phiên bản',
+        disconnect: 'Ngắt kết nối',
+        disconnectConfirm: 'Bạn có chắc muốn ngắt kết nối?',
+        okBtn: 'Yes',
+        cancelBtn: 'No',
+        error: {
+          title: 'Thao tác NetBird thất bại',
+          intro: 'Chi tiết lỗi:',
+          stepWait: '1. Đợi 10-15 giây rồi thử lại.',
+          stepRestartUI: '2. Bấm “Khởi động lại dịch vụ” bên dưới.',
+          stepRestartSSH: '3. Nếu cần, chạy: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Chỉ khởi động lại NanoKVM nếu các bước trên không giúp được.',
+          restartButton: 'Khởi động lại dịch vụ',
+          refreshButton: 'Làm mới trạng thái'
+        }
       },
       update: {
         title: 'Kiểm tra cập nhật',
