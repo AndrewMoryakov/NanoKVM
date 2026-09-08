@@ -41,9 +41,11 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
   const preferenceRequestId = useRef(0);
   const autostartOperationId = useRef(0);
   const hasKnownInstalledState = !!state && state !== 'notInstall';
-  // A failed status request must not hide recovery actions. Stop/Restart are
-  // deliberately useful precisely when the daemon cannot be observed.
-  const showRecoveryActions = state !== 'notInstall';
+  // Only expose destructive recovery actions after the UI has observed an
+  // installed state. A later failed refresh keeps the last known state, so
+  // Stop/Restart remain available for recovery without exposing them during
+  // the initial unknown-status load.
+  const showRecoveryActions = hasKnownInstalledState;
 
   const refreshPreference = useCallback(
     async (reportError = true, clearError = true): Promise<string | undefined> => {
@@ -276,9 +278,8 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
                 </div>
               </Popconfirm>
 
-              {/* Do not expose irreversible uninstall until there is a
-                  confirmed installed state; Stop/Restart above stay available
-                  for an unknown status as recovery actions. */}
+              {/* Stop/Restart and uninstall are available only after a
+                  confirmed installed state. */}
               {hasKnownInstalledState && (
                 <Popover
                   content={<Uninstall onSuccess={onSuccess} />}
