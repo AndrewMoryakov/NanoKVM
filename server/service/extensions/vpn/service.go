@@ -5,8 +5,6 @@ import (
 	"NanoKVM-Server/service/extensions/netbird"
 	"NanoKVM-Server/service/extensions/tailscale"
 	"NanoKVM-Server/service/extensions/vpnpref"
-	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -16,6 +14,12 @@ import (
 )
 
 type Service struct{}
+
+// tailscaleServiceRunning is kept as a package seam so the switching policy
+// can be tested without manufacturing a real /proc tailscaled process.
+var tailscaleServiceRunning = func() (bool, error) {
+	return tailscale.NewCli().ServiceRunning()
+}
 
 func NewService() *Service {
 	return &Service{}
@@ -165,11 +169,14 @@ func running(vpn string) bool {
 		return isRunning
 	}
 
-	// Tailscale has no equivalent service check; a readable status means the
-	// daemon answered. A timeout is uncertainty and counts as running; a non-zero
-	// exit (no binary, no daemon) is absence and does not.
-	_, err := tailscale.NewCli().Status()
-	return err == nil || isTimeout(err)
+	// Status can fail while tailscaled is still alive (for example during a
+	// transient local-socket failure). Use the same /proc identity check as its
+	// lifecycle operations, and fail closed on uncertainty just like NetBird.
+	isRunning, err := tailscaleServiceRunning()
+	if err != nil {
+		return true
+	}
+	return isRunning
 }
 
 // bootable reports whether select_vpn could actually start this client at the
@@ -200,10 +207,6 @@ func bootable(vpn string) bool {
 
 	info, err = os.Stat(tailscale.ScriptPath)
 	return err == nil && info.Mode()&0o111 != 0
-}
-
-func isTimeout(err error) bool {
-	return errors.Is(err, context.DeadlineExceeded)
 }
 
 // connected reports whether the client actually carries a tunnel right now —

@@ -286,6 +286,22 @@ func isExecutable(path string) bool {
 	return err == nil && info.Mode().IsRegular() && info.Mode()&0o111 != 0
 }
 
+// daemonPresentForService is a narrow seam for the daemon-identity probe.  It
+// keeps ServiceRunning deterministic to test without weakening the production
+// check, which remains daemonPresent's pidof + /proc/<pid>/exe verification.
+var daemonPresentForService = daemonPresent
+
+// ServiceRunning reports whether a real tailscaled daemon is present. It does
+// not use `tailscale status`: that command can fail while the daemon remains
+// alive (for example while its local socket is transiently unavailable).
+//
+// The result is based on the same /proc executable identity check used by the
+// stop/uninstall recovery path, so a stale PID or unrelated process cannot be
+// mistaken for tailscaled.
+func (c *Cli) ServiceRunning() (bool, error) {
+	return daemonPresentForService("tailscaled", TailscaledPath)
+}
+
 // daemonPresent verifies the executable via /proc rather than trusting a stale
 // pid file or a process with the same name. A removed executable remains
 // visible as "<path> (deleted)", which still has to block unsafe removal.
