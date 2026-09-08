@@ -18,12 +18,19 @@ type HeaderProps = {
 
 type Loading = '' | 'restarting' | 'stopping';
 
+// Keep observing an ambiguous preference mutation for longer than the
+// server's bounded status/stop work. Until a terminal observation arrives the
+// switch stays unavailable, so a second POST cannot race the first one.
+const PREFERENCE_RECHECK_INTERVAL = 2 * 1000;
+const PREFERENCE_RECHECK_TIMEOUT = 2 * 60 * 1000;
+
 export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState<Loading>('');
   const [isAutostart, setIsAutostart] = useState(false);
   const [autostartLoading, setAutostartLoading] = useState(false);
+  const [preferenceUncertain, setPreferenceUncertain] = useState(false);
   const [errMsg, setErrMsg] = useState('');
   const isMounted = useRef(true);
   const preferenceRequestId = useRef(0);
@@ -33,27 +40,55 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
   // deliberately useful precisely when the daemon cannot be observed.
   const showRecoveryActions = state !== 'notInstall';
 
-  const refreshPreference = useCallback(async (reportError = true): Promise<string | undefined> => {
-    const currentRequestId = ++preferenceRequestId.current;
-    try {
-      const rsp: any = await vpnApi.getPreference();
-      if (!isMounted.current || currentRequestId !== preferenceRequestId.current) return undefined;
+  const refreshPreference = useCallback(
+    async (reportError = true, clearError = true): Promise<string | undefined> => {
+      const currentRequestId = ++preferenceRequestId.current;
+      try {
+        const rsp: any = await vpnApi.getPreference();
+        if (!isMounted.current || currentRequestId !== preferenceRequestId.current)
+          return undefined;
 
-      if (rsp.code !== 0) {
-        if (reportError) setErrMsg(rsp.msg);
+        if (rsp.code !== 0) {
+          if (reportError) setErrMsg(rsp.msg);
+          return undefined;
+        }
+
+        const vpn = rsp.data?.vpn;
+        setIsAutostart(vpn === 'netbird');
+        if (clearError) setErrMsg('');
+        return vpn;
+      } catch (err: any) {
+        if (!isMounted.current || currentRequestId !== preferenceRequestId.current)
+          return undefined;
+        if (reportError) setErrMsg(err?.message || 'Failed to read VPN preference');
         return undefined;
       }
+    },
+    []
+  );
 
-      const vpn = rsp.data?.vpn;
-      setIsAutostart(vpn === 'netbird');
-      setErrMsg('');
-      return vpn;
-    } catch (err: any) {
-      if (!isMounted.current || currentRequestId !== preferenceRequestId.current) return undefined;
-      if (reportError) setErrMsg(err?.message || 'Failed to read VPN preference');
-      return undefined;
+  async function reconcileUncertainPreference(currentOperationId: number) {
+    const deadline = Date.now() + PREFERENCE_RECHECK_TIMEOUT;
+    while (true) {
+      const vpn = await refreshPreference(false, false);
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
+
+      if (vpn === 'netbird') {
+        setPreferenceUncertain(false);
+        setErrMsg('');
+        onSuccess();
+        return;
+      }
+      if (Date.now() >= deadline) {
+        setPreferenceUncertain(false);
+        setErrMsg(t('settings.netbird.preferenceNotChanged'));
+        return;
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, PREFERENCE_RECHECK_INTERVAL));
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
     }
-  }, []);
+  }
 
   useEffect(() => {
     // Invalidating both request counters prevents a late response from a
@@ -74,6 +109,7 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
     // A request that began before the mutation cannot authoritatively update
     // the switch after it completes.
     preferenceRequestId.current += 1;
+    setPreferenceUncertain(false);
     setAutostartLoading(true);
     setErrMsg('');
 
@@ -97,14 +133,8 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
       // A transport timeout does not cancel the server handler. Do not retry a
       // state-changing request: re-read its authoritative result instead.
       setErrMsg(t('settings.netbird.preferenceUnknown'));
-      const vpn = await refreshPreference(false);
-      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
-
-      if (vpn === 'netbird') {
-        onSuccess();
-      } else if (vpn) {
-        setErrMsg(t('settings.netbird.preferenceNotChanged'));
-      }
+      setPreferenceUncertain(true);
+      await reconcileUncertainPreference(currentOperationId);
     } finally {
       if (isMounted.current && currentOperationId === autostartOperationId.current) {
         setAutostartLoading(false);
@@ -174,14 +204,14 @@ export const Header = ({ state, statusIsFresh, onSuccess }: HeaderProps) => {
               okText={t('settings.netbird.okBtn')}
               cancelText={t('settings.netbird.cancelBtn')}
               placement="bottom"
-              disabled={isAutostart || autostartLoading}
+              disabled={isAutostart || autostartLoading || preferenceUncertain}
             >
               <Switch
                 checked={isAutostart}
-                loading={autostartLoading}
+                loading={autostartLoading || preferenceUncertain}
                 size="small"
                 title={t('settings.netbird.autostart')}
-                disabled={!statusIsFresh || isAutostart || autostartLoading}
+                disabled={!statusIsFresh || isAutostart || autostartLoading || preferenceUncertain}
               />
             </Popconfirm>
           )}

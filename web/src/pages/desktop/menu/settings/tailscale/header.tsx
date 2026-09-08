@@ -18,37 +18,75 @@ type HeaderProps = {
 
 type Loading = '' | 'restarting' | 'stopping';
 
+// SetPreference's server-side status and stop probes are bounded. A failed
+// transport request can still leave that handler in flight, so observe the
+// authoritative preference for longer than the handler's worst-case work
+// before treating the old value as a definite failed switch.
+const PREFERENCE_RECHECK_INTERVAL = 2 * 1000;
+const PREFERENCE_RECHECK_TIMEOUT = 2 * 60 * 1000;
+
 export const Header = ({ state, onSuccess }: HeaderProps) => {
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState<Loading>('');
   const [isAutostart, setIsAutostart] = useState(false);
   const [autostartLoading, setAutostartLoading] = useState(false);
+  const [preferenceUncertain, setPreferenceUncertain] = useState(false);
   const isMounted = useRef(true);
   const preferenceRequestId = useRef(0);
   const autostartOperationId = useRef(0);
 
-  const refreshPreference = useCallback(async (reportError = true): Promise<string | undefined> => {
-    const currentRequestId = ++preferenceRequestId.current;
-    try {
-      const rsp: any = await vpnApi.getPreference();
-      if (!isMounted.current || currentRequestId !== preferenceRequestId.current) return undefined;
+  const refreshPreference = useCallback(
+    async (reportError = true, clearError = true): Promise<string | undefined> => {
+      const currentRequestId = ++preferenceRequestId.current;
+      try {
+        const rsp: any = await vpnApi.getPreference();
+        if (!isMounted.current || currentRequestId !== preferenceRequestId.current)
+          return undefined;
 
-      if (rsp.code !== 0) {
-        if (reportError) message.error(rsp.msg);
+        if (rsp.code !== 0) {
+          if (reportError) message.error(rsp.msg);
+          return undefined;
+        }
+
+        const vpn = rsp.data?.vpn;
+        setIsAutostart(vpn === 'tailscale');
+        if (clearError) message.destroy('tailscale-preference-unknown');
+        return vpn;
+      } catch {
+        if (!isMounted.current || currentRequestId !== preferenceRequestId.current)
+          return undefined;
+        // Leave the switch off as the safe default. A failed mutation has already
+        // shown its unknown-result warning before this reconciliation read.
         return undefined;
       }
+    },
+    []
+  );
 
-      const vpn = rsp.data?.vpn;
-      setIsAutostart(vpn === 'tailscale');
-      return vpn;
-    } catch {
-      if (!isMounted.current || currentRequestId !== preferenceRequestId.current) return undefined;
-      // Leave the switch off as the safe default. A failed mutation has already
-      // shown its unknown-result warning before this reconciliation read.
-      return undefined;
+  async function reconcileUncertainPreference(currentOperationId: number) {
+    const deadline = Date.now() + PREFERENCE_RECHECK_TIMEOUT;
+    while (true) {
+      const vpn = await refreshPreference(false, false);
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
+
+      if (vpn === 'tailscale') {
+        setPreferenceUncertain(false);
+        message.destroy('tailscale-preference-unknown');
+        onSuccess();
+        return;
+      }
+      if (Date.now() >= deadline) {
+        setPreferenceUncertain(false);
+        message.destroy('tailscale-preference-unknown');
+        message.error(t('settings.tailscale.preferenceNotChanged'));
+        return;
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, PREFERENCE_RECHECK_INTERVAL));
+      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
     }
-  }, []);
+  }
 
   useEffect(() => {
     isMounted.current = true;
@@ -58,6 +96,9 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
       isMounted.current = false;
       preferenceRequestId.current += 1;
       autostartOperationId.current += 1;
+      // message.loading is global rather than component-owned; closing the
+      // panel must also close a still-pending ambiguity notice.
+      message.destroy('tailscale-preference-unknown');
     };
   }, [refreshPreference]);
 
@@ -67,6 +108,7 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
     // A request that began before the mutation cannot authoritatively update
     // the switch after it completes.
     preferenceRequestId.current += 1;
+    setPreferenceUncertain(false);
     setAutostartLoading(true);
 
     try {
@@ -88,15 +130,13 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
 
       // The server may still be completing the requested switch. Re-read
       // instead of issuing an automatic second state-changing request.
-      message.warning(t('settings.tailscale.preferenceUnknown'));
-      const vpn = await refreshPreference(false);
-      if (!isMounted.current || currentOperationId !== autostartOperationId.current) return;
-
-      if (vpn === 'tailscale') {
-        onSuccess();
-      } else if (vpn) {
-        message.error(t('settings.tailscale.preferenceNotChanged'));
-      }
+      setPreferenceUncertain(true);
+      message.loading({
+        content: t('settings.tailscale.preferenceUnknown'),
+        key: 'tailscale-preference-unknown',
+        duration: 0
+      });
+      await reconcileUncertainPreference(currentOperationId);
     } finally {
       if (isMounted.current && currentOperationId === autostartOperationId.current) {
         setAutostartLoading(false);
@@ -141,14 +181,14 @@ export const Header = ({ state, onSuccess }: HeaderProps) => {
             okText={t('settings.tailscale.okBtn')}
             cancelText={t('settings.tailscale.cancelBtn')}
             placement="bottom"
-            disabled={isAutostart || autostartLoading}
+            disabled={isAutostart || autostartLoading || preferenceUncertain}
           >
             <Switch
               checked={isAutostart}
-              loading={autostartLoading}
+              loading={autostartLoading || preferenceUncertain}
               size="small"
               title={t('settings.tailscale.autostart')}
-              disabled={isAutostart || autostartLoading}
+              disabled={isAutostart || autostartLoading || preferenceUncertain}
             />
           </Popconfirm>
         )}
