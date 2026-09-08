@@ -1,0 +1,50 @@
+name: VPN extension checks
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/vpn-extension-checks.yml
+      # Any server change can affect these packages through shared code.
+      - server/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Vet and test VPN extensions
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+
+      - name: Go vet
+        run: >-
+          go vet
+          ./service/extensions/vpnpref
+          ./service/extensions/tailscale
+          ./service/extensions/netbird
+          ./service/extensions/vpn
+
+      - name: Go test
+        run: >-
+          go test -count=1 -race
+          ./service/extensions/vpnpref
+          ./service/extensions/tailscale
+          ./service/extensions/netbird
+          ./service/extensions/vpn
