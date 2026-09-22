@@ -2,6 +2,7 @@ package config
 
 var defaultConfig = &Config{
 	Proto: "http",
+	Host:  "",
 	Port: Port{
 		Http:  80,
 		Https: 443,
@@ -26,6 +27,10 @@ var defaultConfig = &Config{
 		TurnCred: "",
 	},
 	Authentication: "enable",
+	Security: Security{
+		LoginLockoutDuration: 0,
+		LoginMaxFailures:     5,
+	},
 }
 
 func checkDefaultValue() {

@@ -1,3 +1,150 @@
+## 2.5.0 (2026-08-04)
+
+### Features
+
+* Added an MCP service that lets trusted MCP clients capture screenshots and control the keyboard and mouse with an API key, including a settings page for enabling it and regenerating the key
+* Added coordinated device control so MCP, PicoClaw and manual input hand ownership over to each other instead of writing HID input at the same time
+* Added remote keyboard lock indicators that show the target machine's Num Lock, Caps Lock and Scroll Lock state
+* Added an optional SHA-256 checksum and cancellation to remote image downloads
+
+### Bug Fixes
+
+* Fixed the USB network gadget getting a random host-side MAC on every bind, which made the attached PC register a new network adapter after each reboot; both the device and host MAC are now derived from the chip UID (thanks to [@BeaconCat](https://github.com/BeaconCat))
+* Fixed OLED sleep durations above 255 seconds being truncated, so the 5 min, 10 min, 30 min and 1 hour options now behave as selected
+* Fixed the mounted image API returning an error in HID-Only mode
+* Fixed image downloads and application updates interfering with each other when running at the same time
+* Fixed Direct H.264 playback falling behind when the decoder queue backed up, by resynchronizing at the next key frame and preferring hardware decoding
+* Added a warning when Direct and WebRTC H.264 stream modes are used at the same time
+* Made the video input state shared between processes and read it without shell pipelines, so HDMI status stays consistent between `NanoKVM-Server` and `kvm_system`
+
+### Performance
+
+* Reduced latency in 60 Hz mode with decode-driven flow control, GOP-aware bounded queues, and dedicated writer goroutines with write deadlines so a slow client no longer stalls the others
+* Integrated zero-copy H.264 capture into the video pipeline instead of relying on a preload hook
+* Stopped HDMI capture when no user is logged in or all viewers are idle, reducing power consumption
+
+### UI Improvements
+
+* Tidied the image download dialog layout and truncated long file names in the upload box
+
+### Localization
+
+* Synchronized translations of other languages according to English
+
+### Chores
+
+* Split release automation into separate package, tag and release workflows, and produced identifiable build artifacts with checksums for pull requests
+* Allowed overriding the builder image, installed `patchelf` in the build environment, and fixed the exit codes of `support/sg2002/build`
+* Fixed slow container builds caused by uid/gid mismatch and reused existing container users and groups
+
+## 2.4.3 (2026-06-09)
+
+### Features
+
+* Added LT6911D support
+
+### Bug Fixes
+
+* Improved USB network adapter compatibility on Windows
+
+## 2.4.2 (2026-05-20)
+
+### Features
+
+* Added HDMI capture status detection with localized warning and error overlays on the desktop screen
+
+### Bug Fixes
+
+* Fixed left-button touch cancellation and context menu cleanup for mouse input
+* Improved the WebRTC loading indicator
+* Added Wi-Fi password field validation
+* Hardened Wake-on-LAN MAC handling by normalizing stored addresses, avoiding shell execution, handling missing history gracefully, and improving named MAC display
+* Stabilized PicoClaw session switching by waiting for gateway release, refreshing runtime status before reconnecting, rendering structured thought messages, and preventing history row overflow
+
+### Performance
+
+* Improved H.264 streaming client handling by reducing frame queue latency, using client snapshots for fanout, applying backend ICE server configuration, and cleaning up disconnected WebRTC clients more aggressively
+
+### UI Improvements
+
+* Refreshed desktop menu ordering and community links, including replacing the Discussion link with Discord
+
+### Chores
+
+* Removed the legacy H.264 stream package
+* Updated PostCSS, refreshed the MSW worker, and added pnpm workspace build approvals
+
+## 2.4.1 (2026-05-08)
+
+### Features
+
+* Added DNS management to Network settings, including DHCP/manual modes, effective DNS display, network details, IPv4/IPv6 server validation, and persistent udhcpc hook support
+* Added a configurable server `host` option for binding NanoKVM to a specific listen address (thanks to [@allmazz](https://github.com/allmazz))
+* Added French keyboard layout support and language options (thanks to [@ilyesAj](https://github.com/ilyesAj))
+
+### Bug Fixes
+
+* Hardened HID recovery and cleanup by adding non-blocking HID writes, bounded reopen retries, stale event draining, and release reports after write failures
+* Fixed the `kvm_vision` project name and build output message in the SG2002 build script (thanks to [@Voranto](https://github.com/Voranto))
+
+### UI Improvements
+
+* Moved TLS and Wi-Fi settings into the Network settings section
+* Optimized the Settings scrollbar style
+
+### Localization
+
+* Updated Korean translations (thanks to [@kmw0410](https://github.com/kmw0410))
+* Synchronized translations of other languages according to English
+
+### Security
+
+* Upgraded vulnerable web dependencies
+
+## 2.4.0 (2026-04-10)
+
+### Features
+
+* **Introduced [PicoClaw](https://github.com/sipeed/picoclaw) support** — an AI-powered remote desktop assistant for NanoKVM. PicoClaw seamlessly integrates a lightweight AI agent with NanoKVM's underlying hardware capabilities. Key highlights include:
+  * **Zero-Agent Architecture:** Operates entirely through HDMI video capture (vision) and USB HID emulation (keyboard/mouse). No SSH access, network connection to the host, or OS-level software installation is required.
+  * **Natural Language Control:** Features a built-in chat interface allowing users to issue complex instructions in plain text.
+  * **Autonomous GUI Operation:** The AI agent can autonomously observe the remote host's screen, understand UI elements, reason about the task, and execute operations mimicking human behavior.
+  * **Installation Note:** PicoClaw is not built into the NanoKVM device or firmware. Install it separately when needed.
+
+### Bug Fixes
+
+* Added a default subnet mask for static IP configurations
+* Fixed an issue where the IP address would occasionally not display
+
+## 2.3.6 (2026-03-12)
+
+### Features
+
+* Implemented AP password authentication for the WiFi configuration page
+* Added Korean and Japanese virtual keyboard layouts (thanks to [@klim4-bot](https://github.com/klim4-bot))
+* Enabled support for 640x480 resolution (thanks to [@Voranto](https://github.com/Voranto))
+* Added encryption parameters for OLED distribution network
+* Added custom logo function and logo generation tools
+* Added update mechanism for tailscale startup script
+
+### Localization
+
+* Updated Japanese translation (thanks to [@tkmsst](https://github.com/tkmsst))
+
+## 2.3.5 (2026-02-28)
+
+### Features
+
+* Implemented login brute-force protection with lockout mechanism
+
+### Bug Fixes
+
+* Improved Tailscale error handling in UI components and refined backend state mapping
+
+### Chores
+
+* Updated server and web dependencies
+
 ## 2.3.4 (2026-01-26)
 
 ### Features

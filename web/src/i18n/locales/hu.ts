@@ -17,6 +17,8 @@ const hu = {
       noAccount:
         'Nem sikerült megszerezni a felhasználói információkat, frissítse az oldalt vagy állítsa vissza a jelszót',
       invalidUser: 'Érvénytelen felhasználónév vagy jelszó',
+      locked: 'Túl sok bejelentkezés, kérjük, próbálja újra később',
+      globalLocked: 'A rendszer védelem alatt áll, próbálkozzon újra később',
       error: 'Váratlan hiba',
       changePassword: 'Jelszó megváltoztatása',
       changePasswordDesc:
@@ -31,25 +33,38 @@ const hu = {
       tips: {
         reset1:
           'To reset the passwords, pressing and holding the BOOT button on the NanoKVM for 10 seconds.',
-        reset2: 'For detailed steps, please consult this document:',
-        reset3: 'Web default account:',
-        reset4: 'SSH default account:',
-        change1: 'Please note that this action will change the following passwords:',
-        change2: 'Web login password',
-        change3: 'System root password (SSH login password)',
-        change4: 'To reset the passwords, press and hold the BOOT button on the NanoKVM.'
+        reset2: 'A részletes lépésekért tekintse meg ezt a dokumentumot:',
+        reset3: 'Alapértelmezett webes fiók:',
+        reset4: 'Alapértelmezett SSH-fiók:',
+        change1: 'Vegye figyelembe, hogy ez a művelet a következő jelszavakat módosítja:',
+        change2: 'Webes bejelentkezési jelszó',
+        change3: 'Rendszer root jelszava (SSH bejelentkezési jelszó)',
+        change4: 'A jelszavak visszaállításához tartsa lenyomva a BOOT gombot a NanoKVM-en.'
       }
     },
     wifi: {
       title: 'Wi-Fi',
-      description: 'Configure Wi-Fi for NanoKVM',
+      description: 'Wi-Fi beállítása a NanoKVM-hez',
       success: 'Please check the network status of NanoKVM and visit the new IP address.',
-      failed: 'Operation failed, please try again.',
+      failed: 'A művelet sikertelen, próbálja újra.',
+      invalidMode:
+        'Az aktuális mód nem támogatja a hálózat beállítását. Kérjük, lépjen az eszközére, és engedélyezze a Wi-Fi konfigurációs módot.',
       confirmBtn: 'Ok',
-      finishBtn: 'Finished'
+      finishBtn: 'Kész',
+      ap: {
+        authTitle: 'Hitelesítés szükséges',
+        authDescription: 'A folytatáshoz adja meg a AP jelszót',
+        authFailed: 'Érvénytelen AP jelszó',
+        passPlaceholder: 'AP jelszót',
+        verifyBtn: 'Ellenőrizze'
+      }
     },
     screen: {
+      scale: 'Skála',
+      title: 'Képernyő',
       video: 'Videó mód',
+      videoDirectTips:
+        'Engedélyezze az HTTPS elemet a "Beállítások > Eszköz" menüpontban ennek a módnak a használatához',
       resolution: 'Felbontás',
       auto: 'Automatikus',
       autoTips:
@@ -64,17 +79,84 @@ const hu = {
       frameDetect: 'Képkocka-figyelés',
       frameDetectTip:
         'Elemzi a képkockák közötti különbségeket. A videó stream küldése leáll, ha a távoli gép képernyőjén nem történik változás.',
-      resetHdmi: 'Reset HDMI'
+      resetHdmi: 'HDMI visszaállítása',
+      mixedH264: {
+        title: 'H.264 adatfolyam-ütközés',
+        description:
+          'Az H.264 Direct és az H.264 WebRTC egyszerre van használatban. Ez képtörést vagy sérült videót okozhat. Csak egy H.264 módot használjon.'
+      },
+      webrtcConnectionFailed: {
+        title: 'A WebRTC-kapcsolat sikertelen',
+        description: 'Ellenőrizze a hálózati kapcsolatot, vagy váltson videómódot.'
+      },
+      captureStatus: {
+        hdmiError: 'HDMI-képernyőhiba',
+        unsupportedResolution: 'A jelenlegi felbontás nem támogatott',
+        retrieving: 'Kép lekérése...',
+        changingResolution: 'Felbontás váltása...',
+        updateFailed: 'A kép jelenleg nem frissíthető',
+        videoError: 'Videómegjelenítési hiba',
+        noHdmi: 'Nem észlelhető HDMI-jel',
+        unavailable: 'A kép jelenleg nem jeleníthető meg'
+      }
     },
     keyboard: {
+      title: 'Billentyűzet',
       paste: 'Beillesztés',
       tips: 'Csak a szabványos billentyűzet betűi és szimbólumai támogatottak',
       placeholder: 'Írja be',
       submit: 'Elküldés',
       virtual: 'Billentyűzet',
-      ctrlaltdel: 'Ctrl+Alt+Del'
+      readClipboard: 'Olvasás a vágólapról',
+      clipboardPermissionDenied:
+        'A vágólap engedélye megtagadva. Kérjük, engedélyezze a vágólaphoz való hozzáférést a böngészőjében.',
+      clipboardReadError: 'Nem sikerült beolvasni a vágólapot',
+      dropdownEnglish: 'angol',
+      dropdownGerman: 'német',
+      dropdownFrench: 'francia',
+      dropdownRussian: 'orosz',
+      shortcut: {
+        title: 'Parancsikonok',
+        custom: 'Egyedi',
+        capture: 'Kattintson ide a parancsikon rögzítéséhez',
+        clear: 'Tiszta',
+        save: 'Mentés',
+        captureTips:
+          'A rendszerszintű billentyűk (például a Windows billentyű) rögzítéséhez teljes képernyős engedély szükséges.',
+        enterFullScreen: 'Teljes képernyős mód váltása.'
+      },
+      leaderKey: {
+        title: 'Leader billentyű',
+        desc: 'Kerülje ki a böngésző korlátozásait, és küldje el a rendszer parancsikonjait közvetlenül a távoli gazdagépnek.',
+        howToUse: 'Használat',
+        simultaneous: {
+          title: 'Egyidejű üzemmód',
+          desc1: 'Tartsa lenyomva a Leader billentyűt, majd nyomja meg a gyorsbillentyűt.',
+          desc2: 'Intuitív, de ütközhet a rendszer parancsikonjaival.'
+        },
+        sequential: {
+          title: 'Szekvenciális mód',
+          desc1:
+            'Nyomja meg a Leader billentyűt → nyomja meg sorban a gyorsbillentyűt → nyomja meg újra a Leader billentyűt.',
+          desc2: 'Több lépést igényel, de teljesen elkerülhető a rendszerütközések.'
+        },
+        enable: 'Leader billentyű engedélyezése',
+        tip: 'Leader billentyűként beállítva ez a billentyű kizárólag gyorsbillentyű-indítóként működik, és elveszíti alapértelmezett viselkedését.',
+        placeholder: 'Nyomja meg a Leader billentyűt',
+        shiftRight: 'Jobb Shift',
+        ctrlRight: 'Jobb Ctrl',
+        metaRight: 'Jobb Win',
+        submit: 'Elküldés',
+        recorder: {
+          rec: 'REC',
+          activate: 'Billentyűk aktiválása',
+          input: 'Kérjük, nyomja meg a parancsikont...'
+        }
+      }
     },
     mouse: {
+      title: 'Egér',
+      cursor: 'Kurzorstílus',
       default: 'Alapértelmezett kurzor',
       pointer: 'Mutató kurzor',
       cell: 'Cella kurzor',
@@ -84,17 +166,41 @@ const hu = {
       mode: 'Egér mód',
       absolute: 'Abszolút mód',
       relative: 'Relatív mód',
+      direction: 'Görgő iránya',
+      scrollUp: 'Görgessen felfelé',
+      scrollDown: 'Görgessen le',
+      speed: 'Görgő sebessége',
+      fast: 'Gyors',
+      slow: 'Lassú',
       requestPointer:
         'Relatív mód használata. Kattintson az asztalra, hogy megjelenjen az egérmutató.',
-      resetHid: 'HID alaphelyzetbe állítása'
+      resetHid: 'HID alaphelyzetbe állítása',
+      hidOnly: {
+        title: 'Csak HID mód',
+        desc: 'Ha az egér és a billentyűzet nem válaszol, és az HID alaphelyzetbe állítása nem segít, akkor az NanoKVM és az eszköz közötti kompatibilitási probléma lehet. Próbálja engedélyezni az HID-Csak módot a jobb kompatibilitás érdekében.',
+        tip1: 'Az HID-Csak mód engedélyezése leválasztja a virtuális U-lemezt és a virtuális hálózatot',
+        tip2: 'HID-Csak módban a képrögzítés le van tiltva',
+        tip3: 'A NanoKVM automatikusan újraindul az üzemmódváltás után',
+        enable: 'Engedélyezze a HID-Csak módot',
+        disable: 'A HID-Csak mód letiltása'
+      }
     },
     image: {
       title: 'Képek',
       loading: 'Betöltés...',
       empty: 'Nem található semmi',
+      mountMode: 'Felszerelési mód',
       mountFailed: 'Csatlakoztatás sikertelen',
       mountDesc:
         'Egyes rendszerekben szükséges lehet a virtuális lemez eltávolítása a távoli gépen, mielőtt a képet csatlakoztatja.',
+      unmountFailed: 'A leválasztás nem sikerült',
+      unmountDesc:
+        'Egyes rendszereken manuálisan kell kiadnia a távoli gazdagépről a kép leválasztása előtt.',
+      refresh: 'Frissítse a képlistát',
+      attention: 'Figyelem',
+      deleteConfirm: 'Biztosan törli ezt a képet?',
+      okBtn: 'Igen',
+      cancelBtn: 'Nem',
       tips: {
         title: 'Hogyan tölts fel képeket',
         usb1: 'Csatlakoztassa a NanoKVM-t a számítógépéhez USB-n keresztül.',
@@ -131,6 +237,16 @@ const hu = {
       serialPort: 'Soros port',
       serialPortPlaceholder: 'Adja meg a soros portot',
       baudrate: 'Baudráta',
+      parity: 'Paritás',
+      parityNone: 'Nincs',
+      parityEven: 'Páros',
+      parityOdd: 'Páratlan',
+      flowControl: 'Áramlásszabályozás',
+      flowControlNone: 'Nincs',
+      flowControlSoft: 'Szoftveres',
+      flowControlHard: 'Hardveres',
+      dataBits: 'Adatbitek',
+      stopBits: 'Stop bitek',
       confirm: 'Ok'
     },
     wol: {
@@ -140,40 +256,116 @@ const hu = {
       input: 'Adja meg a MAC címet',
       ok: 'Ok'
     },
+    download: {
+      title: 'Képletöltő',
+      input: 'Adjon meg egy távoli képet URL',
+      ok: 'Ok',
+      disabled: '/data partíció RO, ezért nem tudjuk letölteni a képet',
+      uploadbox: 'Dobja ide a fájlt, vagy kattintson a kiválasztáshoz',
+      inputfile: 'Kérjük, írja be a képfájlt',
+      NoISO: 'Nincs ISO',
+      sha256: 'SHA-256 (opcionális)',
+      sha256Placeholder: 'Adjon meg egy 64 karakteres SHA-256 ellenőrzőösszeget',
+      invalidSHA256: 'A SHA-256 értékének 64 karakteres hexadecimális karakterláncnak kell lennie',
+      failed: 'Sikertelen letöltés',
+      success: 'Sikeres letöltés',
+      checksumFailed: 'Sikertelen letöltés: a SHA-256 ellenőrzése sikertelen',
+      cancel: 'Mégse',
+      cancelFailed: 'A letöltés megszakítása sikertelen'
+    },
     power: {
       title: 'Bekapcsolás',
-      power: 'Bekapcsolás',
+      showConfirm: 'Megerősítés',
+      showConfirmTip: 'Az áramellátási műveletekhez külön megerősítés szükséges',
       reset: 'Újraindítás',
+      power: 'Bekapcsolás',
       powerShort: 'Bekapcsolás (rövid kattintás)',
-      powerLong: 'Bekapcsolás (hosszú kattintás)'
+      powerLong: 'Bekapcsolás (hosszú kattintás)',
+      resetConfirm: 'Folytatja a visszaállítási műveletet?',
+      powerConfirm: 'Folytatja az áramellátást?',
+      okBtn: 'Igen',
+      cancelBtn: 'Nem'
     },
     settings: {
-      title: 'Settings',
+      title: 'Beállítások',
+      mcp: {
+        title: 'MCP-szolgáltatás',
+        service: 'MCP távoli vezérlés',
+        serviceDesc:
+          'Megbízható MCP-kliensek számára a billentyűzet és az egér vezérlésének, valamint képernyőképek készítésének engedélyezése',
+        securityWarning:
+          'Az API-kulcs birtokában bárki vezérelheti a távoli gazdagépet és láthatja annak képernyőjét. Használjon HTTPS-t, és csak megbízható hálózatokon engedélyezze.',
+        endpoint: 'Végpont',
+        apiKey: 'API-kulcs',
+        regenerateConfirmTitle: 'Újragenerálja az MCP API-kulcsot?',
+        regenerateConfirmDesc: 'A jelenlegi kulcs azonnal érvényét veszti.',
+        enableConfirmTitle: 'Engedélyezi a külső MCP-vezérlést?',
+        enableConfirmDesc:
+          'Az MCP engedélyezése leállítja a PicoClaw-t, és bezár minden aktív PicoClaw-munkamenetet.',
+        failed: 'Az MCP-művelet sikertelen',
+        copyFailed: 'A másolás sikertelen. Másolja kézzel.',
+        okBtn: 'Megerősítés',
+        cancelBtn: 'Mégse'
+      },
       about: {
         title: 'NanoKVM Névjegy',
         information: 'Információ',
         ip: 'IP',
         mdns: 'mDNS',
         application: 'Alkalmazás verzió',
-        applicationTip: 'NanoKVM web application version',
+        applicationTip: 'NanoKVM webalkalmazás verziója',
         image: 'Képfájl verzió',
-        imageTip: 'NanoKVM system image version',
+        imageTip: 'NanoKVM rendszerkép verziója',
         deviceKey: 'Eszköz kulcs',
-        community: 'Közösség'
+        community: 'Közösség',
+        hostname: 'Gazdanév',
+        hostnameUpdated: 'Gazdanév frissítve. Az alkalmazáshoz indítsa újra.',
+        ipType: {
+          Wired: 'Vezetékes',
+          Wireless: 'Vezeték nélküli',
+          Other: 'Egyéb'
+        }
       },
       appearance: {
-        title: 'Appearance',
-        display: 'Display',
-        language: 'Language',
-        menuBar: 'Menu Bar',
-        menuBarDesc: 'Display icons in the menu bar'
+        title: 'Megjelenés',
+        display: 'Kijelző',
+        language: 'Nyelv',
+        languageDesc: 'Válassza ki a felület nyelvét',
+        webTitle: 'Webcím',
+        webTitleDesc: 'A weboldal címének testreszabása',
+        menuBar: {
+          title: 'Menüsor',
+          mode: 'Megjelenítési mód',
+          modeDesc: 'Menüsor megjelenítése a képernyőn',
+          modeOff: 'Ki',
+          modeAuto: 'Automatikus elrejtés',
+          modeAlways: 'Mindig látható',
+          keyboardLedStatus: 'Billentyűzár-jelzők',
+          keyboardLedStatusDesc:
+            'A távoli számítógép Num Lock, Caps Lock és Scroll Lock állapotának megjelenítése',
+          icons: 'Almenü ikonok',
+          iconsDesc: 'Almenüikonok megjelenítése a menüsorban'
+        }
+      },
+      keyboardLedStatus: {
+        groupLabel: 'Távoli billentyűzárak állapota',
+        indicatorLabel: '{{label}}: {{state}}',
+        numLock: 'Num Lock',
+        numLockShort: 'Num',
+        capsLock: 'Caps Lock',
+        capsLockShort: 'Caps',
+        scrollLock: 'Scroll Lock',
+        scrollLockShort: 'Scr',
+        on: 'Be',
+        off: 'Ki',
+        unknown: 'Ismeretlen'
       },
       device: {
-        title: 'Device',
+        title: 'Eszköz',
         oled: {
           title: 'OLED',
           description: 'OLED screen automatically sleep',
-          0: 'Never',
+          0: 'Soha',
           15: '15 sec',
           30: '30 sec',
           60: '1 min',
@@ -181,28 +373,124 @@ const hu = {
           300: '5 min',
           600: '10 min',
           1800: '30 min',
-          3600: '1 hour'
+          3600: '1 óra'
         },
+        ssh: {
+          description: 'Engedélyezze a SSH távoli hozzáférést',
+          tip: 'Az engedélyezés előtt állítson be erős jelszót (Fiók - Jelszó módosítása)'
+        },
+        advanced: 'Speciális beállítások',
+        swap: {
+          title: 'Csere',
+          disable: 'Letiltás',
+          description: 'Állítsa be a swap fájl méretét',
+          tip: 'Ennek a funkciónak az engedélyezése lerövidítheti az SD-kártya élettartamát!'
+        },
+        mouseJiggler: {
+          title: 'Mouse Jiggler',
+          description: 'A távoli gazdagép alvó állapotának megakadályozása',
+          disable: 'Letiltás',
+          absolute: 'Abszolút mód',
+          relative: 'Relatív mód'
+        },
+        mdns: {
+          description: 'Engedélyezze az mDNS felderítési szolgáltatást',
+          tip: 'Kikapcsolás, ha nincs rá szükség'
+        },
+        hdmi: {
+          description: 'HDMI/monitor kimenet engedélyezése',
+          idleTimeoutTitle: 'Inaktív rögzítés időkorlátja',
+          idleTimeoutDescription: 'A HDMI-rögzítés leállítása, ha nincs aktív néző ennyi ideig:',
+          minutes: 'perc'
+        },
+        autostart: {
+          title: 'Automatikus indítási parancsfájlok beállításai',
+          description: 'A rendszer indításakor automatikusan futó szkriptek kezelése',
+          new: 'Új',
+          deleteConfirm: 'Biztosan törli ezt a fájlt?',
+          yes: 'Igen',
+          no: 'Nem',
+          scriptName: 'Automatikusan induló szkript neve',
+          scriptContent: 'A szkripttartalom automatikus indítása',
+          settings: 'Beállítások'
+        },
+        hidOnly: 'HID-Csak mód',
+        hidOnlyDesc:
+          'A virtuális eszközök emulálásának leállítása, csak az alapvető HID vezérlés megtartásával',
+        disk: 'Virtuális lemez',
+        diskDesc: 'Mount virtual U-disk on the remote host',
+        network: 'Virtuális hálózat',
+        networkDesc: 'Virtuális hálózati kártya csatlakoztatása a távoli gazdagépen',
+        reboot: 'Újraindítás',
+        rebootDesc: 'Biztos, hogy újra akarja indítani a NanoKVM-t?',
+        okBtn: 'Igen',
+        cancelBtn: 'Nem'
+      },
+      network: {
+        title: 'Hálózat',
         wifi: {
           title: 'Wi-Fi',
-          description: 'Configure Wi-Fi',
-          setBtn: 'Config'
+          description: 'Wi-Fi beállítása',
+          apMode: 'Az AP mód engedélyezve van, csatlakozzon a Wi-Fihez a QR-kód beolvasásával',
+          connect: 'Wi-Fi csatlakoztatása',
+          connectDesc1: 'Adja meg a hálózat SSID-jét és jelszavát',
+          connectDesc2: 'Adja meg a jelszót a hálózathoz való csatlakozáshoz',
+          disconnect: 'Biztosan bontja a hálózati kapcsolatot?',
+          failed: 'A csatlakozás sikertelen, próbálja újra.',
+          ssid: 'Név',
+          password: 'Jelszó',
+          joinBtn: 'Csatlakozás',
+          confirmBtn: 'OK',
+          cancelBtn: 'Mégse'
         },
-        disk: 'Virtual Disk',
-        diskDesc: 'Mount virtual U-disk on the remote host',
-        network: 'Virtual Network',
-        networkDesc: 'Mount virtual network card on the remote host'
+        tls: {
+          description: 'HTTPS protokoll engedélyezése',
+          tip: 'Figyelem: A HTTPS használata növelheti a késleltetést, különösen MJPEG videó módban.'
+        },
+        dns: {
+          title: 'DNS',
+          description: 'DNS-kiszolgálók beállítása a NanoKVM számára',
+          mode: 'Mód',
+          dhcp: 'DHCP',
+          manual: 'Kézi',
+          add: 'DNS hozzáadása',
+          save: 'Mentés',
+          invalid: 'Adjon meg egy érvényes IP-címet',
+          noDhcp: 'Jelenleg nincs elérhető DHCP DNS',
+          saved: 'DNS-beállítások mentve',
+          saveFailed: 'Nem sikerült menteni a DNS-beállításokat',
+          unsaved: 'Nem mentett módosítások',
+          maxServers: 'Legfeljebb {{count}} DNS-kiszolgáló engedélyezett',
+          dnsServers: 'DNS-kiszolgálók',
+          dhcpServersDescription: 'A DNS-kiszolgálók automatikusan DHCP-n keresztül érkeznek',
+          manualServersDescription: 'A DNS-kiszolgálók kézzel szerkeszthetők',
+          networkDetails: 'Hálózati részletek',
+          interface: 'Interfész',
+          ipAddress: 'IP-cím',
+          subnetMask: 'Alhálózati maszk',
+          router: 'Router',
+          none: 'Nincs'
+        }
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Automatikus indítás',
+        autostartConfirm: 'Átváltja az automatikus indítást Tailscale-re? A NetBird leáll.',
+        autostartWarning:
+          'Előbb ellenőrizze, hogy eléri-e az eszközt Tailscale útján. A NetBird leállítása megszakítja a most használt kapcsolatot.',
         memory: {
-          title: 'Memory optimization',
-          tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect.",
-          disable: 'Disable'
+          title: 'Memóriaoptimalizálás',
+          tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
+        },
+        swap: {
+          title: 'Memória csere',
+          tip: 'Ha a memóriaoptimalizálás engedélyezése után is fennállnak a problémák, próbálja meg engedélyezni a swap memóriát. Ez alapértelmezés szerint a swap fájl méretét 256MB értékre állítja be, amely a "Beállítások > Eszköz" menüpontban állítható be.'
         },
         restart: 'Are you sure to restart Tailscale?',
         stop: 'Are you sure to stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable its automatic startup on boot.',
+        stopWarning:
+          'Ha Tailscale útján csatlakozik, ez megszakítja a kapcsolatot. Magától nem tér vissza — gondoskodjon másik hozzáférési útról.',
         loading: 'Betöltés...',
         notInstall: 'Tailscale nem található! Kérem, telepítse.',
         install: 'Telepítés',
@@ -215,6 +503,8 @@ const hu = {
         upTailscale: 'Töltsön fel tailscale-t a NanoKVM /usr/bin/ könyvtárába',
         upTailscaled: 'Töltsön fel tailscaled-t a NanoKVM /usr/sbin/ könyvtárába',
         refresh: 'Frissítse az aktuális oldalt',
+        notRunning: 'Tailscale nem fut. Kérjük, indítsa el a folytatáshoz.',
+        run: 'Indítás',
         notLogin:
           'Az eszköz még nincs kötve. Kérem, jelentkezzen be és kösse az eszközt a fiókjához.',
         urlPeriod: 'Ez az url 10 percig érvényes',
@@ -225,9 +515,59 @@ const hu = {
         deviceIP: 'Eszköz IP',
         account: 'Fiók',
         logout: 'Kijelentkezés',
-        logout2: 'Biztos, hogy kijelentkezik?',
+        logoutDesc: 'Biztos, hogy ki szeretne jelentkezni?',
+        uninstall: 'Eltávolítás Tailscale',
+        uninstallDesc: 'Biztosan eltávolítja a Tailscale alkalmazást?',
+        uninstallWarning:
+          'Ha Tailscale útján csatlakozik, ez megszakítja a kapcsolatot. Magától nem tér vissza — gondoskodjon másik hozzáférési útról.',
         okBtn: 'Yes',
         cancelBtn: 'No'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Automatikus indítás',
+        autostartConfirm: 'Átváltja az automatikus indítást NetBirdre? A Tailscale leáll.',
+        autostartWarning:
+          'Előbb ellenőrizze, hogy eléri-e az eszközt NetBird útján. A Tailscale leállítása megszakítja a most használt kapcsolatot.',
+        restart: 'Are you sure to restart NetBird?',
+        stop: 'Are you sure to stop NetBird?',
+        stopDesc:
+          'Leállítja a NetBird szolgáltatást. Bekapcsolt automatikus indítás mellett a következő indításkor újraindul.',
+        stopWarning:
+          'Ha NetBird útján csatlakozik, ez megszakítja a kapcsolatot. A következő indításkor visszatér, amíg a NetBird automatikus indítása be van kapcsolva.',
+        loading: 'Betöltés...',
+        notInstall: 'NetBird nem található! Kérem, telepítse.',
+        install: 'Telepítés',
+        installing: 'Telepítés folyamatban',
+        notRunning: 'NetBird nem fut. Kérjük, indítsa el a folytatáshoz.',
+        run: 'Indítás',
+        notLogin:
+          'Az eszköz még nincs kötve. Kérem, jelentkezzen be és kösse az eszközt a fiókjához.',
+        urlPeriod: 'Ez az url 10 percig érvényes',
+        login: 'Bejelentkezés',
+        loginSuccess: 'Sikeres bejelentkezés',
+        enable: 'NetBird engedélyezése',
+        deviceName: 'Eszköz neve',
+        deviceIP: 'Eszköz IP',
+        uninstall: 'Eltávolítás NetBird',
+        uninstallDesc: 'Biztosan eltávolítja a NetBird alkalmazást?',
+        uninstallWarning:
+          'Ha NetBird útján csatlakozik, ez megszakítja a kapcsolatot. Az automatikus indítás visszakerül a Tailscale-hez, amelynek telepítve kell lennie és működnie kell.',
+        version: 'Verzió',
+        disconnect: 'Bontás',
+        disconnectConfirm: 'Biztosan bontja a kapcsolatot?',
+        okBtn: 'Yes',
+        cancelBtn: 'No',
+        error: {
+          title: 'A NetBird művelet sikertelen',
+          intro: 'Hiba részletei:',
+          stepWait: '1. Várjon 10-15 másodpercet, majd próbálja újra.',
+          stepRestartUI: '2. Kattintson lent a „Szolgáltatás újraindítása” gombra.',
+          stepRestartSSH: '3. Ha szükséges, futtassa: /etc/init.d/S99netbird restart',
+          stepReboot: '4. A NanoKVM-et csak akkor indítsa újra, ha a fentiek nem segítettek.',
+          restartButton: 'Szolgáltatás újraindítása',
+          refreshButton: 'Állapot frissítése'
+        }
       },
       update: {
         title: 'Frissítés keresése',
@@ -237,15 +577,224 @@ const hu = {
         available: 'Frissítés elérhető. Biztos, hogy frissít?',
         updating: 'Frissítés elkezdődött. Kérem várjon...',
         confirm: 'Megerősítés',
-        cancel: 'Mégse'
+        cancel: 'Mégse',
+        preview: 'Frissítések előnézete',
+        previewDesc: 'Korai hozzáférést kap az új funkciókhoz és fejlesztésekhez',
+        previewTip:
+          'Kérjük, vegye figyelembe, hogy az előzetes verziók hibákat vagy hiányos funkciókat tartalmazhatnak!',
+        customServer: {
+          title: 'Egyéni frissítési kiszolgáló',
+          desc: 'Online frissítések keresése és letöltése a megadott kiszolgálóról',
+          invalidUrl:
+            'Adjon meg egy érvényes HTTP- vagy HTTPS-kiszolgálókönyvtárat lekérdezés, töredékazonosító és latest.json nélkül.',
+          loadFailed: 'Nem sikerült betölteni a frissítési kiszolgáló beállításait.',
+          saveFailed: 'Nem sikerült menteni a frissítési kiszolgáló beállításait.',
+          saved: 'A frissítési kiszolgáló beállításai mentve.',
+          save: 'Mentés',
+          confirmTitle: 'Egyéni frissítési kiszolgálót használ?',
+          confirmDesc:
+            'Az SHA-512 csak azt ellenőrzi, hogy a csomag megfelel-e a kiszolgáló által biztosított jegyzéknek. Nem igazolja, hogy a csomag hivatalos NanoKVM-kiadás. Egy hibás vagy rosszindulatú kiszolgáló használhatatlanná teheti az eszközt, adatvesztést okozhat, vagy veszélyeztetheti a rendszert.',
+          confirm: 'Használat mindenképpen',
+          previewDisabled:
+            'Az előzetes frissítések nem érhetők el, amíg egyéni frissítési kiszolgáló van engedélyezve.'
+        },
+        offline: {
+          title: 'Offline frissítések',
+          desc: 'Frissítés helyi telepítőcsomaggal',
+          upload: 'Feltöltés',
+          checksumPlaceholder: 'SHA-256 ellenőrzőösszeg (opcionális)',
+          invalidChecksum: 'A SHA-256 ellenőrzőösszegnek 64 hexadecimális karakterből kell állnia.',
+          checksumMismatch: 'Az SHA-256 ellenőrzése sikertelen. Lehet, hogy a csomag sérült.',
+          invalidName: 'Érvénytelen fájlnévformátum. Kérjük, töltse le a GitHub kiadásaiból.',
+          updateFailed: 'Frissítés sikertelen. Kérem, próbálja újra.'
+        }
       },
       account: {
-        title: 'Account',
-        webAccount: 'Web Account Name',
-        password: 'Password',
+        title: 'Fiók',
+        webAccount: 'Webes fiók neve',
+        password: 'Jelszó',
         updateBtn: 'Update',
-        logoutBtn: 'Logout'
+        logoutBtn: 'Kijelentkezés',
+        logoutDesc: 'Biztos, hogy ki szeretne jelentkezni?',
+        okBtn: 'Igen',
+        cancelBtn: 'Nem'
       }
+    },
+    picoclaw: {
+      title: 'PicoClaw Asszisztens',
+      empty: 'Nyissa meg a panelt, és indítsa el a feladatot.',
+      inputPlaceholder: 'Írja le, mit szeretne tenni az PicoClaw-val',
+      newConversation: 'Új beszélgetés',
+      processing: 'Feldolgozás...',
+      agent: {
+        defaultTitle: 'Általános asszisztens',
+        defaultDescription: 'Általános csevegési, keresési és munkaterületi súgó.',
+        kvmTitle: 'Távoli vezérlés',
+        kvmDescription: 'Működtesse a távoli gazdagépet az NanoKVM segítségével.',
+        switched: 'Ügynöki szerepkör megváltozott',
+        switchFailed: 'Nem sikerült váltani az ügynöki szerepkört'
+      },
+      send: 'Küldés',
+      cancel: 'Mégse',
+      status: {
+        connecting: 'Csatlakozás az átjáróhoz...',
+        connected: 'PicoClaw munkamenet csatlakoztatva',
+        disconnected: 'PicoClaw munkamenet lezárva',
+        stopped: 'Leállítási kérés elküldve',
+        runtimeStarted: 'PicoClaw Runtime elindult',
+        runtimeStartFailed: 'Nem sikerült elindítani a PicoClaw Runtime-ot',
+        runtimeStopped: 'PicoClaw Runtime leállt',
+        runtimeStopFailed: 'Nem sikerült leállítani a PicoClaw Runtime-ot',
+        controlSwitchedToMCP: 'A vezérlés átkerült a külső MCP-szolgáltatáshoz'
+      },
+      connection: {
+        runtime: {
+          checking: 'Ellenőrzés',
+          restoring: 'Restoring PicoClaw',
+          ready: 'Runtime kész',
+          stopped: 'Runtime leállt',
+          blockedByMCP: 'A külső MCP-vezérlés aktív',
+          readyBlockedByMCP:
+            'The runtime is running, but external MCP currently controls device input.',
+          readyWithoutControl:
+            'The runtime is running. Grant PicoClaw device control before reconnecting.',
+          unavailable: 'Runtime nem érhető el',
+          configError: 'Konfigurációs hiba'
+        },
+        transport: {
+          connecting: 'Csatlakozás',
+          connected: 'Csatlakoztatva',
+          disconnected: 'Disconnected',
+          reconnect: 'Reconnect',
+          reconnectDescription: 'Reconnect to the running PicoClaw session.',
+          reconnectBlocked: 'PicoClaw needs device control before reconnecting.'
+        },
+        run: {
+          idle: 'Üresjárat',
+          busy: 'Elfoglalt'
+        }
+      },
+      message: {
+        toolAction: 'Akció',
+        observation: 'Megfigyelés',
+        screenshot: 'Képernyőkép'
+      },
+      overlay: {
+        locked: 'PicoClaw vezérli az eszközt. A kézi bevitel szünetel.'
+      },
+      control: {
+        picoclaw: 'Eszközvezérlés: PicoClaw',
+        picoclawDescription: 'PicoClaw can write keyboard and mouse input. Manual input may pause.',
+        mcp: 'Eszközvezérlés: külső MCP',
+        mcpDescription: 'External MCP can write to the device. PicoClaw will not take over input.',
+        off: 'Eszközvezérlés: kikapcsolva',
+        offDescription:
+          'AI will not write keyboard or mouse input. Manual control remains available.',
+        transitioning: 'Device control: switching',
+        transitioningDescription: 'Device control is syncing. Please wait.',
+        grant: 'Vezérlés átadása',
+        release: 'Vezérlés feloldása',
+        releasing: 'Releasing...',
+        switching: 'Switching...',
+        releasingLabel: 'Device control: releasing',
+        releasingDescription:
+          'Device control is being returned. PicoClaw has stopped current writes.',
+        granted: 'PicoClaw-vezérlés megadva',
+        released: 'PicoClaw-vezérlés feloldva',
+        grantFailed: 'Nem sikerült megadni a PicoClaw-vezérlést',
+        releaseFailed: 'Nem sikerült feloldani a PicoClaw-vezérlést',
+        grantConfirmTitle: 'Átváltja az eszközvezérlést PicoClaw-ra?',
+        grantConfirmDesc: 'A külső MCP eszközírásai megszakadnak.'
+      },
+      install: {
+        install: 'PicoClaw telepítése',
+        installing: 'PicoClaw telepítése folyamatban',
+        success: 'PicoClaw sikeresen telepítve',
+        failed: 'Nem sikerült telepíteni PicoClaw',
+        uninstalling: 'Runtime eltávolítása...',
+        uninstalled: 'A Runtime sikeresen eltávolítva.',
+        uninstallFailed: 'Az eltávolítás nem sikerült.',
+        requiredTitle: 'PicoClaw nincs telepítve',
+        requiredDescription:
+          'Telepítse a PicoClaw alkalmazást a PicoClaw Runtime elindítása előtt.',
+        progressDescription: 'PicoClaw letöltése és telepítése folyamatban van.',
+        stages: {
+          preparing: 'Felkészülés',
+          downloading: 'Letöltés',
+          extracting: 'Kibontás',
+          verifying: 'Ellenőrzés',
+          installing: 'Telepítés folyamatban',
+          installed: 'Telepítve',
+          install_timeout: 'Időtúllépés',
+          install_failed: 'Sikertelen'
+        }
+      },
+      model: {
+        requiredTitle: 'Modellkonfiguráció szükséges',
+        requiredDescription: 'A PicoClaw chat használata előtt konfigurálja az PicoClaw modellt.',
+        docsTitle: 'Konfigurációs útmutató',
+        docsDesc: 'Támogatott modellek és protokollok',
+        menuLabel: 'Modell konfigurálása',
+        modelIdentifier: 'Modellazonosító',
+        modelIdentifierPlaceholder: 'openai/gpt-5.4',
+        apiBase: 'API Base URL',
+        apiBasePlaceholder: 'https://api.example.com/v1',
+        apiKey: 'API-kulcs',
+        apiKeyPlaceholder: 'Adja meg a modell API-kulcsát',
+        save: 'Mentés',
+        saving: 'Mentés',
+        saved: 'A modell konfigurációja mentve',
+        saveFailed: 'Nem sikerült menteni a modellkonfigurációt',
+        invalid: 'A modellazonosító, az API Base URL és az API-kulcs megadása kötelező'
+      },
+      uninstall: {
+        menuLabel: 'Eltávolítás',
+        confirmTitle: 'Eltávolítás PicoClaw',
+        confirmContent:
+          'Biztosan eltávolítja a következőt: PicoClaw? Ezzel törli a végrehajtható fájlt és az összes konfigurációs fájlt.',
+        confirmOk: 'Eltávolítás',
+        confirmCancel: 'Mégse'
+      },
+      history: {
+        title: 'Előzmények',
+        loading: 'Munkamenetek betöltése...',
+        emptyTitle: 'Még nincs előzmény',
+        emptyDescription: 'A korábbi PicoClaw munkamenetek itt jelennek meg.',
+        loadFailed: 'Nem sikerült betölteni a munkamenet-előzményeket',
+        deleteFailed: 'Nem sikerült törölni a munkamenetet',
+        deleteConfirmTitle: 'Munkamenet törlése',
+        deleteConfirmContent: 'Biztos, hogy törölni szeretné a következőt: "{{title}}"?',
+        deleteConfirmOk: 'Törlés',
+        deleteConfirmCancel: 'Mégse',
+        messageCount_one: '{{count}} üzenet',
+        messageCount_other: '{{count}} üzenet',
+        messageCount: '{{count}} üzenet'
+      },
+      config: {
+        startRuntime: 'PicoClaw indítása',
+        stopRuntime: 'PicoClaw leállítása'
+      },
+      start: {
+        enableConfirmTitle: 'Átváltja a vezérlést a PicoClaw-ra?',
+        enableConfirmDesc: 'A PicoClaw indítása letiltja a külső MCP-szolgáltatást.',
+        enableConfirmOk: 'PicoClaw indítása',
+        enableConfirmCancel: 'Mégse',
+        title: 'PicoClaw indítása',
+        description: 'Indítsa el a Runtime-ot a PicoClaw segéd használatának megkezdéséhez.',
+        switchFromMCP: 'Switch to PicoClaw and start',
+        takeoverAndStart: 'Take over and start'
+      }
+    },
+    error: {
+      title: 'Problémába ütköztünk',
+      refresh: 'Frissítés'
+    },
+    fullscreen: {
+      toggle: 'Teljes képernyő váltás'
+    },
+    menu: {
+      collapse: 'Menü összecsukása',
+      expand: 'Bontsa ki a menüt'
     }
   }
 };

@@ -1,11 +1,46 @@
 #include "config.h"
 #include "system_init.h"
 
+#include <errno.h>
+#include <sys/stat.h>
+
 using namespace maix;
 using namespace maix::sys;
 
 extern kvm_sys_state_t kvm_sys_state;
 extern kvm_oled_state_t kvm_oled_state;
+
+static void write_hdmi_state(uint8_t active)
+{
+    char temp_path[] = "/kvmapp/kvm/.state.init.XXXXXX";
+    const char *state = active != 0 ? "1\n" : "0\n";
+    int fd = mkstemp(temp_path);
+    if(fd < 0){
+        printf("failed to create HDMI state file: %d\n", errno);
+        return;
+    }
+
+    int failure = 0;
+    if(fchmod(fd, 0644) != 0){
+        failure = errno;
+    }
+    if(failure == 0 && write(fd, state, 2) != 2){
+        failure = errno != 0 ? errno : EIO;
+    }
+    if(failure == 0 && fsync(fd) != 0){
+        failure = errno;
+    }
+    if(close(fd) != 0 && failure == 0){
+        failure = errno;
+    }
+    if(failure == 0 && rename(temp_path, "/kvmapp/kvm/state") != 0){
+        failure = errno;
+    }
+    if(failure != 0){
+        unlink(temp_path);
+        printf("failed to publish HDMI state file: %d\n", failure);
+    }
+}
 
 uint8_t get_hdmi_version()
 {
@@ -17,7 +52,7 @@ uint8_t get_hdmi_version()
         fread(RW_Data, sizeof(char), 2, fp);
         fclose(fp);
         if(RW_Data[0] == 'u'){
-            // 6911uxc
+            // 6911uxc / 6911uxe
             if(RW_Data[1] == 'e'){
                 return 2;
             } else if(RW_Data[1] == 'x') {
@@ -25,6 +60,9 @@ uint8_t get_hdmi_version()
             } else {
                 return 1;
             }
+        } else if(RW_Data[0] == 'd'){
+            // 6911d
+            return 3;
         } else {
             // 6911c
             return 0;
@@ -53,6 +91,7 @@ void Production_testing_patch(void)
 void new_app_init(void)
 {
 	// Update the necessary scripts
+	system("rm -f /boot/logo.jpeg");
 	system("cp -f /kvmapp/system/update-nanokvm.py /etc/kvm/");
 	system("rm -f /etc/init.d/S02udisk");
 	system("cp -f /kvmapp/system/init.d/S00kmod /etc/init.d/");
@@ -65,6 +104,11 @@ void new_app_init(void)
 		system("cp -f /kvmapp/system/init.d/S30wifi /etc/init.d/");
 	} else {
 		system("rm -f /etc/init.d/S30wifi");
+	}
+	
+	// if exit /etc/init.d/S98tailscaled then cp -f /kvmapp/system/init.d/S98tailscaled /etc/init.d/
+	if(access("/etc/init.d/S98tailscaled", F_OK) == 0){
+		system("cp -f /kvmapp/system/init.d/S98tailscaled /etc/init.d/");
 	}
 
 	// rmmod soph_saradc
@@ -92,7 +136,7 @@ void new_app_init(void)
 	system("echo 2000 > /kvmapp/kvm/qlty");
 	system("echo 720 > /kvmapp/kvm/res");
 	system("echo h264 > /kvmapp/kvm/type");
-	system("echo 0 > /kvmapp/kvm/state");
+	write_hdmi_state(0);
 	system("touch /etc/kvm/frame_detact");
 
 	// rm jpg_stream & kvm_stream
@@ -133,6 +177,7 @@ void new_app_init(void)
 		fclose(fp);
 		if(RW_Data[0] == 'c') hdmi_ver = 1;
 		else if(RW_Data[0] == 'u') hdmi_ver = 2;
+		else if(RW_Data[0] == 'd') hdmi_ver = 2;
 	}
 
 	// system("/etc/init.d/S03usbdev stop_start");

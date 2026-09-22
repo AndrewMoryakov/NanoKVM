@@ -14,8 +14,11 @@ const pt_br = {
       placeholderPassword2: 'Por favor, digite a senha novamente',
       noEmptyUsername: 'Nome de usuário é obrigatório',
       noEmptyPassword: 'Senha é obrigatória',
-      noAccount: 'Falha ao obter informações do usuário, por favor atualize a página ou redefina a senha',
+      noAccount:
+        'Falha ao obter informações do usuário, por favor atualize a página ou redefina a senha',
       invalidUser: 'Nome de usuário ou senha inválidos',
+      locked: 'Muitos logins, tente novamente mais tarde',
+      globalLocked: 'Sistema sob proteção, tente novamente mais tarde',
       error: 'Erro inesperado',
       changePassword: 'Mudar Senha',
       changePasswordDesc: 'Para a segurança do seu dispositivo, por favor, mude a senha!',
@@ -27,7 +30,8 @@ const pt_br = {
       cancel: 'Cancelar',
       loginButtonText: 'Login',
       tips: {
-        reset1: 'Para redefinir as senhas, pressione e segure o botão BOOT no NanoKVM por 10 segundos.',
+        reset1:
+          'Para redefinir as senhas, pressione e segure o botão BOOT no NanoKVM por 10 segundos.',
         reset2: 'Para etapas detalhadas, por favor, consulte este documento:',
         reset3: 'Conta padrão da Web:',
         reset4: 'Conta padrão SSH:',
@@ -42,16 +46,27 @@ const pt_br = {
       description: 'Configurar Wi-Fi para o NanoKVM',
       success: 'Por favor, verifique o status da rede do NanoKVM e visite o novo endereço IP.',
       failed: 'Operação falhou, por favor, tente novamente.',
+      invalidMode:
+        'O modo atual não suporta configuração de rede. Vá para o seu dispositivo e ative o modo de configuração Wi-Fi.',
       confirmBtn: 'Ok',
-      finishBtn: 'Finalizado'
+      finishBtn: 'Finalizado',
+      ap: {
+        authTitle: 'Autenticação necessária',
+        authDescription: 'Por favor, digite a senha AP para continuar',
+        authFailed: 'Senha AP inválida',
+        passPlaceholder: 'AP senha',
+        verifyBtn: 'Verificar'
+      }
     },
     screen: {
+      scale: 'Escala',
       title: 'Tela',
       video: 'Modo de Vídeo',
       videoDirectTips: 'Ative HTTPS em "Configurações > Dispositivo" para usar este modo',
       resolution: 'Resolução',
       auto: 'Automático',
-      autoTips: 'Rasgos na tela ou desvio do mouse podem ocorrer em resoluções específicas. Considere ajustar a resolução do host remoto ou desativar o modo automático.',
+      autoTips:
+        'Rasgos na tela ou desvio do mouse podem ocorrer em resoluções específicas. Considere ajustar a resolução do host remoto ou desativar o modo automático.',
       fps: 'FPS',
       customizeFps: 'Personalizar',
       quality: 'Qualidade',
@@ -60,8 +75,28 @@ const pt_br = {
       qualityMedium: 'Média',
       qualityLow: 'Baixa',
       frameDetect: 'Detecção de Quadros',
-      frameDetectTip: 'Calcular a diferença entre os quadros. Parar a transmissão de vídeo quando nenhuma alteração for detectada na tela do host remoto.',
-      resetHdmi: 'Redefinir HDMI'
+      frameDetectTip:
+        'Calcular a diferença entre os quadros. Parar a transmissão de vídeo quando nenhuma alteração for detectada na tela do host remoto.',
+      resetHdmi: 'Redefinir HDMI',
+      mixedH264: {
+        title: 'Conflito de transmissão H.264',
+        description:
+          'H.264 Direct e H.264 WebRTC estão sendo usados ao mesmo tempo. Isso pode causar rasgos na tela ou vídeo corrompido. Use apenas um modo H.264.'
+      },
+      webrtcConnectionFailed: {
+        title: 'Falha na conexão WebRTC',
+        description: 'Verifique a conexão de rede ou alterne o modo de vídeo.'
+      },
+      captureStatus: {
+        hdmiError: 'Erro na imagem HDMI',
+        unsupportedResolution: 'A resolução atual não é compatível',
+        retrieving: 'Obtendo tela...',
+        changingResolution: 'Alterando resolução...',
+        updateFailed: 'A tela não pode ser atualizada agora',
+        videoError: 'Erro na exibição de vídeo',
+        noHdmi: 'Nenhum sinal HDMI detectado',
+        unavailable: 'A tela não pode ser exibida agora'
+      }
     },
     keyboard: {
       title: 'Teclado',
@@ -70,7 +105,52 @@ const pt_br = {
       placeholder: 'Por favor, digite',
       submit: 'Enviar',
       virtual: 'Teclado',
-      ctrlaltdel: 'Ctrl+Alt+Del'
+      readClipboard: 'Ler da área de transferência',
+      clipboardPermissionDenied:
+        'Permissão da área de transferência negada. Permita o acesso à área de transferência no seu navegador.',
+      clipboardReadError: 'Falha ao ler a área de transferência',
+      dropdownEnglish: 'Inglês',
+      dropdownGerman: 'Alemão',
+      dropdownFrench: 'Francês',
+      dropdownRussian: 'Russo',
+      shortcut: {
+        title: 'Atalhos',
+        custom: 'Personalizado',
+        capture: 'Clique aqui para capturar o atalho',
+        clear: 'Limpar',
+        save: 'Salvar',
+        captureTips:
+          'Capturar teclas do sistema (como a tecla Windows) requer permissão de tela cheia.',
+        enterFullScreen: 'Alternar modo de tela cheia.'
+      },
+      leaderKey: {
+        title: 'Tecla Leader',
+        desc: 'Ignore as restrições do navegador e envie atalhos do sistema diretamente para o host remoto.',
+        howToUse: 'Como usar',
+        simultaneous: {
+          title: 'Modo Simultâneo',
+          desc1: 'Pressione e segure a tecla Leader e depois pressione o atalho.',
+          desc2: 'Intuitivo, mas pode entrar em conflito com atalhos do sistema.'
+        },
+        sequential: {
+          title: 'Modo Sequencial',
+          desc1:
+            'Pressione a tecla Leader → pressione o atalho em sequência → pressione a tecla Leader novamente.',
+          desc2: 'Requer mais etapas, mas evita completamente conflitos de sistema.'
+        },
+        enable: 'Habilitar tecla Leader',
+        tip: 'Quando atribuída como tecla Leader, esta tecla funciona apenas como gatilho de atalho e perde seu comportamento padrão.',
+        placeholder: 'Pressione a tecla Leader',
+        shiftRight: 'Shift direito',
+        ctrlRight: 'Ctrl direito',
+        metaRight: 'Win direito',
+        submit: 'Enviar',
+        recorder: {
+          rec: 'REC',
+          activate: 'Ativar teclas',
+          input: 'Por favor, pressione o atalho...'
+        }
+      }
     },
     mouse: {
       title: 'Mouse',
@@ -84,13 +164,17 @@ const pt_br = {
       mode: 'Modo do mouse',
       absolute: 'Modo absoluto',
       relative: 'Modo relativo',
-      speed: 'Velocidade da roda',
+      direction: 'Direção da roda de rolagem',
+      scrollUp: 'Role para cima',
+      scrollDown: 'Role para baixo',
+      speed: 'Velocidade da roda de rolagem',
       fast: 'Rápido',
       slow: 'Lento',
-      requestPointer: 'Usando modo relativo. Por favor, clique na área de trabalho para obter o ponteiro do mouse.',
+      requestPointer:
+        'Usando modo relativo. Por favor, clique na área de trabalho para obter o ponteiro do mouse.',
       resetHid: 'Redefinir HID',
       hidOnly: {
-        title: 'Modo Somente-HID',
+        title: 'Modo somente HID',
         desc: 'Se o seu mouse e teclado pararem de responder e a redefinição de HID não ajudar, pode ser um problema de compatibilidade entre o NanoKVM e o dispositivo. Tente habilitar o modo Somente-HID para melhor compatibilidade.',
         tip1: 'Habilitar o modo Somente-HID irá desmontar o U-disk virtual e a rede virtual',
         tip2: 'No modo Somente-HID, a montagem de imagem está desativada',
@@ -103,10 +187,18 @@ const pt_br = {
       title: 'Imagens',
       loading: 'Carregando...',
       empty: 'Nada Encontrado',
-      cdrom: 'Montar a imagem no modo CD-ROM',
+      mountMode: 'Modo de montagem',
       mountFailed: 'Falha na Montagem',
-      mountDesc: 'Em alguns sistemas, é necessário ejetar o disco virtual no host remoto antes de montar a imagem.',
+      mountDesc:
+        'Em alguns sistemas, é necessário ejetar o disco virtual no host remoto antes de montar a imagem.',
+      unmountFailed: 'Falha na desmontagem',
+      unmountDesc:
+        'Em alguns sistemas, é necessário ejetar manualmente do host remoto antes de desmontar a imagem.',
       refresh: 'Atualizar a lista de imagens',
+      attention: 'Atenção',
+      deleteConfirm: 'Tem certeza que deseja excluir esta imagem?',
+      okBtn: 'Sim',
+      cancelBtn: 'Não',
       tips: {
         title: 'Como fazer upload',
         usb1: 'Conecte o NanoKVM ao seu computador via USB.',
@@ -166,7 +258,18 @@ const pt_br = {
       title: 'Baixador de Imagens',
       input: 'Por favor, digite uma URL de imagem remota',
       ok: 'Ok',
-      disabled: 'A partição /data é RO, então não podemos baixar a imagem'
+      disabled: 'A partição /data é RO, então não podemos baixar a imagem',
+      uploadbox: 'Solte o arquivo aqui ou clique para selecionar',
+      inputfile: 'Por favor insira o arquivo de imagem',
+      NoISO: 'Sem ISO',
+      sha256: 'SHA-256 (opcional)',
+      sha256Placeholder: 'Digite um checksum SHA-256 de 64 caracteres',
+      invalidSHA256: 'SHA-256 deve ser uma sequência hexadecimal de 64 caracteres',
+      failed: 'Falha no download',
+      success: 'Download concluído',
+      checksumFailed: 'Falha no download: a verificação SHA-256 falhou',
+      cancel: 'Cancelar',
+      cancelFailed: 'Falha ao cancelar o download'
     },
     power: {
       title: 'Energia',
@@ -183,6 +286,25 @@ const pt_br = {
     },
     settings: {
       title: 'Configurações',
+      mcp: {
+        title: 'Serviço MCP',
+        service: 'Controle remoto MCP',
+        serviceDesc:
+          'Permitir que clientes MCP confiáveis controlem o teclado e o mouse e capturem imagens da tela',
+        securityWarning:
+          'Qualquer pessoa com esta chave de API pode controlar o host remoto e visualizar sua tela. Use HTTPS e habilite o serviço somente em redes confiáveis.',
+        endpoint: 'Endpoint',
+        apiKey: 'Chave de API',
+        regenerateConfirmTitle: 'Gerar novamente a chave de API MCP?',
+        regenerateConfirmDesc: 'A chave atual deixará de funcionar imediatamente.',
+        enableConfirmTitle: 'Habilitar o controle MCP externo?',
+        enableConfirmDesc:
+          'Habilitar o MCP interromperá o PicoClaw e fechará todas as sessões ativas do PicoClaw.',
+        failed: 'Falha na operação MCP',
+        copyFailed: 'Falha ao copiar. Copie manualmente.',
+        okBtn: 'Confirmar',
+        cancelBtn: 'Cancelar'
+      },
       about: {
         title: 'Sobre o NanoKVM',
         information: 'Informação',
@@ -206,10 +328,35 @@ const pt_br = {
         title: 'Aparência',
         display: 'Exibição',
         language: 'Idioma',
-        menuBar: 'Barra de Menu',
-        menuBarDesc: 'Exibir ícones na barra de menu',
+        languageDesc: 'Selecione o idioma da interface',
         webTitle: 'Título da Web',
-        webTitleDesc: 'Personalizar o título da página web'
+        webTitleDesc: 'Personalizar o título da página web',
+        menuBar: {
+          title: 'Barra de Menu',
+          mode: 'Modo de exibição',
+          modeDesc: 'Exibir barra de menu na tela',
+          modeOff: 'Desligado',
+          modeAuto: 'Ocultar automaticamente',
+          modeAlways: 'Sempre visível',
+          keyboardLedStatus: 'Indicadores de bloqueio do teclado',
+          keyboardLedStatusDesc:
+            'Exibir o estado de Num Lock, Caps Lock e Scroll Lock do computador remoto',
+          icons: 'Ícones do submenu',
+          iconsDesc: 'Exibir ícones de submenus na barra de menu'
+        }
+      },
+      keyboardLedStatus: {
+        groupLabel: 'Estado dos bloqueios do teclado remoto',
+        indicatorLabel: '{{label}}: {{state}}',
+        numLock: 'Num Lock',
+        numLockShort: 'Num',
+        capsLock: 'Caps Lock',
+        capsLockShort: 'Caps',
+        scrollLock: 'Scroll Lock',
+        scrollLockShort: 'Scr',
+        on: 'Ativado',
+        off: 'Desativado',
+        unknown: 'Desconhecido'
       },
       device: {
         title: 'Dispositivo',
@@ -226,18 +373,9 @@ const pt_br = {
           1800: '30 min',
           3600: '1 hora'
         },
-        wifi: {
-          title: 'Wi-Fi',
-          description: 'Configurar Wi-Fi',
-          setBtn: 'Configurar'
-        },
         ssh: {
           description: 'Habilitar acesso remoto SSH',
           tip: 'Defina uma senha forte antes de habilitar (Conta - Mudar Senha)'
-        },
-        tls: {
-          description: 'Habilitar protocolo HTTPS',
-          tip: 'Atenção: O uso de HTTPS pode aumentar a latência, especialmente com o modo de vídeo MJPEG.'
         },
         advanced: 'Configurações Avançadas',
         swap: {
@@ -258,9 +396,25 @@ const pt_br = {
           tip: 'Desligue se não for necessário'
         },
         hdmi: {
-          description: 'Habilitar saída HDMI/monitor'
+          description: 'Habilitar saída HDMI/monitor',
+          idleTimeoutTitle: 'Tempo limite de captura inativa',
+          idleTimeoutDescription: 'Parar a captura HDMI após não haver visualizadores ativos por',
+          minutes: 'min'
+        },
+        autostart: {
+          title: 'Configurações de scripts de inicialização automática',
+          description:
+            'Gerencia scripts que são executados automaticamente na inicialização do sistema',
+          new: 'Novo',
+          deleteConfirm: 'Tem certeza de que deseja excluir este arquivo?',
+          yes: 'Sim',
+          no: 'Não',
+          scriptName: 'Nome do script de inicialização automática',
+          scriptContent: 'Conteúdo do script de inicialização automática',
+          settings: 'Configurações'
         },
         hidOnly: 'Modo Somente-HID',
+        hidOnlyDesc: 'Pare de emular dispositivos virtuais, mantendo apenas o controle básico HID',
         disk: 'Disco Virtual',
         diskDesc: 'Montar U-disk virtual no host remoto',
         network: 'Rede Virtual',
@@ -270,16 +424,71 @@ const pt_br = {
         okBtn: 'Sim',
         cancelBtn: 'Não'
       },
+      network: {
+        title: 'Rede',
+        wifi: {
+          title: 'Wi-Fi',
+          description: 'Configurar Wi-Fi',
+          apMode: 'O modo AP está ativado, conecte-se ao Wi-Fi escaneando o QR code',
+          connect: 'Conectar Wi-Fi',
+          connectDesc1: 'Digite o SSID da rede e a senha',
+          connectDesc2: 'Digite a senha para entrar nesta rede',
+          disconnect: 'Tem certeza de que deseja desconectar a rede?',
+          failed: 'Falha na conexão, tente novamente.',
+          ssid: 'Nome',
+          password: 'Senha',
+          joinBtn: 'Entrar',
+          confirmBtn: 'OK',
+          cancelBtn: 'Cancelar'
+        },
+        tls: {
+          description: 'Habilitar protocolo HTTPS',
+          tip: 'Atenção: O uso de HTTPS pode aumentar a latência, especialmente com o modo de vídeo MJPEG.'
+        },
+        dns: {
+          title: 'DNS',
+          description: 'Configurar servidores DNS para o NanoKVM',
+          mode: 'Modo',
+          dhcp: 'DHCP',
+          manual: 'Manual',
+          add: 'Adicionar DNS',
+          save: 'Salvar',
+          invalid: 'Digite um endereço IP válido',
+          noDhcp: 'Nenhum DNS DHCP está disponível no momento',
+          saved: 'Configurações de DNS salvas',
+          saveFailed: 'Falha ao salvar as configurações de DNS',
+          unsaved: 'Alterações não salvas',
+          maxServers: 'Máximo de {{count}} servidores DNS permitido',
+          dnsServers: 'Servidores DNS',
+          dhcpServersDescription: 'Os servidores DNS são obtidos automaticamente via DHCP',
+          manualServersDescription: 'Os servidores DNS podem ser editados manualmente',
+          networkDetails: 'Detalhes da rede',
+          interface: 'Interface',
+          ipAddress: 'Endereço IP',
+          subnetMask: 'Máscara de sub-rede',
+          router: 'Roteador',
+          none: 'Nenhum'
+        }
+      },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Início automático',
+        autostartConfirm: 'Mudar o início automático para o Tailscale? O NetBird será parado.',
+        autostartWarning:
+          'Verifique primeiro se você consegue acessar este dispositivo pelo Tailscale. Parar o NetBird encerra a conexão que você está usando agora.',
         memory: {
           title: 'Otimização de memória',
-          tip: 'Quando o uso de memória excede o limite, a coleta de lixo é realizada de forma mais agressiva para tentar liberar memória. Recomenda-se definir para 75MB se estiver usando Tailscale. É necessário reiniciar o Tailscale para que a alteração tenha efeito.',
-          disable: 'Desativar'
+          tip: 'Quando o uso de memória excede o limite, a coleta de lixo é realizada de forma mais agressiva para tentar liberar memória. Recomenda-se definir para 75MB se estiver usando Tailscale. É necessário reiniciar o Tailscale para que a alteração tenha efeito.'
+        },
+        swap: {
+          title: 'Trocar memória',
+          tip: 'Se os problemas persistirem após ativar a otimização de memória, tente ativar a memória swap. Isso define o tamanho do arquivo de troca para 256MB por padrão, que pode ser ajustado em "Configurações > Dispositivo".'
         },
         restart: 'Reiniciar Tailscale?',
         stop: 'Parar Tailscale?',
         stopDesc: 'Sair do Tailscale e desabilitar a inicialização automática no boot.',
+        stopWarning:
+          'Se você está conectado pelo Tailscale, esta conexão será encerrada. Ela não volta sozinha — garanta que você tem outra via de acesso.',
         loading: 'Carregando...',
         notInstall: 'Tailscale não encontrado! Por favor, instale.',
         install: 'Instalar',
@@ -292,7 +501,10 @@ const pt_br = {
         upTailscale: 'Fazer upload do tailscale para o diretório NanoKVM /usr/bin/',
         upTailscaled: 'Fazer upload do tailscaled para o diretório NanoKVM /usr/sbin/',
         refresh: 'Atualizar página atual',
-        notLogin: 'O dispositivo ainda não foi vinculado. Por favor, faça login e vincule este dispositivo à sua conta.',
+        notRunning: 'Tailscale não está em execução. Por favor, inicie-o para continuar.',
+        run: 'Iniciar',
+        notLogin:
+          'O dispositivo ainda não foi vinculado. Por favor, faça login e vincule este dispositivo à sua conta.',
         urlPeriod: 'Esta URL é válida por 10 minutos',
         login: 'Login',
         loginSuccess: 'Login Bem-sucedido',
@@ -303,8 +515,57 @@ const pt_br = {
         logout: 'Sair',
         logoutDesc: 'Tem certeza de que deseja sair?',
         uninstall: 'Desinstalar Tailscale',
+        uninstallDesc: 'Tem certeza de que deseja desinstalar Tailscale?',
+        uninstallWarning:
+          'Se você está conectado pelo Tailscale, esta conexão será encerrada. Ela não volta sozinha — garanta que você tem outra via de acesso.',
         okBtn: 'Sim',
         cancelBtn: 'Não'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Início automático',
+        autostartConfirm: 'Mudar o início automático para o NetBird? O Tailscale será parado.',
+        autostartWarning:
+          'Verifique primeiro se você consegue acessar este dispositivo pelo NetBird. Parar o Tailscale encerra a conexão que você está usando agora.',
+        restart: 'Reiniciar NetBird?',
+        stop: 'Parar NetBird?',
+        stopDesc:
+          'Interrompe o serviço NetBird. Ele será iniciado novamente na próxima inicialização se o início automático estiver ativo.',
+        stopWarning:
+          'Se você está conectado pelo NetBird, esta conexão será encerrada. Ela volta na próxima inicialização enquanto o início automático do NetBird estiver ativo.',
+        loading: 'Carregando...',
+        notInstall: 'NetBird não encontrado! Por favor, instale.',
+        install: 'Instalar',
+        installing: 'Instalando',
+        notRunning: 'NetBird não está em execução. Por favor, inicie-o para continuar.',
+        run: 'Iniciar',
+        notLogin:
+          'O dispositivo ainda não foi vinculado. Por favor, faça login e vincule este dispositivo à sua conta.',
+        urlPeriod: 'Esta URL é válida por 10 minutos',
+        login: 'Login',
+        loginSuccess: 'Login Bem-sucedido',
+        enable: 'Habilitar NetBird',
+        deviceName: 'Nome do Dispositivo',
+        deviceIP: 'IP do Dispositivo',
+        uninstall: 'Desinstalar NetBird',
+        uninstallDesc: 'Tem certeza de que deseja desinstalar NetBird?',
+        uninstallWarning:
+          'Se você está conectado pelo NetBird, esta conexão será encerrada. O início automático volta para o Tailscale, que já deve estar instalado e funcionando.',
+        version: 'Versão',
+        disconnect: 'Desconectar',
+        disconnectConfirm: 'Tem certeza de que deseja desconectar?',
+        okBtn: 'Sim',
+        cancelBtn: 'Não',
+        error: {
+          title: 'A operação do NetBird falhou',
+          intro: 'Detalhes do erro:',
+          stepWait: '1. Aguarde 10-15 segundos e tente novamente.',
+          stepRestartUI: '2. Clique em “Reiniciar serviço” abaixo.',
+          stepRestartSSH: '3. Se necessário, execute: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Reinicie o NanoKVM apenas se os passos acima não resolverem.',
+          restartButton: 'Reiniciar serviço',
+          refreshButton: 'Atualizar status'
+        }
       },
       update: {
         title: 'Verificar Atualizações',
@@ -317,7 +578,34 @@ const pt_br = {
         cancel: 'Cancelar',
         preview: 'Prévia das Atualizações',
         previewDesc: 'Tenha acesso antecipado a novos recursos e melhorias',
-        previewTip: 'Esteja ciente de que as versões de prévia podem conter bugs ou funcionalidade incompleta!'
+        previewTip:
+          'Esteja ciente de que as versões de prévia podem conter bugs ou funcionalidade incompleta!',
+        customServer: {
+          title: 'Servidor de atualização personalizado',
+          desc: 'Verifique e baixe atualizações online de um servidor especificado',
+          invalidUrl:
+            'Insira um diretório de servidor HTTP ou HTTPS válido, sem parâmetros de consulta, fragmentos ou latest.json.',
+          loadFailed: 'Não foi possível carregar a configuração do servidor de atualização.',
+          saveFailed: 'Não foi possível salvar a configuração do servidor de atualização.',
+          saved: 'Configuração do servidor de atualização salva.',
+          save: 'Salvar',
+          confirmTitle: 'Usar um servidor de atualização personalizado?',
+          confirmDesc:
+            'O SHA-512 apenas verifica se o pacote corresponde ao manifesto fornecido por este servidor. Ele não comprova que o pacote seja uma versão oficial do NanoKVM. Um servidor com falha ou mal-intencionado pode inutilizar o dispositivo, causar perda de dados ou comprometer o sistema.',
+          confirm: 'Usar mesmo assim',
+          previewDisabled:
+            'As atualizações de prévia ficam indisponíveis enquanto um servidor de atualização personalizado estiver ativado.'
+        },
+        offline: {
+          title: 'Atualizações off-line',
+          desc: 'Atualização através do pacote de instalação local',
+          upload: 'Upload',
+          checksumPlaceholder: 'Soma de verificação SHA-256 (opcional)',
+          invalidChecksum: 'A soma de verificação SHA-256 deve conter 64 caracteres hexadecimais.',
+          checksumMismatch: 'A verificação SHA-256 falhou. O pacote pode estar corrompido.',
+          invalidName: 'Formato de nome de arquivo inválido. Faça download das versões do GitHub.',
+          updateFailed: 'Falha na atualização. Por favor, tente novamente.'
+        }
       },
       account: {
         title: 'Conta',
@@ -328,6 +616,170 @@ const pt_br = {
         logoutDesc: 'Tem certeza de que deseja sair?',
         okBtn: 'Sim',
         cancelBtn: 'Não'
+      }
+    },
+    picoclaw: {
+      title: 'PicoClaw Assistente',
+      empty: 'Abra o painel e inicie uma tarefa para começar.',
+      inputPlaceholder: 'Descreva o que você deseja que PicoClaw faça',
+      newConversation: 'Nova conversa',
+      processing: 'Processando...',
+      agent: {
+        defaultTitle: 'Assistente geral',
+        defaultDescription: 'Ajuda geral sobre bate-papo, pesquisa e espaço de trabalho.',
+        kvmTitle: 'Controle remoto',
+        kvmDescription: 'Opera o host remoto por meio de NanoKVM.',
+        switched: 'Função de agente trocada',
+        switchFailed: 'Falha ao mudar de função de agente'
+      },
+      send: 'Enviar',
+      cancel: 'Cancelar',
+      status: {
+        connecting: 'Conectando ao gateway...',
+        connected: 'Sessão PicoClaw conectada',
+        disconnected: 'Sessão PicoClaw desconectada',
+        stopped: 'Solicitação de parada enviada',
+        runtimeStarted: 'Runtime do PicoClaw iniciado',
+        runtimeStartFailed: 'Falha ao iniciar o runtime do PicoClaw',
+        runtimeStopped: 'Runtime do PicoClaw interrompido',
+        runtimeStopFailed: 'Falha ao parar o runtime do PicoClaw',
+        controlSwitchedToMCP: 'Controle transferido para o serviço MCP externo'
+      },
+      connection: {
+        runtime: {
+          checking: 'Verificando',
+          restoring: 'Restoring PicoClaw',
+          ready: 'Runtime pronto',
+          stopped: 'Runtime interrompido',
+          blockedByMCP: 'O controle MCP externo está ativo',
+          readyBlockedByMCP:
+            'The runtime is running, but external MCP currently controls device input.',
+          readyWithoutControl:
+            'The runtime is running. Grant PicoClaw device control before reconnecting.',
+          unavailable: 'Runtime indisponível',
+          configError: 'Erro de configuração'
+        },
+        transport: {
+          connecting: 'Conectando',
+          connected: 'Conectado',
+          disconnected: 'Disconnected',
+          reconnect: 'Reconnect',
+          reconnectDescription: 'Reconnect to the running PicoClaw session.',
+          reconnectBlocked: 'PicoClaw needs device control before reconnecting.'
+        },
+        run: {
+          idle: 'Inativo',
+          busy: 'Ocupado'
+        }
+      },
+      message: {
+        toolAction: 'Ação',
+        observation: 'Observação',
+        screenshot: 'Captura de tela'
+      },
+      overlay: {
+        locked: 'PicoClaw está controlando o dispositivo. A entrada manual está pausada.'
+      },
+      control: {
+        picoclaw: 'Controle do dispositivo: PicoClaw',
+        picoclawDescription: 'PicoClaw can write keyboard and mouse input. Manual input may pause.',
+        mcp: 'Controle do dispositivo: MCP externo',
+        mcpDescription: 'External MCP can write to the device. PicoClaw will not take over input.',
+        off: 'Controle do dispositivo: desativado',
+        offDescription:
+          'AI will not write keyboard or mouse input. Manual control remains available.',
+        transitioning: 'Device control: switching',
+        transitioningDescription: 'Device control is syncing. Please wait.',
+        grant: 'Conceder controle',
+        release: 'Liberar',
+        releasing: 'Releasing...',
+        switching: 'Switching...',
+        releasingLabel: 'Device control: releasing',
+        releasingDescription:
+          'Device control is being returned. PicoClaw has stopped current writes.',
+        granted: 'Controle do PicoClaw concedido',
+        released: 'Controle do PicoClaw liberado',
+        grantFailed: 'Falha ao conceder controle ao PicoClaw',
+        releaseFailed: 'Falha ao liberar controle do PicoClaw',
+        grantConfirmTitle: 'Alternar controle do dispositivo para PicoClaw?',
+        grantConfirmDesc: 'As gravações de dispositivo do MCP externo serão interrompidas.'
+      },
+      install: {
+        install: 'Instalar PicoClaw',
+        installing: 'Instalando PicoClaw',
+        success: 'PicoClaw instalado com sucesso',
+        failed: 'Falha ao instalar PicoClaw',
+        uninstalling: 'Desinstalando o runtime...',
+        uninstalled: 'Runtime desinstalado com sucesso.',
+        uninstallFailed: 'Falha na desinstalação.',
+        requiredTitle: 'PicoClaw não está instalado',
+        requiredDescription: 'Instale o PicoClaw antes de iniciar o runtime do PicoClaw.',
+        progressDescription: 'PicoClaw está sendo baixado e instalado.',
+        stages: {
+          preparing: 'Preparando',
+          downloading: 'Baixando',
+          extracting: 'Extraindo',
+          verifying: 'Verificando',
+          installing: 'Instalando',
+          installed: 'Instalado',
+          install_timeout: 'Tempo limite esgotado',
+          install_failed: 'Falhou'
+        }
+      },
+      model: {
+        requiredTitle: 'A configuração do modelo é necessária',
+        requiredDescription: 'Configure o modelo PicoClaw antes de usar o chat PicoClaw.',
+        docsTitle: 'Guia de configuração',
+        docsDesc: 'Modelos e protocolos suportados',
+        menuLabel: 'Configurar modelo',
+        modelIdentifier: 'Identificador do modelo',
+        modelIdentifierPlaceholder: 'openai/gpt-5.4',
+        apiBase: 'API Base URL',
+        apiBasePlaceholder: 'https://api.example.com/v1',
+        apiKey: 'Chave API',
+        apiKeyPlaceholder: 'Insira a chave API do modelo',
+        save: 'Salvar',
+        saving: 'Salvando',
+        saved: 'Configuração do modelo salva',
+        saveFailed: 'Falha ao salvar a configuração do modelo',
+        invalid: 'Identificador do modelo, API Base URL e chave API são obrigatórios'
+      },
+      uninstall: {
+        menuLabel: 'Desinstalar',
+        confirmTitle: 'Desinstalar PicoClaw',
+        confirmContent:
+          'Tem certeza de que deseja desinstalar PicoClaw? Isso excluirá o executável e todos os arquivos de configuração.',
+        confirmOk: 'Desinstalar',
+        confirmCancel: 'Cancelar'
+      },
+      history: {
+        title: 'Histórico',
+        loading: 'Carregando sessões...',
+        emptyTitle: 'Ainda sem histórico',
+        emptyDescription: 'As sessões anteriores de PicoClaw aparecerão aqui.',
+        loadFailed: 'Falha ao carregar o histórico da sessão',
+        deleteFailed: 'Falha ao excluir sessão',
+        deleteConfirmTitle: 'Excluir sessão',
+        deleteConfirmContent: 'Tem certeza de que deseja excluir "{{title}}"?',
+        deleteConfirmOk: 'Excluir',
+        deleteConfirmCancel: 'Cancelar',
+        messageCount_one: '{{count}} mensagem',
+        messageCount_other: '{{count}} mensagens',
+        messageCount: '{{count}} mensagens'
+      },
+      config: {
+        startRuntime: 'Iniciar PicoClaw',
+        stopRuntime: 'Parar PicoClaw'
+      },
+      start: {
+        enableConfirmTitle: 'Transferir o controle para o PicoClaw?',
+        enableConfirmDesc: 'Iniciar o PicoClaw desabilitará o serviço MCP externo.',
+        enableConfirmOk: 'Iniciar PicoClaw',
+        enableConfirmCancel: 'Cancelar',
+        title: 'Iniciar PicoClaw',
+        description: 'Inicie o runtime para começar a usar o assistente PicoClaw.',
+        switchFromMCP: 'Switch to PicoClaw and start',
+        takeoverAndStart: 'Take over and start'
       }
     },
     error: {
@@ -342,6 +794,6 @@ const pt_br = {
       expand: 'Expandir Menu'
     }
   }
-}
+};
 
 export default pt_br;

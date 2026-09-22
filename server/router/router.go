@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"NanoKVM-Server/service/controlmode"
+	"NanoKVM-Server/service/picoclaw"
+
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -29,6 +32,9 @@ func web(r *gin.Engine) {
 }
 
 func server(r *gin.Engine) {
+	control := controlmode.GetManager()
+	picoclawService := picoclaw.NewService(control)
+
 	authRouter(r)
 	applicationRouter(r)
 	vmRouter(r)
@@ -36,7 +42,16 @@ func server(r *gin.Engine) {
 	storageRouter(r)
 	networkRouter(r)
 	hidRouter(r)
+	controlRouter(r, control, picoclawService)
+	mcpRouter(r, control, picoclawService)
+	picoclawRouter(r, picoclawService)
 	wsRouter(r)
 	downloadRouter(r)
 	extensionsRouter(r)
+}
+
+func LoopbackHTTPAllowedPaths() []string {
+	paths := PicoclawLoopbackHTTPAllowedPaths()
+	paths = append(paths, HIDLoopbackHTTPAllowedPaths()...)
+	return paths
 }

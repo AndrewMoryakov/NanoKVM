@@ -2,6 +2,7 @@ package webrtc
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"github.com/gorilla/websocket"
 	"github.com/pion/rtp"
@@ -9,9 +10,11 @@ import (
 )
 
 type WebRTCManager struct {
-	clients      map[*websocket.Conn]*Client
-	videoSending int32
-	mutex        sync.RWMutex
+	clients        map[*websocket.Conn]*Client
+	clientSnapshot atomic.Pointer[[]*Client]
+	videoSending   bool
+	mutex          sync.Mutex
+	viewerVersion  uint64
 }
 
 type Client struct {
@@ -21,8 +24,15 @@ type Client struct {
 	mutex sync.Mutex
 }
 
+func (c *Client) WsConn() *websocket.Conn {
+	return c.ws
+}
+
 type SignalingHandler struct {
-	client *Client
+	client         *Client
+	mutex          sync.Mutex
+	unregisterMode func()
+	closed         bool
 }
 
 type Track struct {

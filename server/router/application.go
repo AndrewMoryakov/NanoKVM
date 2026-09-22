@@ -1,6 +1,7 @@
 package router
 
 import (
+	"NanoKVM-Server/authn"
 	"NanoKVM-Server/middleware"
 	"NanoKVM-Server/service/application"
 
@@ -9,7 +10,7 @@ import (
 
 func applicationRouter(r *gin.Engine) {
 	service := application.NewService()
-	api := r.Group("/api").Use(middleware.CheckToken())
+	api := r.Group("/api").Use(middleware.CheckToken(), middleware.RequireRole(authn.RoleAdmin))
 
 	api.GET("/application/version", service.GetVersion)            // get application version
 	api.POST("/application/update", service.Update)                // update application
@@ -17,4 +18,7 @@ func applicationRouter(r *gin.Engine) {
 
 	api.GET("/application/preview", service.GetPreview)  // get preview updates state
 	api.POST("/application/preview", service.SetPreview) // set preview updates state
+
+	api.GET("/application/update-server", service.GetUpdateServer)  // get custom update server
+	api.POST("/application/update-server", service.SetUpdateServer) // set custom update server
 }

@@ -1,5 +1,6 @@
-import { IMessageEvent, w3cwebsocket as W3cWebSocket } from 'websocket';
+import { ICloseEvent, IMessageEvent, w3cwebsocket as W3cWebSocket } from 'websocket';
 
+import { notifyAuthExpired } from '@/lib/auth-events.ts';
 import { getBaseUrl } from '@/lib/service.ts';
 
 type MessageHandler = (message: IMessageEvent) => void;
@@ -22,7 +23,7 @@ const DEFAULT_OPTIONS: Required<WsClientOptions> = {
   url: `${getBaseUrl('ws')}/api/ws`,
   heartbeatInterval: 10 * 1000,
   reconnectInterval: 3 * 1000,
-  maxReconnectAttempts: 1
+  maxReconnectAttempts: Number.POSITIVE_INFINITY
 };
 
 export class WsClient {
@@ -123,8 +124,16 @@ export class WsClient {
     this.startHeartbeat();
   }
 
-  private handleClose(): void {
+  private handleClose(event: ICloseEvent): void {
     this.stopHeartbeat();
+
+    if (event.code === 4401) {
+      this.shouldReconnect = false;
+      this.cleanup();
+      notifyAuthExpired();
+      return;
+    }
+
     this.scheduleReconnect();
   }
 

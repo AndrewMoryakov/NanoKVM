@@ -17,6 +17,8 @@ const da = {
       noAccount:
         'Kunne ikke hente brugeroplysninger. Prøv at opdater siden eller nulstil adgangskoden',
       invalidUser: 'ugyldigt brugernavn eller adgangskode',
+      locked: 'For mange logins, prøv venligst igen senere',
+      globalLocked: 'System under beskyttelse, prøv venligst igen senere',
       error: 'uventet fejl',
       changePassword: 'Skift adgangskode',
       changePasswordDesc: 'For sikkerheden af din enhed, bedes du ændre web-login adgangskoden.',
@@ -30,25 +32,37 @@ const da = {
       tips: {
         reset1:
           'To reset the passwords, pressing and holding the BOOT button on the NanoKVM for 10 seconds.',
-        reset2: 'For detailed steps, please consult this document:',
-        reset3: 'Web default account:',
-        reset4: 'SSH default account:',
-        change1: 'Please note that this action will change the following passwords:',
-        change2: 'Web login password',
-        change3: 'System root password (SSH login password)',
-        change4: 'To reset the passwords, press and hold the BOOT button on the NanoKVM.'
+        reset2: 'Se detaljerede trin i dette dokument:',
+        reset3: 'Standard webkonto:',
+        reset4: 'Standard SSH-konto:',
+        change1: 'Bemærk, at denne handling ændrer følgende adgangskoder:',
+        change2: 'Adgangskode til weblogin',
+        change3: 'Systemets root-adgangskode (SSH-loginadgangskode)',
+        change4: 'For at nulstille adgangskoderne skal du holde BOOT-knappen på NanoKVM nede.'
       }
     },
     wifi: {
       title: 'Wi-Fi',
-      description: 'Configure Wi-Fi for NanoKVM',
+      description: 'Konfigurer Wi-Fi for NanoKVM',
       success: 'Please check the network status of NanoKVM and visit the new IP address.',
-      failed: 'Operation failed, please try again.',
+      failed: 'Handlingen mislykkedes, prøv igen.',
+      invalidMode:
+        'Den aktuelle tilstand understøtter ikke netværksopsætning. Gå til din enhed og aktiver Wi-Fi konfigurationstilstand.',
       confirmBtn: 'Ok',
-      finishBtn: 'Finished'
+      finishBtn: 'Færdig',
+      ap: {
+        authTitle: 'Godkendelse påkrævet',
+        authDescription: 'Indtast venligst AP adgangskoden for at fortsætte',
+        authFailed: 'Ugyldig AP adgangskode',
+        passPlaceholder: 'AP adgangskode',
+        verifyBtn: 'Bekræft'
+      }
     },
     screen: {
+      scale: 'Skala',
+      title: 'Skærm',
       video: 'Videotilstand',
+      videoDirectTips: 'Aktiver HTTPS i "Indstillinger > Enhed" for at bruge denne tilstand',
       resolution: 'Opløsning',
       auto: 'Automatisk',
       autoTips:
@@ -63,17 +77,84 @@ const da = {
       frameDetect: 'Beregn frames',
       frameDetectTip:
         'Beregner forskellen mellem hver frame. Stopper med at sende et video stream hvis der ikke registreres ændringer på fjerncomputerens skærm.',
-      resetHdmi: 'Reset HDMI'
+      resetHdmi: 'Nulstil HDMI',
+      mixedH264: {
+        title: 'H.264-streamkonflikt',
+        description:
+          'H.264 Direct og H.264 WebRTC bruges samtidigt. Dette kan forårsage skærmrivning eller beskadiget video. Brug kun én H.264-tilstand.'
+      },
+      webrtcConnectionFailed: {
+        title: 'WebRTC-forbindelse mislykkedes',
+        description: 'Kontrollér netværksforbindelsen, eller skift videotilstand.'
+      },
+      captureStatus: {
+        hdmiError: 'Fejl i HDMI-billedet',
+        unsupportedResolution: 'Den aktuelle opløsning understøttes ikke',
+        retrieving: 'Henter skærmbillede...',
+        changingResolution: 'Skifter opløsning...',
+        updateFailed: 'Skærmbilledet kan ikke opdateres lige nu',
+        videoError: 'Fejl i videovisning',
+        noHdmi: 'Intet HDMI-signal registreret',
+        unavailable: 'Skærmbilledet kan ikke vises lige nu'
+      }
     },
     keyboard: {
+      title: 'Tastatur',
       paste: 'Indsæt',
       tips: 'Kun standard bogstaver og symboler er understøttet',
       placeholder: 'Indtast tekst',
       submit: 'Send',
       virtual: 'Tastatur',
-      ctrlaltdel: 'Ctrl+Alt+Del'
+      readClipboard: 'Læs fra udklipsholder',
+      clipboardPermissionDenied:
+        'Udklipsholdertilladelse nægtet. Tillad venligst udklipsholderadgang i din browser.',
+      clipboardReadError: 'Kunne ikke læse udklipsholderen',
+      dropdownEnglish: 'Engelsk',
+      dropdownGerman: 'tysk',
+      dropdownFrench: 'Fransk',
+      dropdownRussian: 'russisk',
+      shortcut: {
+        title: 'Genveje',
+        custom: 'Brugerdefineret',
+        capture: 'Klik her for at fange genvej',
+        clear: 'Ryd',
+        save: 'Gem',
+        captureTips:
+          'Optagelse af systemtaster (såsom Windows-tasten) kræver fuldskærmstilladelse.',
+        enterFullScreen: 'Skift fuldskærmstilstand.'
+      },
+      leaderKey: {
+        title: 'Leader-tast',
+        desc: 'Omgå browserbegrænsninger og send systemgenveje direkte til fjernværten.',
+        howToUse: 'Sådan bruges',
+        simultaneous: {
+          title: 'Samtidig tilstand',
+          desc1: 'Hold Leader-tasten nede, og tryk derefter på genvejen.',
+          desc2: 'Intuitivt, men kan være i konflikt med systemgenveje.'
+        },
+        sequential: {
+          title: 'Sekventiel tilstand',
+          desc1:
+            'Tryk på Leader-tasten → tryk på genvejen i rækkefølge → tryk på Leader-tasten igen.',
+          desc2: 'Kræver flere trin, men undgår fuldstændig systemkonflikter.'
+        },
+        enable: 'Aktiver Leader-tast',
+        tip: 'Når denne tast tildeles som Leader-tast, fungerer den kun som genvejsudløser og mister sin standardfunktion.',
+        placeholder: 'Tryk på Leader-tasten',
+        shiftRight: 'Højre Shift',
+        ctrlRight: 'Højre Ctrl',
+        metaRight: 'Højre Win',
+        submit: 'Send',
+        recorder: {
+          rec: 'REC',
+          activate: 'Aktiver taster',
+          input: 'Tryk på genvejen...'
+        }
+      }
     },
     mouse: {
+      title: 'Mus',
+      cursor: 'Markørstil',
       default: 'Standard-markør',
       pointer: 'Peger-markør',
       cell: 'Celle-markør',
@@ -83,16 +164,40 @@ const da = {
       mode: 'Tilstand for mus',
       absolute: 'Absolut tilstand',
       relative: 'Relativ tilstand',
+      direction: 'Rullehjulsretning',
+      scrollUp: 'Rul op',
+      scrollDown: 'Rul ned',
+      speed: 'Rullehjulshastighed',
+      fast: 'Hurtigt',
+      slow: 'Langsomt',
       requestPointer: 'Bruger relativ-tilstand. Klik på skrivebordet for at få musemarkør.',
-      resetHid: 'Nulstil HID'
+      resetHid: 'Nulstil HID',
+      hidOnly: {
+        title: 'Kun HID-tilstand',
+        desc: 'Hvis din mus og tastatur holder op med at reagere, og nulstilling af HID ikke hjælper, kan det være et kompatibilitetsproblem mellem NanoKVM og enheden. Prøv at aktivere HID-Only-tilstand for bedre kompatibilitet.',
+        tip1: 'Aktivering af HID-Only-tilstand vil afmontere den virtuelle U-disk og det virtuelle netværk',
+        tip2: 'I HID-Only-tilstand er billedmontering deaktiveret',
+        tip3: 'NanoKVM genstarter automatisk efter at have skiftet tilstand',
+        enable: 'Aktiver HID-kun tilstand',
+        disable: 'Deaktiver HID-kun tilstand'
+      }
     },
     image: {
       title: 'Diskbilleder',
       loading: 'Kontrollerer...',
       empty: 'Ingen fundet',
+      mountMode: 'Monteringstilstand',
       mountFailed: 'Montering af diskbillede mislykkedes',
       mountDesc:
         'På nogle systemer kan det være nødvendigt at skubbe den virtuelle disk ud på fjerncomputeren før du kan montere diskbilledet.',
+      unmountFailed: 'Afmontering mislykkedes',
+      unmountDesc:
+        'På nogle systemer skal du manuelt skubbe ud fra fjernværten, før du afmonterer billedet.',
+      refresh: 'Opdater billedlisten',
+      attention: 'Opmærksomhed påkrævet',
+      deleteConfirm: 'Er du sikker på, at du vil slette dette billede?',
+      okBtn: 'Ja',
+      cancelBtn: 'Annuller',
       tips: {
         title: 'Sådan uploader du',
         usb1: 'Forbind din NanoKVM til din computer via USB.',
@@ -129,6 +234,16 @@ const da = {
       serialPort: 'Serial port',
       serialPortPlaceholder: 'Angiv seriel port',
       baudrate: 'Baud-hastighed',
+      parity: 'Paritet',
+      parityNone: 'Ingen',
+      parityEven: 'Lige',
+      parityOdd: 'Ulige',
+      flowControl: 'Flowkontrol',
+      flowControlNone: 'Ingen',
+      flowControlSoft: 'Software',
+      flowControlHard: 'Hardware',
+      dataBits: 'Databits',
+      stopBits: 'Stopbit',
       confirm: 'OK'
     },
     wol: {
@@ -138,69 +253,240 @@ const da = {
       input: 'Angiv MAC-adresse',
       ok: 'OK'
     },
+    download: {
+      title: 'Billedhenter',
+      input: 'Indtast venligst et fjernbillede URL',
+      ok: 'OK',
+      disabled: '/data partitionen er RO, så vi kan ikke downloade billedet',
+      uploadbox: 'Slip filen her, eller klik for at vælge',
+      inputfile: 'Indtast venligst billedfilen',
+      NoISO: 'Ingen ISO',
+      sha256: 'SHA-256 (valgfri)',
+      sha256Placeholder: 'Indtast en SHA-256-kontrolsum på 64 tegn',
+      invalidSHA256: 'SHA-256 skal være en hexadecimal streng på 64 tegn',
+      failed: 'Download mislykkedes',
+      success: 'Download gennemført',
+      checksumFailed: 'Download mislykkedes: SHA-256-verifikation mislykkedes',
+      cancel: 'Annuller',
+      cancelFailed: 'Kunne ikke annullere download'
+    },
     power: {
       title: 'Tænd/sluk-knap',
+      showConfirm: 'Bekræftelse',
+      showConfirmTip: 'Strømdrift kræver en ekstra bekræftelse',
       reset: 'Nulstillingsknap',
       power: 'Tænd/sluk-knap',
       powerShort: 'Tænd/sluk-knap (kort tryk)',
-      powerLong: 'Tænd/sluk-knap (langt tryk)'
+      powerLong: 'Tænd/sluk-knap (langt tryk)',
+      resetConfirm: 'Fortsæt med nulstilling?',
+      powerConfirm: 'Fortsæt strømdrift?',
+      okBtn: 'Ja',
+      cancelBtn: 'Annuller'
     },
     settings: {
-      title: 'Settings',
+      title: 'Indstillinger',
+      mcp: {
+        title: 'MCP-tjeneste',
+        service: 'MCP-fjernbetjening',
+        serviceDesc: 'Tillad betroede MCP-klienter at styre tastatur og mus og tage skærmbilleder',
+        securityWarning:
+          'Alle med denne API-nøgle kan styre fjernværten og se dens skærm. Brug HTTPS, og aktivér kun tjenesten på netværk, du har tillid til.',
+        endpoint: 'Slutpunkt',
+        apiKey: 'API-nøgle',
+        regenerateConfirmTitle: 'Generér MCP API-nøglen igen?',
+        regenerateConfirmDesc: 'Den nuværende nøgle holder straks op med at virke.',
+        enableConfirmTitle: 'Aktivér ekstern MCP-styring?',
+        enableConfirmDesc:
+          'Aktivering af MCP stopper PicoClaw og lukker alle aktive PicoClaw-sessioner.',
+        failed: 'MCP-handlingen mislykkedes',
+        copyFailed: 'Kopiering mislykkedes. Kopiér manuelt.',
+        okBtn: 'Bekræft',
+        cancelBtn: 'Annuller'
+      },
       about: {
         title: 'Om NanoKVM',
         information: 'Information',
         ip: 'IP',
         mdns: 'mDNS',
         application: 'Program version',
-        applicationTip: 'NanoKVM web application version',
+        applicationTip: 'Version af NanoKVM-webapplikationen',
         image: 'Firmware version',
-        imageTip: 'NanoKVM system image version',
+        imageTip: 'Version af NanoKVM-systemimaget',
         deviceKey: 'Enhedsnøgle',
-        community: 'Fællesskab'
+        community: 'Fællesskab',
+        hostname: 'Værtsnavn',
+        hostnameUpdated: 'Værtsnavn opdateret. Genstart for at anvende.',
+        ipType: {
+          Wired: 'Kablet',
+          Wireless: 'Trådløs',
+          Other: 'Andet'
+        }
       },
       appearance: {
-        title: 'Appearance',
-        display: 'Display',
-        language: 'Language',
-        menuBar: 'Menu Bar',
-        menuBarDesc: 'Display icons in the menu bar'
+        title: 'Udseende',
+        display: 'Visning',
+        language: 'Sprog',
+        languageDesc: 'Vælg sproget til grænsefladen',
+        webTitle: 'Webtitel',
+        webTitleDesc: 'Tilpas websidens titel',
+        menuBar: {
+          title: 'Menulinje',
+          mode: 'Visningstilstand',
+          modeDesc: 'Vis menulinje på skærmen',
+          modeOff: 'Fra',
+          modeAuto: 'Skjul automatisk',
+          modeAlways: 'Altid synlig',
+          keyboardLedStatus: 'Tastaturlåseindikatorer',
+          keyboardLedStatusDesc:
+            'Vis Num Lock-, Caps Lock- og Scroll Lock-status for fjerncomputeren',
+          icons: 'Undermenuikoner',
+          iconsDesc: 'Vis undermenuikoner i menulinjen'
+        }
+      },
+      keyboardLedStatus: {
+        groupLabel: 'Status for låse på fjernkeyboard',
+        indicatorLabel: '{{label}}: {{state}}',
+        numLock: 'Num Lock',
+        numLockShort: 'Num',
+        capsLock: 'Caps Lock',
+        capsLockShort: 'Caps',
+        scrollLock: 'Scroll Lock',
+        scrollLockShort: 'Scr',
+        on: 'Til',
+        off: 'Fra',
+        unknown: 'Ukendt'
       },
       device: {
-        title: 'Device',
+        title: 'Enhed',
         oled: {
           title: 'OLED',
           description: 'OLED screen automatically sleep',
-          0: 'Never',
-          15: '15 sec',
-          30: '30 sec',
+          0: 'Aldrig',
+          15: '15 sek.',
+          30: '30 sek.',
           60: '1 min',
           180: '3 min',
           300: '5 min',
           600: '10 min',
           1800: '30 min',
-          3600: '1 hour'
+          3600: '1 time'
         },
+        ssh: {
+          description: 'Aktiver SSH fjernadgang',
+          tip: 'Indstil en stærk adgangskode før aktivering (Konto - Skift adgangskode)'
+        },
+        advanced: 'Avancerede indstillinger',
+        swap: {
+          title: 'Byt',
+          disable: 'Deaktiver',
+          description: 'Indstil swap-filstørrelsen',
+          tip: 'Aktivering af denne funktion kan forkorte dit SD-korts brugbare levetid!'
+        },
+        mouseJiggler: {
+          title: 'Mus Jiggler',
+          description: 'Forhindrer fjernværten i at sove',
+          disable: 'Deaktiver',
+          absolute: 'Absolut tilstand',
+          relative: 'Relativ tilstand'
+        },
+        mdns: {
+          description: 'Aktiver mDNS opdagelsestjeneste',
+          tip: 'Slukker den, hvis den ikke er nødvendig'
+        },
+        hdmi: {
+          description: 'Aktiver HDMI/monitor output',
+          idleTimeoutTitle: 'Timeout for inaktiv optagelse',
+          idleTimeoutDescription: 'Stop HDMI-optagelse efter en periode uden aktive seere på',
+          minutes: 'min'
+        },
+        autostart: {
+          title: 'Indstillinger for autostart scripts',
+          description: 'Administrer scripts, der kører automatisk ved systemstart',
+          new: 'Ny',
+          deleteConfirm: 'Er du sikker på at du vil slette denne fil?',
+          yes: 'Ja',
+          no: 'Annuller',
+          scriptName: 'Autostart scriptnavn',
+          scriptContent: 'Autostart scriptindhold',
+          settings: 'Indstillinger'
+        },
+        hidOnly: 'HID-Kun tilstand',
+        hidOnlyDesc:
+          'Stop med at emulere virtuelle enheder, og behold kun grundlæggende HID kontrol',
+        disk: 'Virtuel disk',
+        diskDesc: 'Mount virtual U-disk on the remote host',
+        network: 'Virtuelt netværk',
+        networkDesc: 'Monter det virtuelle netværkskort på den eksterne vært',
+        reboot: 'Genstart',
+        rebootDesc: 'Er du sikker på, at du vil genstarte NanoKVM?',
+        okBtn: 'Ja',
+        cancelBtn: 'Annuller'
+      },
+      network: {
+        title: 'Netværk',
         wifi: {
           title: 'Wi-Fi',
-          description: 'Configure Wi-Fi',
-          setBtn: 'Config'
+          description: 'Konfigurer Wi-Fi',
+          apMode: 'AP-tilstand er aktiveret, opret forbindelse til Wi-Fi ved at scanne QR-koden',
+          connect: 'Tilslut Wi-Fi',
+          connectDesc1: 'Indtast netværkets SSID og adgangskode',
+          connectDesc2: 'Indtast adgangskoden for at tilslutte dette netværk',
+          disconnect: 'Er du sikker på, at du vil afbryde netværket?',
+          failed: 'Forbindelsen mislykkedes, prøv igen.',
+          ssid: 'Navn',
+          password: 'Adgangskode',
+          joinBtn: 'Tilslut',
+          confirmBtn: 'OK',
+          cancelBtn: 'Annuller'
         },
-        disk: 'Virtual Disk',
-        diskDesc: 'Mount virtual U-disk on the remote host',
-        network: 'Virtual Network',
-        networkDesc: 'Mount virtual network card on the remote host'
+        tls: {
+          description: 'Aktiver HTTPS-protokol',
+          tip: 'Bemærk: Brug af HTTPS kan øge forsinkelsen, især med MJPEG-videotilstand.'
+        },
+        dns: {
+          title: 'DNS',
+          description: 'Konfigurer DNS-servere til NanoKVM',
+          mode: 'Tilstand',
+          dhcp: 'DHCP',
+          manual: 'Manuel',
+          add: 'Tilføj DNS',
+          save: 'Gem',
+          invalid: 'Indtast en gyldig IP-adresse',
+          noDhcp: 'Ingen DHCP-DNS er tilgængelig i øjeblikket',
+          saved: 'DNS-indstillinger gemt',
+          saveFailed: 'DNS-indstillinger kunne ikke gemmes',
+          unsaved: 'Ikke-gemte ændringer',
+          maxServers: 'Maksimalt {{count}} DNS-servere er tilladt',
+          dnsServers: 'DNS-servere',
+          dhcpServersDescription: 'DNS-servere hentes automatisk fra DHCP',
+          manualServersDescription: 'DNS-servere kan redigeres manuelt',
+          networkDetails: 'Netværksdetaljer',
+          interface: 'Grænseflade',
+          ipAddress: 'IP-adresse',
+          subnetMask: 'Undernetmaske',
+          router: 'Router',
+          none: 'Ingen'
+        }
       },
       tailscale: {
         title: 'Tailscale',
+        autostart: 'Start automatisk',
+        autostartConfirm: 'Skift automatisk start til Tailscale? NetBird stoppes.',
+        autostartWarning:
+          'Kontrollér først, at du kan nå denne enhed via Tailscale. Når NetBird stoppes, afbrydes den forbindelse, du bruger nu.',
         memory: {
-          title: 'Memory optimization',
-          tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect.",
-          disable: 'Disable'
+          title: 'Hukommelsesoptimering',
+          tip: "When memory usage exceeds the limit, garbage collection is performed more aggressively to attempt to free up memory. it's recommended to set to 50MB if using Tailscale. A Tailscale restart is required for the change to take effect."
+        },
+        swap: {
+          title: 'Skift hukommelse',
+          tip: 'Hvis problemerne fortsætter efter aktivering af hukommelsesoptimering, prøv at aktivere swap-hukommelse. Dette indstiller swap-filstørrelsen til 256MB som standard, som kan justeres i "Indstillinger > Enhed".'
         },
         restart: 'Are you sure to restart Tailscale?',
         stop: 'Are you sure to stop Tailscale?',
         stopDesc: 'Log out Tailscale and disable its automatic startup on boot.',
+        stopWarning:
+          'Hvis du er forbundet via Tailscale, afbrydes den forbindelse. Den kommer ikke igen af sig selv — sørg for at have en anden vej ind.',
         loading: 'Indlæser...',
         notInstall: 'Tailscale ikke fundet! Installer det for at fuldføre opsætningen.',
         install: 'Installer',
@@ -210,9 +496,11 @@ const da = {
         download: 'Download',
         package: 'installationspakken',
         unzip: 'og udpak den',
-        upTailscale: 'Upload tailscale til følgende mappe på enheden: /usr/bin/',
-        upTailscaled: 'Upload tailscaled til følgende mappe på enheden: /usr/sbin/',
+        upTailscale: 'Upload tailscale til NanoKVM-mappen /usr/bin/',
+        upTailscaled: 'Upload tailscaled til NanoKVM-mappen /usr/sbin/',
         refresh: 'Opdater sides',
+        notRunning: 'Tailscale kører ikke. Start det for at fortsætte.',
+        run: 'Start',
         notLogin:
           'Enheden er ikke tilknyttet en Tailscale-konto endnu. Log ind for at fuldføre tilknytningen til din konto.',
         urlPeriod: 'Denne URL er gyldig i 10 minutter',
@@ -223,9 +511,59 @@ const da = {
         deviceIP: 'Enhedens IP',
         account: 'Konto',
         logout: 'Log ud',
-        logout2: 'Er du sikker på at du vil logge ud?',
+        logoutDesc: 'Er du sikker på, at du vil logge ud?',
+        uninstall: 'Afinstaller Tailscale',
+        uninstallDesc: 'Er du sikker på, at du vil afinstallere Tailscale?',
+        uninstallWarning:
+          'Hvis du er forbundet via Tailscale, afbrydes den forbindelse. Den kommer ikke igen af sig selv — sørg for at have en anden vej ind.',
         okBtn: 'Yes',
         cancelBtn: 'No'
+      },
+      netbird: {
+        title: 'NetBird',
+        autostart: 'Start automatisk',
+        autostartConfirm: 'Skift automatisk start til NetBird? Tailscale stoppes.',
+        autostartWarning:
+          'Kontrollér først, at du kan nå denne enhed via NetBird. Når Tailscale stoppes, afbrydes den forbindelse, du bruger nu.',
+        restart: 'Are you sure to restart NetBird?',
+        stop: 'Are you sure to stop NetBird?',
+        stopDesc:
+          'Stopper NetBird-tjenesten. Den starter igen ved næste opstart, hvis automatisk start er slået til.',
+        stopWarning:
+          'Hvis du er forbundet via NetBird, afbrydes den forbindelse. Den kommer igen ved næste opstart, så længe automatisk start for NetBird er slået til.',
+        loading: 'Indlæser...',
+        notInstall: 'NetBird ikke fundet! Installer det for at fuldføre opsætningen.',
+        install: 'Installer',
+        installing: 'Installerer',
+        notRunning: 'NetBird kører ikke. Start det for at fortsætte.',
+        run: 'Start',
+        notLogin:
+          'Enheden er ikke tilknyttet en NetBird-konto endnu. Log ind for at fuldføre tilknytningen til din konto.',
+        urlPeriod: 'Denne URL er gyldig i 10 minutter',
+        login: 'Log ind',
+        loginSuccess: 'Log ind lykkedes',
+        enable: 'Aktiver NetBird',
+        deviceName: 'Enhedens navn',
+        deviceIP: 'Enhedens IP',
+        uninstall: 'Afinstaller NetBird',
+        uninstallDesc: 'Er du sikker på, at du vil afinstallere NetBird?',
+        uninstallWarning:
+          'Hvis du er forbundet via NetBird, afbrydes den forbindelse. Automatisk start går tilbage til Tailscale, som skal være installeret og virke.',
+        version: 'Version',
+        disconnect: 'Afbryd',
+        disconnectConfirm: 'Er du sikker på, at du vil afbryde?',
+        okBtn: 'Yes',
+        cancelBtn: 'No',
+        error: {
+          title: 'NetBird-handlingen mislykkedes',
+          intro: 'Fejldetaljer:',
+          stepWait: '1. Vent 10-15 sekunder, og prøv igen.',
+          stepRestartUI: '2. Klik på „Genstart tjeneste“ nedenfor.',
+          stepRestartSSH: '3. Kør om nødvendigt: /etc/init.d/S99netbird restart',
+          stepReboot: '4. Genstart kun NanoKVM, hvis ovenstående ikke hjælper.',
+          restartButton: 'Genstart tjeneste',
+          refreshButton: 'Opdater status'
+        }
       },
       update: {
         title: 'Kontroller for opdatering',
@@ -235,15 +573,223 @@ const da = {
         available: 'En opdatering er tilgængelig. Vil du installere den?',
         updating: 'Opdatering i gang. Vent venligst...',
         confirm: 'Bekræft',
-        cancel: 'Annuller'
+        cancel: 'Annuller',
+        preview: 'Forhåndsvisning af opdateringer',
+        previewDesc: 'Få tidlig adgang til nye funktioner og forbedringer',
+        previewTip:
+          'Vær opmærksom på, at forhåndsvisningsudgivelser kan indeholde fejl eller ufuldstændig funktionalitet!',
+        customServer: {
+          title: 'Brugerdefineret opdateringsserver',
+          desc: 'Søg efter og download onlineopdateringer fra en angivet server',
+          invalidUrl:
+            'Indtast en gyldig HTTP- eller HTTPS-servermappe uden forespørgsel, fragment eller latest.json.',
+          loadFailed: 'Konfigurationen af opdateringsserveren kunne ikke indlæses.',
+          saveFailed: 'Konfigurationen af opdateringsserveren kunne ikke gemmes.',
+          saved: 'Konfigurationen af opdateringsserveren er gemt.',
+          save: 'Gem',
+          confirmTitle: 'Vil du bruge en brugerdefineret opdateringsserver?',
+          confirmDesc:
+            'SHA-512 kontrollerer kun, at pakken stemmer overens med manifestet fra denne server. Det beviser ikke, at pakken er en officiel NanoKVM-udgivelse. En fejlbehæftet eller ondsindet server kan gøre enheden ubrugelig, medføre tab af data eller kompromittere systemet.',
+          confirm: 'Brug alligevel',
+          previewDisabled:
+            'Forhåndsvisningsopdateringer er ikke tilgængelige, mens en brugerdefineret opdateringsserver er aktiveret.'
+        },
+        offline: {
+          title: 'Offline opdateringer',
+          desc: 'Opdatering via lokal installationspakke',
+          upload: 'Upload',
+          checksumPlaceholder: 'SHA-256-kontrolsum (valgfri)',
+          invalidChecksum: 'SHA-256-kontrolsummen skal indeholde 64 hexadecimale tegn.',
+          checksumMismatch: 'SHA-256-verificeringen mislykkedes. Pakken kan være beskadiget.',
+          invalidName: 'Ugyldigt filnavnsformat. Download venligst fra GitHub-udgivelser.',
+          updateFailed: 'Opdatering fejlede. Prøv igen.'
+        }
       },
       account: {
-        title: 'Account',
-        webAccount: 'Web Account Name',
-        password: 'Password',
+        title: 'Konto',
+        webAccount: 'Navn på webkonto',
+        password: 'Adgangskode',
         updateBtn: 'Update',
-        logoutBtn: 'Logout'
+        logoutBtn: 'Log ud',
+        logoutDesc: 'Er du sikker på, at du vil logge ud?',
+        okBtn: 'Ja',
+        cancelBtn: 'Annuller'
       }
+    },
+    picoclaw: {
+      title: 'PicoClaw Assistent',
+      empty: 'Åbn panelet og start en opgave for at begynde.',
+      inputPlaceholder: 'Beskriv, hvad du vil have PicoClaw til at gøre',
+      newConversation: 'Ny samtale',
+      processing: 'Behandler...',
+      agent: {
+        defaultTitle: 'Generel assistent',
+        defaultDescription: 'Generel hjælp til chat, søgning og arbejdsområde.',
+        kvmTitle: 'Fjernstyring',
+        kvmDescription: 'Betjen fjernværten gennem NanoKVM.',
+        switched: 'Agentrolle skiftet',
+        switchFailed: 'Kunne ikke skifte agentrolle'
+      },
+      send: 'Send',
+      cancel: 'Annuller',
+      status: {
+        connecting: 'Opretter forbindelse til gateway...',
+        connected: 'PicoClaw-session tilsluttet',
+        disconnected: 'PicoClaw-session lukket',
+        stopped: 'Stopanmodning sendt',
+        runtimeStarted: 'PicoClaw runtime startet',
+        runtimeStartFailed: 'Kunne ikke starte PicoClaw runtime',
+        runtimeStopped: 'PicoClaw runtime stoppet',
+        runtimeStopFailed: 'Kunne ikke stoppe PicoClaw runtime',
+        controlSwitchedToMCP: 'Styringen er skiftet til den eksterne MCP-tjeneste'
+      },
+      connection: {
+        runtime: {
+          checking: 'Kontrol',
+          restoring: 'Restoring PicoClaw',
+          ready: 'Runtime klar',
+          stopped: 'Runtime stoppet',
+          blockedByMCP: 'Ekstern MCP-styring er aktiv',
+          readyBlockedByMCP:
+            'The runtime is running, but external MCP currently controls device input.',
+          readyWithoutControl:
+            'The runtime is running. Grant PicoClaw device control before reconnecting.',
+          unavailable: 'Runtime utilgængelig',
+          configError: 'Konfigurationsfejl'
+        },
+        transport: {
+          connecting: 'Tilslutning',
+          connected: 'Tilsluttet',
+          disconnected: 'Disconnected',
+          reconnect: 'Reconnect',
+          reconnectDescription: 'Reconnect to the running PicoClaw session.',
+          reconnectBlocked: 'PicoClaw needs device control before reconnecting.'
+        },
+        run: {
+          idle: 'Tomgang',
+          busy: 'Optaget'
+        }
+      },
+      message: {
+        toolAction: 'Handling',
+        observation: 'Observation',
+        screenshot: 'Skærmbillede'
+      },
+      overlay: {
+        locked: 'PicoClaw styrer enheden. Manuel indtastning er sat på pause.'
+      },
+      control: {
+        picoclaw: 'Enhedsstyring: PicoClaw',
+        picoclawDescription: 'PicoClaw can write keyboard and mouse input. Manual input may pause.',
+        mcp: 'Enhedsstyring: ekstern MCP',
+        mcpDescription: 'External MCP can write to the device. PicoClaw will not take over input.',
+        off: 'Enhedsstyring: fra',
+        offDescription:
+          'AI will not write keyboard or mouse input. Manual control remains available.',
+        transitioning: 'Device control: switching',
+        transitioningDescription: 'Device control is syncing. Please wait.',
+        grant: 'Giv styring',
+        release: 'Frigiv',
+        releasing: 'Releasing...',
+        switching: 'Switching...',
+        releasingLabel: 'Device control: releasing',
+        releasingDescription:
+          'Device control is being returned. PicoClaw has stopped current writes.',
+        granted: 'PicoClaw-styring givet',
+        released: 'PicoClaw-styring frigivet',
+        grantFailed: 'Kunne ikke give PicoClaw styring',
+        releaseFailed: 'Kunne ikke frigive PicoClaw styring',
+        grantConfirmTitle: 'Skift enhedsstyring til PicoClaw?',
+        grantConfirmDesc: 'Eksterne MCP-enhedsskrivninger bliver afbrudt.'
+      },
+      install: {
+        install: 'Installer PicoClaw',
+        installing: 'Installation af PicoClaw',
+        success: 'PicoClaw installeret korrekt',
+        failed: 'Kunne ikke installere PicoClaw',
+        uninstalling: 'Afinstallerer runtime...',
+        uninstalled: 'Runtime blev afinstalleret.',
+        uninstallFailed: 'Afinstallation mislykkedes.',
+        requiredTitle: 'PicoClaw er ikke installeret',
+        requiredDescription: 'Installer PicoClaw før start af PicoClaw runtime.',
+        progressDescription: 'PicoClaw bliver downloadet og installeret.',
+        stages: {
+          preparing: 'Forberedelse',
+          downloading: 'Downloader',
+          extracting: 'Udpakning',
+          verifying: 'Bekræfter',
+          installing: 'Installerer',
+          installed: 'Installeret',
+          install_timeout: 'Timeout',
+          install_failed: 'Mislykkedes'
+        }
+      },
+      model: {
+        requiredTitle: 'Modelkonfiguration er påkrævet',
+        requiredDescription: 'Konfigurer PicoClaw-modellen, før du bruger PicoClaw chat.',
+        docsTitle: 'Konfigurationsvejledning',
+        docsDesc: 'Understøttede modeller og protokoller',
+        menuLabel: 'Konfigurer model',
+        modelIdentifier: 'Modelidentifikator',
+        modelIdentifierPlaceholder: 'openai/gpt-5.4',
+        apiBase: 'API Base URL',
+        apiBasePlaceholder: 'https://api.example.com/v1',
+        apiKey: 'API-nøgle',
+        apiKeyPlaceholder: 'Indtast modellens API-nøgle',
+        save: 'Gem',
+        saving: 'Gemmer',
+        saved: 'Modelkonfiguration gemt',
+        saveFailed: 'Kunne ikke gemme modelkonfigurationen',
+        invalid: 'Model-id, API Base URL og API-nøgle er påkrævet'
+      },
+      uninstall: {
+        menuLabel: 'Afinstaller',
+        confirmTitle: 'Afinstaller PicoClaw',
+        confirmContent:
+          'Er du sikker på, at du vil afinstallere PicoClaw? Dette vil slette den eksekverbare fil og alle konfigurationsfiler.',
+        confirmOk: 'Afinstaller',
+        confirmCancel: 'Annuller'
+      },
+      history: {
+        title: 'Historik',
+        loading: 'Indlæser sessioner...',
+        emptyTitle: 'Ingen historik endnu',
+        emptyDescription: 'Tidligere PicoClaw sessioner vil blive vist her.',
+        loadFailed: 'Kunne ikke indlæse sessionshistorikken',
+        deleteFailed: 'Kunne ikke slette session',
+        deleteConfirmTitle: 'Slet session',
+        deleteConfirmContent: 'Er du sikker på, at du vil slette "{{title}}"?',
+        deleteConfirmOk: 'Slet',
+        deleteConfirmCancel: 'Annuller',
+        messageCount_one: '{{count}} besked',
+        messageCount_other: '{{count}} beskeder',
+        messageCount: '{{count}} beskeder'
+      },
+      config: {
+        startRuntime: 'Start PicoClaw',
+        stopRuntime: 'Stop PicoClaw'
+      },
+      start: {
+        enableConfirmTitle: 'Skift styringen til PicoClaw?',
+        enableConfirmDesc: 'Start af PicoClaw deaktiverer den eksterne MCP-tjeneste.',
+        enableConfirmOk: 'Start PicoClaw',
+        enableConfirmCancel: 'Annuller',
+        title: 'Start PicoClaw',
+        description: 'Start runtime for at begynde at bruge PicoClaw-assistenten.',
+        switchFromMCP: 'Switch to PicoClaw and start',
+        takeoverAndStart: 'Take over and start'
+      }
+    },
+    error: {
+      title: 'Vi er stødt på et problem',
+      refresh: 'Opdater'
+    },
+    fullscreen: {
+      toggle: 'Skift fuldskærm'
+    },
+    menu: {
+      collapse: 'Skjul menu',
+      expand: 'Udvid menu'
     }
   }
 };

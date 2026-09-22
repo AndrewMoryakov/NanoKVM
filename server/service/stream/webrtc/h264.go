@@ -2,7 +2,8 @@ package webrtc
 
 import (
 	"NanoKVM-Server/config"
-	"net/http"
+	"NanoKVM-Server/middleware"
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -15,9 +16,8 @@ import (
 
 var (
 	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
+		WriteBufferSize: 256 * 1024,
+		CheckOrigin:     middleware.CheckWebSocketOrigin,
 	}
 	globalManager *WebRTCManager
 	managerOnce   sync.Once
@@ -37,6 +37,8 @@ func Connect(c *gin.Context) {
 		log.Errorf("failed to create h264 websocket: %s", err)
 		return
 	}
+	stopSessionWatcher := middleware.WatchWebSocket(c.Request.Context(), wsConn)
+	defer stopSessionWatcher()
 	defer func() {
 		_ = wsConn.Close()
 		log.Debugf("h264 websocket disconnected: %s", c.ClientIP())
@@ -72,13 +74,14 @@ func Connect(c *gin.Context) {
 		return
 	}
 
-	manager := getManager()
-	manager.AddClient(wsConn, client)
-	defer manager.RemoveClient(wsConn)
-
 	// handle signaling
 	signalingHandler := NewSignalingHandler(client)
+	defer signalingHandler.Close()
 	signalingHandler.RegisterCallbacks()
+	if err := sendICEServers(client, iceServers); err != nil {
+		log.Errorf("failed to send ICE servers: %s", err)
+		return
+	}
 
 	// read and wait
 	for {
@@ -114,6 +117,30 @@ func createICEServers() []webrtc.ICEServer {
 	}
 
 	return iceServers
+}
+
+type clientICEServer struct {
+	URLs       []string    `json:"urls"`
+	Username   string      `json:"username,omitempty"`
+	Credential interface{} `json:"credential,omitempty"`
+}
+
+func sendICEServers(client *Client, iceServers []webrtc.ICEServer) error {
+	clientServers := make([]clientICEServer, 0, len(iceServers))
+	for _, server := range iceServers {
+		clientServers = append(clientServers, clientICEServer{
+			URLs:       server.URLs,
+			Username:   server.Username,
+			Credential: server.Credential,
+		})
+	}
+
+	data, err := json.Marshal(clientServers)
+	if err != nil {
+		return err
+	}
+
+	return client.WriteMessage("ice-servers", string(data))
 }
 
 func createMediaEngine() (*webrtc.MediaEngine, error) {

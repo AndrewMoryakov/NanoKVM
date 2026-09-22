@@ -13,8 +13,8 @@ void kvm_init_cube_ui(void)
 
 	OLED_Clear();
 	// OLED_Revolve();
+	OLED_ShowKVMLogo();
 	OLED_ShowLogo();
-	OLED_ShowSipeedLogo();
 	OLED_ShowKVMState(HDMI_STATE, 	0);
 	OLED_ShowKVMState(HID_STATE, 	0);
 	OLED_ShowKVMState(ETH_STATE, 	0);
@@ -37,7 +37,7 @@ void kvm_init_pcie_ui(void)
 {
 	OLED_Revolve();
 	OLED_Showline_1();
-	OLED_ShowSipeedLogo();
+	OLED_ShowLogo();
 	OLED_ShowKVMState(HDMI_STATE, 	0);
 	OLED_ShowKVMState(HID_STATE, 	0);
 	OLED_ShowKVMState(ETH_STATE, 	0);
@@ -209,7 +209,14 @@ void kvm_eth_state_disp(ip_addr_t _ip_type, uint8_t first_disp)
 		(_ip_type_old != _ip_type) || 
 		first_disp || ip_changed(ETH_IP))
 	{
-		kvm_oled_state.eth_state = kvm_sys_state.eth_state;
+		// ensure eth_addr is updated
+		if (kvm_sys_state.eth_state >= 2) {
+			if (kvm_sys_state.eth_addr[0] != 0) 
+				kvm_oled_state.eth_state = kvm_sys_state.eth_state;
+		} else {
+			kvm_oled_state.eth_state = kvm_sys_state.eth_state;
+		}
+		
 		_ip_type_old = _ip_type;
 		switch(kvm_oled_state.eth_state){
 			case -1:
@@ -412,8 +419,15 @@ void show_wifi_config_ip(void)
 {
 	OLED_Clear();
 	get_ip_addr(WiFi_IP);
-	OLED_ShowString(0, 1, "Config IP:", 8);
-	OLED_ShowString_AlignRight(63, 2, (char*)kvm_sys_state.wifi_addr, 4);
+	OLED_ShowString(1, 0, "Config URL", 8);
+	OLED_ShowString_AlignRight(63, 1, "----------------", 4);
+	// OLED_ShowString_AlignRight(63, 2, (char*)kvm_sys_state.wifi_addr, 4);
+	static char wifi_addr_with_path[30];
+	static char wifi_addr_with_key[30];
+	sprintf(wifi_addr_with_path, "%s/#/", kvm_sys_state.wifi_addr);
+	sprintf(wifi_addr_with_key, "WIFI?P=%s", kvm_sys_state.wifi_ap_pass);
+	OLED_ShowString_AlignRight(63, 2, wifi_addr_with_path, 4);
+	OLED_ShowString_AlignRight(63, 3, wifi_addr_with_key, 4);
 }
 
 void show_wifi_config_QR(void)
@@ -421,8 +435,7 @@ void show_wifi_config_QR(void)
 	static char cmd[70];
 	OLED_Clear();
 	get_ip_addr(WiFi_IP);
-	printf("http://%s/#/wifi\n", kvm_sys_state.wifi_addr);
-	sprintf(cmd, "http://%s/#/wifi", kvm_sys_state.wifi_addr);
+	sprintf(cmd, "http://%s/#/WIFI?P=%s", kvm_sys_state.wifi_addr, kvm_sys_state.wifi_ap_pass);
 	qrencode(cmd);
 }
 
@@ -479,26 +492,30 @@ void oled_auto_sleep_time_update(void)
 
 void oled_auto_sleep(void)
 {
-	uint8_t tmp8;
+	uint16_t tmp16;
 	uint8_t sleep_close_signal = 0;
 	FILE *fp;
 	int file_size;
-	uint8_t RW_Data[10];	
+	char RW_Data[10] = {0};
 	if(access("/etc/kvm/oled_sleep", F_OK) == 0){
         fp = fopen("/etc/kvm/oled_sleep", "r");
 		fseek(fp, 0, SEEK_END);
 		file_size = ftell(fp); 
 		fseek(fp, 0, SEEK_SET);
+		if(file_size >= (int)sizeof(RW_Data)){
+			file_size = sizeof(RW_Data) - 1;
+		}
         fread(RW_Data, sizeof(char), file_size, fp);
+		RW_Data[file_size] = '\0';
         fclose(fp);
 		if(file_size != 0){
-			tmp8 = atoi((char*)RW_Data);
+			tmp16 = atoi(RW_Data);
 		} else {
-			tmp8 = OLED_SLEEP_DELAY_DEFAULT;
+			tmp16 = OLED_SLEEP_DELAY_DEFAULT;
 		}
-		if(tmp8 != kvm_oled_state.oled_sleep_param){
-			// printf("/etc/kvm/oled_sleep = %d\n", tmp8);
-			kvm_oled_state.oled_sleep_param = tmp8;
+		if(tmp16 != kvm_oled_state.oled_sleep_param){
+			// printf("/etc/kvm/oled_sleep = %d\n", tmp16);
+			kvm_oled_state.oled_sleep_param = tmp16;
 			if(kvm_oled_state.oled_sleep_param < OLED_SLEEP_DELAY_MIN){
 				sleep_close_signal = 1;
 			} else {
